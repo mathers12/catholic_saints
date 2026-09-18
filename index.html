@@ -24,13 +24,8 @@
   .scene, .scene > * { position: fixed; pointer-events: none; }
   .scene { inset: 0; z-index: 0; overflow: hidden; animation: sunrise 4s ease-out both; }
   @keyframes sunrise { from { filter: brightness(.08) saturate(.4); } 40% { filter: brightness(.55) saturate(.8); } }
-  .side, .photo { background-image: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_and_sunset_(Unsplash).jpg?width=1600"); background-repeat: no-repeat; }
-  /* fotka vysoká ako obrazovka; kríž je na 34 % jej šírky, preto ho posúvame do stredu */
-  .photo { top: 0; height: 100vh; aspect-ratio: 3207 / 4489; left: calc(50vw - 24.29vh); background-size: cover; }
-  /* boky na širokých obrazovkách: krajný 1 % stĺpec oblohy z fotky roztiahnutý do strany – farby na hrane presne nadviažu */
-  .side { top: 0; height: 100vh; }
-  .side-l { left: 0; width: calc(50vw - 24.29vh + 1px); background-size: calc((50vw - 24.29vh) * 100) 100vh; background-position: left top; }
-  .side-r { right: 0; width: calc(50vw - 47.15vh + 1px); background-size: calc((50vw - 47.15vh) * 100) 100vh; background-position: right top; }
+  /* fotka cez celé pozadie; na mobile posunutá tak, aby bol kríž (34 % šírky fotky) v strede */
+  .photo { inset: 0; background: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_and_sunset_(Unsplash).jpg?width=1600") 8% 30% / cover no-repeat; }
   .photo {
     transform-origin: 34% 30%; animation: breath 50s ease-in-out infinite alternate;
   }
@@ -121,7 +116,7 @@
 </head>
 <body>
 <div class="scene" aria-hidden="true">
-  <div class="side side-l"></div><div class="side side-r"></div><div class="photo"></div><div class="veil"></div><div class="glow"></div>
+  <div class="photo"></div><div class="veil"></div><div class="glow"></div>
 </div>
 <canvas id="motes"></canvas>
 
