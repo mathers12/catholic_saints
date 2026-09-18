@@ -5,107 +5,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Svätý dňa</title>
 <meta name="description" content="Každý deň jeden katolícky svätý, jeho citát a inšpirácia z jeho života.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --gold: #f3d38a; --gold-2: #e7b453; --text: #f4efe6; --muted: #d6cbe0;
-    --glass: rgba(255,255,255,.06); --line: rgba(243,211,138,.25);
+    --ink: #2c2319; --muted: #6e5c46; --gold: #a8761f; --gold-2: #d4a24c; --line: rgba(168,118,31,.3);
   }
   * { box-sizing: border-box; margin: 0; }
   html, body { min-height: 100%; }
   body {
-    font-family: Inter, system-ui, sans-serif; color: var(--text);
-    background: #141633;
-    display: grid; place-items: center; padding: 32px 16px; overflow-x: hidden;
+    font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #f6ead6;
+    padding: 32px 16px 40px; overflow-x: hidden;
   }
-  canvas, .bg, .bg > * { position: fixed; pointer-events: none; }
-  canvas { inset: 0; z-index: 0; }
-  .bg { inset: 0; z-index: 0; overflow: hidden; animation: dawn 3.5s ease-out both; }
-  /* pri príchode sa nebo rozsvieti z tmy ako svitanie, potom sa zo svetla vynorí obsah */
-  @keyframes dawn { from { filter: brightness(.05) blur(6px); } }
 
-  /* nebo: G. Doré, Nebeská ruža (Raj, spev 31) – rytina, ktorú zafarbí .tint; pomaly sa blíži k svetlu */
-  .heaven {
-    inset: -4%; background: url("https://commons.wikimedia.org/wiki/Special:FilePath/Paradiso_Canto_31.jpg?width=1600") center 28% / cover no-repeat;
-    filter: grayscale(1) contrast(1.15) brightness(1.05);
-    animation: ascend 60s ease-in-out infinite alternate;
-    transform-origin: 50% 44%;
+  /* scéna: skutočná fotografia kríža na svetlej oblohe (CC0, Unsplash), kríž vždy v strede obrazovky */
+  .scene, .scene > * { position: fixed; pointer-events: none; }
+  .scene { inset: 0; z-index: 0; overflow: hidden; animation: sunrise 4s ease-out both; }
+  @keyframes sunrise { from { filter: brightness(.08) saturate(.4); } 40% { filter: brightness(.55) saturate(.8); } }
+  .side, .photo { background-image: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_and_sunset_(Unsplash).jpg?width=1600"); background-repeat: no-repeat; }
+  /* fotka vysoká ako obrazovka; kríž je na 34 % jej šírky, preto ho posúvame do stredu */
+  .photo { top: 0; height: 100vh; aspect-ratio: 3207 / 4489; left: calc(50vw - 24.29vh); background-size: cover; }
+  /* boky na širokých obrazovkách: krajný 1 % stĺpec oblohy z fotky roztiahnutý do strany – farby na hrane presne nadviažu */
+  .side { top: 0; height: 100vh; }
+  .side-l { left: 0; width: calc(50vw - 24.29vh + 1px); background-size: calc((50vw - 24.29vh) * 100) 100vh; background-position: left top; }
+  .side-r { right: 0; width: calc(50vw - 47.15vh + 1px); background-size: calc((50vw - 47.15vh) * 100) 100vh; background-position: right top; }
+  .photo {
+    transform-origin: 34% 30%; animation: breath 50s ease-in-out infinite alternate;
   }
-  /* svitanie neba: v strede biele svetlo -> zlato -> ružové zore -> hlboká nebeská modrá na okrajoch */
-  .tint {
-    inset: 0; mix-blend-mode: multiply;
-    background: radial-gradient(ellipse 75% 65% at 50% 44%, #fffaf0 0%, #ffe1a0 18%, #f0b060 36%, #c77a78 56%, #4a3f8f 78%, #141633 100%);
+  @keyframes breath { to { scale: 1.06; } }
+  /* zosvetlenie – nádych svitania */
+  .veil { inset: 0; background: linear-gradient(rgba(255,250,240,.28), rgba(255,250,240,.05) 45%, rgba(255,244,225,.25)); }
+  /* Božie svetlo, ktoré pokojne dýcha za krížom */
+  .glow {
+    inset: 0; mix-blend-mode: screen;
+    background: radial-gradient(circle at 50% 30%, rgba(255,247,225,.55), rgba(255,230,180,.18) 22%, transparent 45%);
+    animation: pulse 8s ease-in-out infinite;
   }
-  @keyframes ascend { to { scale: 1.15; } }
+  @keyframes pulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+  canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-  /* Božie svetlo: jadro, ktoré pokojne dýcha, a lúče, čo sa z neho rozlievajú */
-  .light {
-    left: 50%; top: 44%; width: 110vmax; height: 110vmax; translate: -50% -50%; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,253,245,.95) 0, rgba(255,240,200,.6) 6%, rgba(255,215,140,.25) 18%, transparent 45%);
-    mix-blend-mode: screen; animation: heartbeat 8s ease-in-out infinite;
-  }
-  .rays {
-    left: 50%; top: 44%; width: 240vmax; height: 240vmax; translate: -50% -50%;
-    background: repeating-conic-gradient(rgba(255,240,200,.16) 0 2deg, transparent 2deg 9deg);
-    mask: radial-gradient(circle, #000 0, rgba(0,0,0,.5) 15%, transparent 42%);
-    mix-blend-mode: screen; animation: spin 240s linear infinite, heartbeat 8s ease-in-out infinite;
-  }
-  /* jemné lúče zhora, ako svetlo z okna katedrály */
-  .beams {
-    inset: 0; mix-blend-mode: screen; opacity: .5;
-    background: repeating-linear-gradient(100deg, transparent 0 6vw, rgba(255,235,190,.07) 6vw 9vw, transparent 9vw 15vw);
-    mask: linear-gradient(#000, transparent 75%);
-    animation: sway 20s ease-in-out infinite alternate;
-  }
-  @keyframes spin { to { rotate: 360deg; } }
-  @keyframes heartbeat { 0%, 100% { opacity: .75; scale: 1; } 50% { opacity: 1; scale: 1.06; } }
-  @keyframes sway { to { translate: 4vw 0; opacity: .8; } }
-
-  /* jemné stmavenie spodku, aby text vždy vynikol */
-  .vignette { inset: 0; background: radial-gradient(ellipse at 50% 44%, transparent 45%, rgba(10,10,35,.55) 100%), linear-gradient(transparent 60%, rgba(10,10,35,.45)); }
-
-  main { position: relative; z-index: 1; width: min(680px, 100%); text-align: center; animation: rise 1.6s 1.6s both; }
+  main { position: relative; z-index: 1; width: min(680px, 100%); margin: 0 auto; text-align: center; animation: rise 1.6s 2s both; }
   @keyframes rise { from { opacity: 0; translate: 0 24px; } }
-  .date { font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); text-shadow: 0 1px 12px #000, 0 0 2px #000; }
+  .date { font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink); text-shadow: 0 0 12px #fff, 0 0 4px #fff; }
   .badge {
-    display: inline-block; margin: 12px 0 28px; padding: 6px 14px; border-radius: 999px;
-    border: 1px solid var(--line); color: var(--gold); font-size: .78rem; letter-spacing: .08em; background: rgba(20,16,42,.6); backdrop-filter: blur(6px);
+    display: inline-block; margin-top: 12px; padding: 6px 14px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--gold); font-size: .78rem; letter-spacing: .08em;
+    background: rgba(255,255,255,.6); backdrop-filter: blur(6px);
   }
 
+  /* karta začína pod krížom, aby ho nezakryla; pri skrolovaní po ňom prejde */
   .card {
-    position: relative; padding: 36px 28px; border-radius: 28px;
-    background: rgba(20,16,42,.5); border: 1px solid rgba(255,255,255,.1);
-    backdrop-filter: blur(8px) saturate(1.2); -webkit-backdrop-filter: blur(8px) saturate(1.2);
-    box-shadow: 0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+    position: relative; margin-top: max(24px, calc(58vh - 110px)); padding: 36px 28px; border-radius: 28px;
+    background: rgba(255,251,243,.8); border: 1px solid rgba(255,255,255,.8);
+    backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 30px 80px rgba(90,65,30,.25);
   }
-  /* celý obrázok bez orezania, zmenšený a vycentrovaný v zlatom ráme */
   .portrait { min-height: 240px; display: grid; place-items: center; margin-bottom: 24px; font-size: 64px; }
   .frame {
     position: relative; padding: 5px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--gold), #7a5a1c 45%, var(--gold-2) 70%, #fff3cf);
+    background: linear-gradient(135deg, #f3d38a, #8a5a12 45%, var(--gold-2) 70%, #fff3cf);
     animation: glow 4s ease-in-out infinite, pop 1s cubic-bezier(.2,1.4,.4,1) both;
   }
-  .frame img {
-    display: block; max-height: 240px; max-width: min(260px, 70vw); border-radius: 10px;
-    opacity: 0; transition: opacity 1s;
-  }
+  .frame img { display: block; max-height: 240px; max-width: min(260px, 70vw); border-radius: 10px; opacity: 0; transition: opacity 1s; }
   .frame img.loaded { opacity: 1; }
   .frame .sym {
     position: absolute; right: -14px; bottom: -14px; width: 42px; height: 42px; border-radius: 50%;
-    display: grid; place-items: center; font-size: 22px; background: #1e1a3a; border: 1px solid var(--line);
+    display: grid; place-items: center; font-size: 22px; background: #fffaf0; border: 1px solid var(--line);
   }
   @keyframes pop { from { scale: .8; opacity: 0; } }
   @keyframes glow {
-    0%,100% { box-shadow: 0 0 30px 4px rgba(243,211,138,.2); }
-    50%     { box-shadow: 0 0 55px 12px rgba(243,211,138,.4); }
+    0%,100% { box-shadow: 0 6px 24px rgba(168,118,31,.25); }
+    50%     { box-shadow: 0 6px 40px rgba(212,162,76,.5); }
   }
 
   h1 {
     font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1;
-    background: linear-gradient(90deg, var(--gold), #fff6dc, var(--gold));
+    background: linear-gradient(90deg, #7a4e0e, #c8912e, #7a4e0e);
     background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
     animation: shimmer 6s linear infinite;
   }
@@ -116,25 +93,26 @@
     margin: 32px 0 8px; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500;
     font-size: clamp(1.4rem, 4.2vw, 1.9rem); line-height: 1.35;
   }
-  blockquote::before, blockquote::after { color: var(--gold); opacity: .8; }
+  blockquote::before, blockquote::after { color: var(--gold); }
   blockquote::before { content: "„"; } blockquote::after { content: "“"; }
   .w { display: inline-block; opacity: 0; filter: blur(6px); translate: 0 8px; animation: word .7s forwards; }
   @keyframes word { to { opacity: 1; filter: blur(0); translate: 0 0; } }
   .source { color: var(--muted); font-size: .82rem; }
 
   .divider { width: 60px; height: 1px; margin: 28px auto; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .story { color: #f1ebe0; line-height: 1.7; font-size: 1rem; max-width: 52ch; margin: 0 auto; }
+  .story { color: #3d3226; line-height: 1.7; font-size: 1rem; max-width: 52ch; margin: 0 auto; }
 
   .fade { opacity: 0; translate: 0 14px; animation: fadeUp .8s forwards; }
   @keyframes fadeUp { to { opacity: 1; translate: 0 0; } }
 
   nav { display: flex; gap: 12px; justify-content: center; margin-top: 28px; }
   button {
-    font: inherit; color: var(--text); background: var(--glass); border: 1px solid rgba(255,255,255,.14);
-    border-radius: 999px; padding: 10px 18px; cursor: pointer; transition: .25s;
+    font: inherit; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9);
+    border-radius: 999px; padding: 10px 18px; cursor: pointer; transition: .25s; backdrop-filter: blur(6px);
+    box-shadow: 0 4px 14px rgba(60,45,20,.15);
   }
-  button:hover, button:focus-visible { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 20px rgba(243,211,138,.25); outline: none; }
-  footer { margin-top: 28px; font-size: .75rem; color: var(--muted); opacity: .7; }
+  button:hover, button:focus-visible { border-color: var(--gold-2); color: var(--gold); box-shadow: 0 0 20px rgba(212,162,76,.45); outline: none; }
+  footer { margin-top: 28px; font-size: .8rem; color: #fff; text-shadow: 0 1px 6px rgba(40,50,20,.6); }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
@@ -142,11 +120,10 @@
 </style>
 </head>
 <body>
-<div class="bg" aria-hidden="true">
-  <div class="heaven"></div><div class="tint"></div><div class="beams"></div><div class="light"></div><div class="rays"></div>
-  <div class="vignette"></div>
+<div class="scene" aria-hidden="true">
+  <div class="side side-l"></div><div class="side side-r"></div><div class="photo"></div><div class="veil"></div><div class="glow"></div>
 </div>
-<canvas id="sky"></canvas>
+<canvas id="motes"></canvas>
 
 <main>
   <div class="date" id="date"></div>
@@ -178,7 +155,7 @@
 
   const esc = t => t.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
-  let intro = 2.2; // pri prvom načítaní počkaj, kým sa rozsvieti nebo
+  let intro = 2.6; // pri prvom načítaní počkaj, kým vyjde svetlo za krížom
   function render() {
     const t0 = intro; intro = 0;
     const d = new Date(); d.setDate(d.getDate() + offset);
@@ -191,8 +168,7 @@
 
     const words = s.quote.split(" ").map((w, i) => `<span class="w" style="animation-delay:${t0 + .6 + i * .08}s">${esc(w)}</span>`).join(" ");
     const after = t0 + .6 + s.quote.split(" ").length * .08 + .3;
-    const file = encodeURIComponent(s.img);
-    const src = `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=500`;
+    const src = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(s.img)}?width=500`;
     $("card").innerHTML = `
       <div class="portrait">
         <div class="frame"><img src="${src}" alt="${esc(s.name)}"><span class="sym">${s.symbol}</span></div>
@@ -218,25 +194,23 @@
   addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 60) go(dx > 0 ? -1 : 1); x0 = null; });
   render();
 
-  // svetielka (duše) pomaly krúžia k Božiemu svetlu v strede a v ňom sa rozplynú
-  const c = $("sky"), ctx = c.getContext("2d");
+  // svetielka stúpajú zo zeme k nebu ako modlitby
+  const c = $("motes"), ctx = c.getContext("2d");
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const dpr = devicePixelRatio;
-  let W, H, R, motes = [];
-  const resize = () => { W = c.width = innerWidth * dpr; H = c.height = innerHeight * dpr; R = Math.hypot(W, H) * .6; };
-  const mote = (r = R * (.25 + Math.random() * .75)) => ({ a: Math.random() * 6.28, r, s: (Math.random() * 1.6 + .5) * dpr, v: Math.random() * .5 + .25, p: Math.random() * 6.28 });
+  let W, H, motes = [];
+  const resize = () => { W = c.width = innerWidth * dpr; H = c.height = innerHeight * dpr; };
+  const mote = (y = Math.random() * H) => ({ x: Math.random() * W, y, s: (Math.random() * 1.8 + .6) * dpr, v: Math.random() * .35 + .12, p: Math.random() * 6.28 });
   resize(); addEventListener("resize", resize);
-  for (let i = 0; i < 110; i++) motes.push(mote());
+  for (let i = 0; i < 60; i++) motes.push(mote());
   (function tick() {
     ctx.clearRect(0, 0, W, H);
-    const cx = W / 2, cy = H * .44;
     for (const m of motes) {
-      m.r -= m.v * dpr * (.4 + m.r / R); m.a += .0009 * (R / (m.r + 60)); m.p += .03;
-      if (m.r < 12 * dpr) Object.assign(m, mote(R));
-      const near = Math.min(1, m.r / (R * .12)), far = Math.min(1, (R - m.r) / (R * .15));
-      const alpha = (.45 + Math.sin(m.p) * .3) * near * far;
-      ctx.beginPath(); ctx.arc(cx + Math.cos(m.a) * m.r, cy + Math.sin(m.a) * m.r * .9, m.s, 0, 6.28);
-      ctx.fillStyle = `rgba(255,236,190,${alpha})`; ctx.shadowColor = "#ffe7a8"; ctx.shadowBlur = 14; ctx.fill();
+      m.y -= m.v * dpr; m.p += .02;
+      if (m.y < -10) Object.assign(m, mote(H + 10));
+      const a = (.55 + Math.sin(m.p) * .35) * Math.min(1, m.y / (H * .3));
+      ctx.beginPath(); ctx.arc(m.x + Math.sin(m.p) * 8, m.y, m.s, 0, 6.28);
+      ctx.fillStyle = `rgba(255,250,235,${a})`; ctx.shadowColor = "#ffd98a"; ctx.shadowBlur = 10; ctx.fill();
     }
     if (!still) requestAnimationFrame(tick);
   })();
