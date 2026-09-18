@@ -1,0 +1,32 @@
+# Každý pondelok Claude pridá jedného nového svätého a otvorí PR na schválenie.
+name: Weekly saint PR
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  add-saint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Riaď sa CLAUDE.md. Pridaj do saints.js presne jedného nového katolíckeho svätého,
+            ktorého sviatok (feast) ešte v súbore nie je. Uprednostni dátumy, ktoré sú najbližšie
+            k dnešku v budúcnosti. Potom:
+              git checkout -b saint/$(date +%F)
+              git add saints.js && git commit -m "Pridaný svätý: <meno>"
+              git push -u origin HEAD
+              gh pr create --fill --base main
+          claude_args: |
+            --allowedTools "Edit,Read,Bash(git:*),Bash(gh pr create:*),Bash(date:*)"
