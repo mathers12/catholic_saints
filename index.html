@@ -11,59 +11,73 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --gold: #f3d38a; --gold-2: #e7b453; --text: #f4efe6; --muted: #cdbf9f;
+    --gold: #f3d38a; --gold-2: #e7b453; --text: #f4efe6; --muted: #d6cbe0;
     --glass: rgba(255,255,255,.06); --line: rgba(243,211,138,.25);
   }
   * { box-sizing: border-box; margin: 0; }
   html, body { min-height: 100%; }
   body {
     font-family: Inter, system-ui, sans-serif; color: var(--text);
-    background: #1a1206;
+    background: #141633;
     display: grid; place-items: center; padding: 32px 16px; overflow-x: hidden;
   }
   canvas, .bg, .bg > * { position: fixed; pointer-events: none; }
   canvas { inset: 0; z-index: 0; }
-  .bg { inset: 0; z-index: 0; overflow: hidden; }
+  .bg { inset: 0; z-index: 0; overflow: hidden; animation: dawn 3.5s ease-out both; }
+  /* pri príchode sa nebo rozsvieti z tmy ako svitanie, potom sa zo svetla vynorí obsah */
+  @keyframes dawn { from { filter: brightness(.05) blur(6px); } }
 
-  /* nebo: G. Doré, Nebeská ruža (Raj, spev 31) – rytina zafarbená do zlata, pomaly sa blíži k svetlu */
+  /* nebo: G. Doré, Nebeská ruža (Raj, spev 31) – rytina, ktorú zafarbí .tint; pomaly sa blíži k svetlu */
   .heaven {
     inset: -4%; background: url("https://commons.wikimedia.org/wiki/Special:FilePath/Paradiso_Canto_31.jpg?width=1600") center 28% / cover no-repeat;
-    filter: grayscale(1) contrast(1.25) brightness(.85);
+    filter: grayscale(1) contrast(1.15) brightness(1.05);
     animation: ascend 60s ease-in-out infinite alternate;
     transform-origin: 50% 44%;
   }
-  /* zlaté zafarbenie: biele svetlo rytiny -> zlato, tiene -> hlboký jantár */
-  .tint { inset: 0; background: radial-gradient(ellipse at 50% 44%, #f6d58c, #b9832f 45%, #4a2a0c 100%); mix-blend-mode: multiply; }
-  @keyframes ascend { to { scale: 1.18; } }
-
-  /* Božie svetlo: lúče zo stredu nebeskej ruže, ktoré pulzujú a pomaly sa otáčajú */
-  .rays {
-    left: 50%; top: 44%; width: 220vmax; height: 220vmax; translate: -50% -50%;
-    background: repeating-conic-gradient(rgba(255,236,180,.10) 0 3deg, transparent 3deg 12deg);
-    mask: radial-gradient(circle, #000 0, transparent 45%);
-    mix-blend-mode: screen; animation: spin 200s linear infinite, breathe 7s ease-in-out infinite;
+  /* svitanie neba: v strede biele svetlo -> zlato -> ružové zore -> hlboká nebeská modrá na okrajoch */
+  .tint {
+    inset: 0; mix-blend-mode: multiply;
+    background: radial-gradient(ellipse 75% 65% at 50% 44%, #fffaf0 0%, #ffe1a0 18%, #f0b060 36%, #c77a78 56%, #4a3f8f 78%, #141633 100%);
   }
+  @keyframes ascend { to { scale: 1.15; } }
+
+  /* Božie svetlo: jadro, ktoré pokojne dýcha, a lúče, čo sa z neho rozlievajú */
   .light {
-    left: 50%; top: 44%; width: 90vmax; height: 90vmax; translate: -50% -50%; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,244,210,.35), rgba(243,211,138,.12) 30%, transparent 65%);
-    mix-blend-mode: screen; animation: breathe 7s ease-in-out infinite;
+    left: 50%; top: 44%; width: 110vmax; height: 110vmax; translate: -50% -50%; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,253,245,.95) 0, rgba(255,240,200,.6) 6%, rgba(255,215,140,.25) 18%, transparent 45%);
+    mix-blend-mode: screen; animation: heartbeat 8s ease-in-out infinite;
+  }
+  .rays {
+    left: 50%; top: 44%; width: 240vmax; height: 240vmax; translate: -50% -50%;
+    background: repeating-conic-gradient(rgba(255,240,200,.16) 0 2deg, transparent 2deg 9deg);
+    mask: radial-gradient(circle, #000 0, rgba(0,0,0,.5) 15%, transparent 42%);
+    mix-blend-mode: screen; animation: spin 240s linear infinite, heartbeat 8s ease-in-out infinite;
+  }
+  /* jemné lúče zhora, ako svetlo z okna katedrály */
+  .beams {
+    inset: 0; mix-blend-mode: screen; opacity: .5;
+    background: repeating-linear-gradient(100deg, transparent 0 6vw, rgba(255,235,190,.07) 6vw 9vw, transparent 9vw 15vw);
+    mask: linear-gradient(#000, transparent 75%);
+    animation: sway 20s ease-in-out infinite alternate;
   }
   @keyframes spin { to { rotate: 360deg; } }
-  @keyframes breathe { 50% { opacity: .55; } }
+  @keyframes heartbeat { 0%, 100% { opacity: .75; scale: 1; } 50% { opacity: 1; scale: 1.06; } }
+  @keyframes sway { to { translate: 4vw 0; opacity: .8; } }
 
-  /* stmavenie okrajov a spodku, aby text vždy vynikol */
-  .vignette { inset: 0; background: radial-gradient(ellipse at 50% 44%, transparent 30%, rgba(15,8,2,.8) 85%), linear-gradient(transparent 55%, rgba(15,8,2,.6)); }
+  /* jemné stmavenie spodku, aby text vždy vynikol */
+  .vignette { inset: 0; background: radial-gradient(ellipse at 50% 44%, transparent 45%, rgba(10,10,35,.55) 100%), linear-gradient(transparent 60%, rgba(10,10,35,.45)); }
 
-  main { position: relative; z-index: 1; width: min(680px, 100%); text-align: center; }
+  main { position: relative; z-index: 1; width: min(680px, 100%); text-align: center; animation: rise 1.6s 1.6s both; }
+  @keyframes rise { from { opacity: 0; translate: 0 24px; } }
   .date { font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); text-shadow: 0 1px 12px #000, 0 0 2px #000; }
   .badge {
     display: inline-block; margin: 12px 0 28px; padding: 6px 14px; border-radius: 999px;
-    border: 1px solid var(--line); color: var(--gold); font-size: .78rem; letter-spacing: .08em; background: rgba(28,17,6,.6); backdrop-filter: blur(6px);
+    border: 1px solid var(--line); color: var(--gold); font-size: .78rem; letter-spacing: .08em; background: rgba(20,16,42,.6); backdrop-filter: blur(6px);
   }
 
   .card {
     position: relative; padding: 36px 28px; border-radius: 28px;
-    background: rgba(28,17,6,.42); border: 1px solid rgba(255,255,255,.1);
+    background: rgba(20,16,42,.5); border: 1px solid rgba(255,255,255,.1);
     backdrop-filter: blur(8px) saturate(1.2); -webkit-backdrop-filter: blur(8px) saturate(1.2);
     box-shadow: 0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
   }
@@ -81,7 +95,7 @@
   .frame img.loaded { opacity: 1; }
   .frame .sym {
     position: absolute; right: -14px; bottom: -14px; width: 42px; height: 42px; border-radius: 50%;
-    display: grid; place-items: center; font-size: 22px; background: #2a1c08; border: 1px solid var(--line);
+    display: grid; place-items: center; font-size: 22px; background: #1e1a3a; border: 1px solid var(--line);
   }
   @keyframes pop { from { scale: .8; opacity: 0; } }
   @keyframes glow {
@@ -109,7 +123,7 @@
   .source { color: var(--muted); font-size: .82rem; }
 
   .divider { width: 60px; height: 1px; margin: 28px auto; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .story { color: #efe3cb; line-height: 1.7; font-size: 1rem; max-width: 52ch; margin: 0 auto; }
+  .story { color: #f1ebe0; line-height: 1.7; font-size: 1rem; max-width: 52ch; margin: 0 auto; }
 
   .fade { opacity: 0; translate: 0 14px; animation: fadeUp .8s forwards; }
   @keyframes fadeUp { to { opacity: 1; translate: 0 0; } }
@@ -129,7 +143,7 @@
 </head>
 <body>
 <div class="bg" aria-hidden="true">
-  <div class="heaven"></div><div class="tint"></div><div class="light"></div><div class="rays"></div>
+  <div class="heaven"></div><div class="tint"></div><div class="beams"></div><div class="light"></div><div class="rays"></div>
   <div class="vignette"></div>
 </div>
 <canvas id="sky"></canvas>
@@ -164,7 +178,9 @@
 
   const esc = t => t.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
+  let intro = 2.2; // pri prvom načítaní počkaj, kým sa rozsvieti nebo
   function render() {
+    const t0 = intro; intro = 0;
     const d = new Date(); d.setDate(d.getDate() + offset);
     const [s, isFeast] = pick(d);
     const [m, day] = s.feast.split("-").map(Number);
@@ -173,16 +189,16 @@
     $("badge").textContent = isFeast ? "✦ Dnes slávime sviatok ✦" : `Svätec dňa · sviatok ${day}. ${m}.`;
     $("today").hidden = offset === 0;
 
-    const words = s.quote.split(" ").map((w, i) => `<span class="w" style="animation-delay:${.6 + i * .08}s">${esc(w)}</span>`).join(" ");
-    const after = .6 + s.quote.split(" ").length * .08 + .3;
+    const words = s.quote.split(" ").map((w, i) => `<span class="w" style="animation-delay:${t0 + .6 + i * .08}s">${esc(w)}</span>`).join(" ");
+    const after = t0 + .6 + s.quote.split(" ").length * .08 + .3;
     const file = encodeURIComponent(s.img);
     const src = `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=500`;
     $("card").innerHTML = `
       <div class="portrait">
         <div class="frame"><img src="${src}" alt="${esc(s.name)}"><span class="sym">${s.symbol}</span></div>
       </div>
-      <h1 class="fade" style="animation-delay:.1s">${esc(s.name)}</h1>
-      <div class="meta fade" style="animation-delay:.3s">${esc(s.title)} · ${esc(s.years)}</div>
+      <h1 class="fade" style="animation-delay:${t0 + .1}s">${esc(s.name)}</h1>
+      <div class="meta fade" style="animation-delay:${t0 + .3}s">${esc(s.title)} · ${esc(s.years)}</div>
       <blockquote>${words}</blockquote>
       <div class="source fade" style="animation-delay:${after}s">— ${esc(s.source)}</div>
       <div class="divider fade" style="animation-delay:${after + .2}s"></div>
@@ -202,22 +218,25 @@
   addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 60) go(dx > 0 ? -1 : 1); x0 = null; });
   render();
 
-  // zlaté svetielka stúpajúce k nebu
+  // svetielka (duše) pomaly krúžia k Božiemu svetlu v strede a v ňom sa rozplynú
   const c = $("sky"), ctx = c.getContext("2d");
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let W, H, motes = [];
-  const resize = () => { W = c.width = innerWidth * devicePixelRatio; H = c.height = innerHeight * devicePixelRatio; };
-  const mote = (y = Math.random() * H) => ({ x: Math.random() * W, y, r: (Math.random() * 1.8 + .4) * devicePixelRatio, v: Math.random() * .4 + .15, p: Math.random() * 6.28 });
+  const dpr = devicePixelRatio;
+  let W, H, R, motes = [];
+  const resize = () => { W = c.width = innerWidth * dpr; H = c.height = innerHeight * dpr; R = Math.hypot(W, H) * .6; };
+  const mote = (r = R * (.25 + Math.random() * .75)) => ({ a: Math.random() * 6.28, r, s: (Math.random() * 1.6 + .5) * dpr, v: Math.random() * .5 + .25, p: Math.random() * 6.28 });
   resize(); addEventListener("resize", resize);
-  for (let i = 0; i < 70; i++) motes.push(mote());
+  for (let i = 0; i < 110; i++) motes.push(mote());
   (function tick() {
     ctx.clearRect(0, 0, W, H);
+    const cx = W / 2, cy = H * .44;
     for (const m of motes) {
-      m.y -= m.v * devicePixelRatio; m.p += .02;
-      if (m.y < -10) Object.assign(m, mote(H + 10));
-      const a = .35 + Math.sin(m.p) * .3;
-      ctx.beginPath(); ctx.arc(m.x + Math.sin(m.p) * 6, m.y, m.r, 0, 6.28);
-      ctx.fillStyle = `rgba(243,211,138,${a})`; ctx.shadowColor = "#f3d38a"; ctx.shadowBlur = 12; ctx.fill();
+      m.r -= m.v * dpr * (.4 + m.r / R); m.a += .0009 * (R / (m.r + 60)); m.p += .03;
+      if (m.r < 12 * dpr) Object.assign(m, mote(R));
+      const near = Math.min(1, m.r / (R * .12)), far = Math.min(1, (R - m.r) / (R * .15));
+      const alpha = (.45 + Math.sin(m.p) * .3) * near * far;
+      ctx.beginPath(); ctx.arc(cx + Math.cos(m.a) * m.r, cy + Math.sin(m.a) * m.r * .9, m.s, 0, 6.28);
+      ctx.fillStyle = `rgba(255,236,190,${alpha})`; ctx.shadowColor = "#ffe7a8"; ctx.shadowBlur = 14; ctx.fill();
     }
     if (!still) requestAnimationFrame(tick);
   })();
