@@ -3,11 +3,16 @@
 Statická stránka bez buildu: `index.html` (dizajn + logika) a `saints.js` (dáta).
 
 ## Pravidlá pre dáta v saints.js
+- Presne jeden záznam na každý deň roka (366 vrátane 29. 2.), zoradené podľa `feast` (`"MM-DD"`).
+- Poradie výberu na deň: slávenie podľa kalendára platného na Slovensku (Rímsky misál 2021 – Všeobecný
+  kalendár + osobitný kalendár diecéz na Slovensku). Ak v ten deň nie je povinné slávenie, svätý z Rímskeho
+  martyrológia na ten deň. Nevymýšľaj ani neposúvaj dátumy.
 - Texty po slovensky, so správnou diakritikou.
-- `feast` = deň sviatku `"MM-DD"` podľa rímskeho kalendára platného na Slovensku; žiadne duplicity.
-- `quote` musí byť skutočný, overiteľný citát svätého (alebo z Písma pri apoštoloch) a `source` uvádza dielo.
-  Nevymýšľaj citáty. Ak je autorstvo len tradičné, napíš to do `source` („tradične pripisovaná“).
+- `quote` musí byť skutočný, overiteľný výrok svätého, alebo verš z Písma súvisiaci s jeho životom,
+  a `source` uvádza dielo alebo presný odkaz (napr. „Mt 5, 8“). Nevymýšľaj citáty; keď si nie si istý, použi Písmo.
 - `story` = 2–3 vety: konkrétny fakt zo života + povzbudivé ponaučenie pre dnešok.
+- `years` = roky života („1567 – 1622“, „† 304“, „1. storočie“), pri sviatkoch Pána a Panny Márie prázdne.
 - `symbol` = jedno emoji.
-- `img` = názov súboru na Wikimedia Commons (bez `File:`), len voľne použiteľný obrázok.
-  Nájdeš ho cez `page_image_free` z Wikipedia API (`prop=pageprops`) alebo Wikidata vlastnosť P18.- Zoznam udržuj zoradený podľa `feast`.
+- `img` = názov súboru na Wikimedia Commons (bez `File:`), len voľne použiteľný obrázok; na stránke sa naň
+  odkazuje cez URL, nič sa nesťahuje. Nájdeš ho cez `page_image_free` z Wikipedia API (`prop=pageprops`)
+  alebo Wikidata vlastnosť P18. Súbor musí existovať priamo na Commons.

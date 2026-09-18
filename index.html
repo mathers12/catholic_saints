@@ -153,7 +153,7 @@
   const pad = n => String(n).padStart(2, "0");
   const dayOfYear = d => Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(d.getFullYear(), 0, 0)) / 864e5);
 
-  // ak má niekto v ten deň sviatok, ukáž jeho; inak deterministicky rotuj podľa dňa v roku
+  // každý deň má v saints.js svojho svätého podľa kalendára; rotácia je len poistka, keby dátum chýbal
   function pick(d) {
     const key = `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     const feast = S.find(s => s.feast === key);
@@ -170,7 +170,7 @@
     const [m, day] = s.feast.split("-").map(Number);
 
     $("date").textContent = d.toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    $("badge").textContent = isFeast ? "✦ Dnes slávime sviatok ✦" : `Svätec dňa · sviatok ${day}. ${m}.`;
+    $("badge").textContent = isFeast ? "✦ Dnes si Cirkev pripomína ✦" : `Svätec dňa · sviatok ${day}. ${m}.`;
     $("today").hidden = offset === 0;
 
     const words = s.quote.split(" ").map((w, i) => `<span class="w" style="animation-delay:${t0 + .6 + i * .08}s">${esc(w)}</span>`).join(" ");
@@ -182,7 +182,7 @@
       </div>
       <div class="text">
       <h1 class="fade" style="animation-delay:${t0 + .1}s">${esc(s.name)}</h1>
-      <div class="meta fade" style="animation-delay:${t0 + .3}s">${esc(s.title)} · ${esc(s.years)}</div>
+      <div class="meta fade" style="animation-delay:${t0 + .3}s">${[s.title, s.years].filter(Boolean).map(esc).join(" · ")}</div>
       <blockquote>${words}</blockquote>
       <div class="source fade" style="animation-delay:${after}s">— ${esc(s.source)}</div>
       <div class="divider fade" style="animation-delay:${after + .2}s"></div>

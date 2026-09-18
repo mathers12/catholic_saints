@@ -1,5 +1,5 @@
-# Každý pondelok Claude pridá jedného nového svätého a otvorí PR na schválenie.
-name: Weekly saint PR
+# Každý pondelok Claude skontroluje svätých na nadchádzajúci mesiac a opravy navrhne cez PR.
+name: Weekly saints review
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  add-saint:
+  review-saints:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,11 +21,12 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            Riaď sa CLAUDE.md. Pridaj do saints.js presne jedného nového katolíckeho svätého,
-            ktorého sviatok (feast) ešte v súbore nie je. Uprednostni dátumy, ktoré sú najbližšie
-            k dnešku v budúcnosti. Potom:
-              git checkout -b saint/$(date +%F)
-              git add saints.js && git commit -m "Pridaný svätý: <meno>"
+            Riaď sa CLAUDE.md. V saints.js skontroluj záznamy na najbližších 30 dní od dnešného dátumu:
+            správny dátum podľa kalendára na Slovensku, fakty v `story`, pravosť citátu a jeho zdroj,
+            roky a slovenskú gramatiku. Oprav len to, čo je naozaj chybné. Ak nič nenájdeš, nič neotváraj.
+            Ak si niečo opravil:
+              git checkout -b review/$(date +%F)
+              git add saints.js && git commit -m "Kontrola svätých: <čo si opravil>"
               git push -u origin HEAD
               gh pr create --fill --base main
           claude_args: |
