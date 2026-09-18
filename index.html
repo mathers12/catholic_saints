@@ -20,14 +20,15 @@
     padding: 32px 16px 40px; overflow-x: hidden;
   }
 
-  /* scéna: skutočná fotografia kríža na svetlej oblohe (CC0, Unsplash), kríž vždy v strede obrazovky */
+  /* scéna: skutočná fotografia kríža nad údolím pri svitaní (CC0, Unsplash) */
   .scene, .scene > * { position: fixed; pointer-events: none; }
   .scene { inset: 0; z-index: 0; overflow: hidden; animation: sunrise 4s ease-out both; }
   @keyframes sunrise { from { filter: brightness(.08) saturate(.4); } 40% { filter: brightness(.55) saturate(.8); } }
-  /* fotka cez celé pozadie; na mobile posunutá tak, aby bol kríž (34 % šírky fotky) v strede */
-  .photo { inset: 0; background: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_and_sunset_(Unsplash).jpg?width=1600") 8% 30% / cover no-repeat; }
-  .photo {
-    transform-origin: 34% 30%; animation: breath 50s ease-in-out infinite alternate;
+  /* fotka na šírku cez celé pozadie. Kríž je na 62 % šírky a 5–90 % výšky fotky.
+     Široká obrazovka: fotka vyplní šírku, zarovnaná hore → celý kríž nad kartou.
+     Úzka obrazovka: fotka vyplní výšku, posun 70 % dá kríž do stredu. */
+  .photo { inset: 0; background: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=2400") 70% 0% / cover no-repeat;
+    transform-origin: 62% 26%; animation: breath 50s ease-in-out infinite alternate;
   }
   @keyframes breath { to { scale: 1.06; } }
   /* zosvetlenie – nádych svitania */
@@ -35,9 +36,10 @@
   /* Božie svetlo, ktoré pokojne dýcha za krížom */
   .glow {
     inset: 0; mix-blend-mode: screen;
-    background: radial-gradient(circle at 50% 30%, rgba(255,247,225,.55), rgba(255,230,180,.18) 22%, transparent 45%);
+    background: radial-gradient(circle at var(--cx, 50%) 26%, rgba(255,247,225,.55), rgba(255,230,180,.18) 22%, transparent 45%);
     animation: pulse 8s ease-in-out infinite;
   }
+  @media (min-aspect-ratio: 3/2) { .glow { --cx: 62%; } }
   @keyframes pulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
   canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
