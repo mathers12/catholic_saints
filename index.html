@@ -14,10 +14,9 @@
     --ink: #2c2319; --muted: #6e5c46; --gold: #a8761f; --gold-2: #d4a24c; --line: rgba(168,118,31,.3);
   }
   * { box-sizing: border-box; margin: 0; }
-  html, body { min-height: 100%; }
   body {
     font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #f6ead6;
-    padding: 32px 16px 40px; overflow-x: hidden;
+    padding: 16px; overflow-x: hidden;
   }
 
   /* scéna: skutočná fotografia kríža nad údolím pri svitaní (CC0, Unsplash) */
@@ -43,33 +42,37 @@
   @keyframes pulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
   canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-  main { position: relative; z-index: 1; width: min(680px, 100%); margin: 0 auto; text-align: center; animation: rise 1.6s 2s both; }
-  @keyframes rise { from { opacity: 0; translate: 0 24px; } }
-  .date { font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink); text-shadow: 0 0 12px #fff, 0 0 4px #fff; }
+  /* všetko na jednu obrazovku: dátum hore, kríž voľne v strede, karta s navigáciou dole */
+  main {
+    position: relative; z-index: 1; width: min(920px, 100%); margin: 0 auto; text-align: center;
+    min-height: calc(100vh - 32px); min-height: calc(100dvh - 32px); display: flex; flex-direction: column;
+    animation: rise 1.6s 2s both;
+  }
+  @keyframes rise { from { opacity: 0; translate: 0 -16px; } }
+  .date { font-size: .75rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink); text-shadow: 0 0 12px #fff, 0 0 4px #fff; }
   .badge {
-    display: inline-block; margin-top: 12px; padding: 6px 14px; border-radius: 999px;
-    border: 1px solid var(--line); color: var(--gold); font-size: .78rem; letter-spacing: .08em;
+    align-self: center; margin-top: 8px; padding: 5px 14px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--gold); font-size: .75rem; letter-spacing: .08em;
     background: rgba(255,255,255,.6); backdrop-filter: blur(6px);
   }
 
-  /* karta začína pod krížom, aby ho nezakryla; pri skrolovaní po ňom prejde */
   .card {
-    position: relative; margin-top: max(24px, calc(58vh - 110px)); padding: 36px 28px; border-radius: 28px;
-    background: rgba(255,251,243,.8); border: 1px solid rgba(255,255,255,.8);
+    margin-top: auto; padding: clamp(16px, 2.6vh, 28px) clamp(16px, 3vw, 32px); border-radius: 24px;
+    background: rgba(255,251,243,.82); border: 1px solid rgba(255,255,255,.8);
     backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
     box-shadow: 0 30px 80px rgba(90,65,30,.25);
   }
-  .portrait { min-height: 240px; display: grid; place-items: center; margin-bottom: 24px; font-size: 64px; }
+  .portrait { display: grid; place-items: center; margin-bottom: clamp(8px, 1.6vh, 16px); font-size: 48px; }
   .frame {
-    position: relative; padding: 5px; border-radius: 14px;
+    position: relative; padding: 4px; border-radius: 12px;
     background: linear-gradient(135deg, #f3d38a, #8a5a12 45%, var(--gold-2) 70%, #fff3cf);
     animation: glow 4s ease-in-out infinite, pop 1s cubic-bezier(.2,1.4,.4,1) both;
   }
-  .frame img { display: block; max-height: 240px; max-width: min(260px, 70vw); border-radius: 10px; opacity: 0; transition: opacity 1s; }
+  .frame img { display: block; height: clamp(90px, 17vh, 230px); width: auto; max-width: 60vw; border-radius: 9px; opacity: 0; transition: opacity 1s; }
   .frame img.loaded { opacity: 1; }
   .frame .sym {
-    position: absolute; right: -14px; bottom: -14px; width: 42px; height: 42px; border-radius: 50%;
-    display: grid; place-items: center; font-size: 22px; background: #fffaf0; border: 1px solid var(--line);
+    position: absolute; right: -12px; bottom: -12px; width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 18px; background: #fffaf0; border: 1px solid var(--line);
   }
   @keyframes pop { from { scale: .8; opacity: 0; } }
   @keyframes glow {
@@ -78,38 +81,46 @@
   }
 
   h1 {
-    font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1;
+    font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(1.5rem, 3.8vh, 2.6rem); line-height: 1.1;
     background: linear-gradient(90deg, #7a4e0e, #c8912e, #7a4e0e);
     background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
     animation: shimmer 6s linear infinite;
   }
   @keyframes shimmer { to { background-position: 200% center; } }
-  .meta { margin-top: 8px; color: var(--muted); font-size: .9rem; }
+  .meta { margin-top: 4px; color: var(--muted); font-size: clamp(.75rem, 1.6vh, .9rem); }
 
   blockquote {
-    margin: 32px 0 8px; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500;
-    font-size: clamp(1.4rem, 4.2vw, 1.9rem); line-height: 1.35;
+    margin: clamp(8px, 1.8vh, 18px) 0 4px; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500;
+    font-size: clamp(1.05rem, 2.5vh, 1.65rem); line-height: 1.3;
   }
   blockquote::before, blockquote::after { color: var(--gold); }
   blockquote::before { content: "„"; } blockquote::after { content: "“"; }
-  .w { display: inline-block; opacity: 0; filter: blur(6px); translate: 0 8px; animation: word .7s forwards; }
+  .w { display: inline-block; opacity: 0; filter: blur(6px); translate: 0 -8px; animation: word .7s forwards; }
   @keyframes word { to { opacity: 1; filter: blur(0); translate: 0 0; } }
-  .source { color: var(--muted); font-size: .82rem; }
+  .source { color: var(--muted); font-size: clamp(.7rem, 1.5vh, .82rem); }
 
-  .divider { width: 60px; height: 1px; margin: 28px auto; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .story { color: #3d3226; line-height: 1.7; font-size: 1rem; max-width: 52ch; margin: 0 auto; }
+  .divider { width: 60px; height: 1px; margin: clamp(8px, 1.6vh, 16px) auto; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .story { color: #3d3226; line-height: 1.5; font-size: clamp(.8rem, 1.75vh, 1rem); max-width: 60ch; margin: 0 auto; }
 
-  .fade { opacity: 0; translate: 0 14px; animation: fadeUp .8s forwards; }
+  /* široká obrazovka: portrét vľavo, text vpravo – karta je nízka a kríž nad ňou zostane celý */
+  @media (min-width: 760px) {
+    .card { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; text-align: left; }
+    .portrait { margin: 0; }
+    .frame img { height: clamp(140px, 26vh, 260px); max-width: 240px; }
+    .divider { margin-left: 0; background: linear-gradient(90deg, var(--gold), transparent); }
+    .story { margin: 0; }
+  }
+
+  .fade { opacity: 0; translate: 0 -10px; animation: fadeUp .8s forwards; }
   @keyframes fadeUp { to { opacity: 1; translate: 0 0; } }
 
-  nav { display: flex; gap: 12px; justify-content: center; margin-top: 28px; }
+  nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 1.6vh, 16px); }
   button {
-    font: inherit; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9);
-    border-radius: 999px; padding: 10px 18px; cursor: pointer; transition: .25s; backdrop-filter: blur(6px);
+    font: inherit; font-size: .9rem; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9);
+    border-radius: 999px; padding: 8px 16px; cursor: pointer; transition: .25s; backdrop-filter: blur(6px);
     box-shadow: 0 4px 14px rgba(60,45,20,.15);
   }
   button:hover, button:focus-visible { border-color: var(--gold-2); color: var(--gold); box-shadow: 0 0 20px rgba(212,162,76,.45); outline: none; }
-  footer { margin-top: 28px; font-size: .8rem; color: #fff; text-shadow: 0 1px 6px rgba(40,50,20,.6); }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
@@ -131,7 +142,6 @@
     <button id="today">Dnes</button>
     <button id="next" aria-label="Nasledujúci deň">Zajtra ›</button>
   </nav>
-  <footer>Svätí sú ľudia, cez ktorých presvitá svetlo.</footer>
 </main>
 
 <script src="saints.js"></script>
@@ -170,12 +180,14 @@
       <div class="portrait">
         <div class="frame"><img src="${src}" alt="${esc(s.name)}"><span class="sym">${s.symbol}</span></div>
       </div>
+      <div class="text">
       <h1 class="fade" style="animation-delay:${t0 + .1}s">${esc(s.name)}</h1>
       <div class="meta fade" style="animation-delay:${t0 + .3}s">${esc(s.title)} · ${esc(s.years)}</div>
       <blockquote>${words}</blockquote>
       <div class="source fade" style="animation-delay:${after}s">— ${esc(s.source)}</div>
       <div class="divider fade" style="animation-delay:${after + .2}s"></div>
-      <p class="story fade" style="animation-delay:${after + .4}s">${esc(s.story)}</p>`;
+      <p class="story fade" style="animation-delay:${after + .4}s">${esc(s.story)}</p>
+      </div>`;
     const img = $("card").querySelector(".frame img");
     img.onload = () => img.classList.add("loaded");
     img.onerror = () => img.parentNode.replaceWith(s.symbol);
