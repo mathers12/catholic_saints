@@ -10,7 +10,4 @@ Statická stránka bez buildu: `index.html` (dizajn + logika) a `saints.js` (dá
 - `story` = 2–3 vety: konkrétny fakt zo života + povzbudivé ponaučenie pre dnešok.
 - `symbol` = jedno emoji.
 - `img` = názov súboru na Wikimedia Commons (bez `File:`), len voľne použiteľný obrázok.
-  Nájdeš ho cez `page_image_free` z Wikipedia API (`prop=pageprops`) alebo Wikidata vlastnosť P18.
-- `focus` = `[x, y, priblíženie]`: stred tváre ako podiel šírky/výšky obrázka (0–1) a zoom (1 = celý výrez,
-  2 = 2× bližšie pre celopostavové obrazy). Tvár musí byť v kruhu celá, v strede.
-- Zoznam udržuj zoradený podľa `feast`.
+  Nájdeš ho cez `page_image_free` z Wikipedia API (`prop=pageprops`) alebo Wikidata vlastnosť P18.- Zoznam udržuj zoradený podľa `feast`.

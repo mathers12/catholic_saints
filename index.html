@@ -60,35 +60,31 @@
   }
 
   .card {
-    position: relative; padding: 112px 28px 36px; border-radius: 28px;
+    position: relative; padding: 36px 28px; border-radius: 28px;
     background: rgba(12,10,35,.45); border: 1px solid rgba(255,255,255,.1);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
-    margin-top: 96px;
   }
-  .halo {
-    position: absolute; left: 50%; top: 0; translate: -50% -50%;
-    width: 176px; height: 176px; border-radius: 50%; display: grid; place-items: center;
-    font-size: 64px; background: #2a2150;
+  /* celý obrázok bez orezania, zmenšený a vycentrovaný v zlatom ráme */
+  .portrait { min-height: 240px; display: grid; place-items: center; margin-bottom: 24px; font-size: 64px; }
+  .frame {
+    position: relative; padding: 5px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--gold), #7a5a1c 45%, var(--gold-2) 70%, #fff3cf);
     animation: glow 4s ease-in-out infinite, pop 1s cubic-bezier(.2,1.4,.4,1) both;
   }
-  .frame { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }
-  .frame img { position: absolute; max-width: none; opacity: 0; scale: 1.08; transition: opacity 1s, scale 6s ease-out; }
-  .frame img.loaded { opacity: 1; scale: 1; }
-  .halo::before {
-    content: ""; position: absolute; inset: -7px; border-radius: 50%; z-index: 1;
-    background: conic-gradient(var(--gold), transparent 30%, var(--gold-2), transparent 70%, var(--gold));
-    mask: radial-gradient(circle, transparent 87px, #000 88px);
-    animation: spin 8s linear infinite;
+  .frame img {
+    display: block; max-height: 240px; max-width: min(260px, 70vw); border-radius: 10px;
+    opacity: 0; transition: opacity 1s;
   }
-  .halo .sym {
-    position: absolute; right: 2px; bottom: 6px; z-index: 2; width: 42px; height: 42px; border-radius: 50%;
+  .frame img.loaded { opacity: 1; }
+  .frame .sym {
+    position: absolute; right: -14px; bottom: -14px; width: 42px; height: 42px; border-radius: 50%;
     display: grid; place-items: center; font-size: 22px; background: #1b1446; border: 1px solid var(--line);
   }
-  @keyframes pop { from { scale: .6; opacity: 0; } }
+  @keyframes pop { from { scale: .8; opacity: 0; } }
   @keyframes glow {
-    0%,100% { box-shadow: 0 0 40px 6px rgba(243,211,138,.25); }
-    50%     { box-shadow: 0 0 70px 16px rgba(243,211,138,.45); }
+    0%,100% { box-shadow: 0 0 30px 4px rgba(243,211,138,.2); }
+    50%     { box-shadow: 0 0 55px 12px rgba(243,211,138,.4); }
   }
 
   h1 {
@@ -183,9 +179,8 @@
     const src = `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=500`;
     setAmbient(`https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=120`);
     $("card").innerHTML = `
-      <div class="halo">
-        <div class="frame"><img src="${src}" alt="${esc(s.name)}"></div>
-        <span class="sym">${s.symbol}</span>
+      <div class="portrait">
+        <div class="frame"><img src="${src}" alt="${esc(s.name)}"><span class="sym">${s.symbol}</span></div>
       </div>
       <h1 class="fade" style="animation-delay:.1s">${esc(s.name)}</h1>
       <div class="meta fade" style="animation-delay:.3s">${esc(s.title)} · ${esc(s.years)}</div>
@@ -194,16 +189,8 @@
       <div class="divider fade" style="animation-delay:${after + .2}s"></div>
       <p class="story fade" style="animation-delay:${after + .4}s">${esc(s.story)}</p>`;
     const img = $("card").querySelector(".frame img");
-    img.onload = () => { fit(img, s.focus || [.5, .3, 1.2]); img.classList.add("loaded"); };
+    img.onload = () => img.classList.add("loaded");
     img.onerror = () => img.parentNode.replaceWith(s.symbol);
-  }
-
-  // tvár (focus = [x, y, priblíženie]) do stredu kruhu, bez prázdnych okrajov
-  function fit(img, [fx, fy, z]) {
-    const B = img.parentNode.offsetWidth, w = img.naturalWidth, h = img.naturalHeight;
-    const k = Math.max(B / w, B / h) * z, W = w * k, H = h * k;
-    const clamp = (v, size) => Math.min(0, Math.max(B - size, v));
-    Object.assign(img.style, { width: W + "px", height: H + "px", left: clamp(B / 2 - fx * W, W) + "px", top: clamp(B / 2 - fy * H, H) + "px" });
   }
 
   // dve vrstvy pozadia sa prelínajú, aby zmena svätého bola plynulá
