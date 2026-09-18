@@ -72,11 +72,9 @@
     font-size: 64px; background: #2a2150;
     animation: glow 4s ease-in-out infinite, pop 1s cubic-bezier(.2,1.4,.4,1) both;
   }
-  .halo img {
-    position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 20%;
-    opacity: 0; scale: 1.08; transition: opacity 1s, scale 6s ease-out;
-  }
-  .halo img.loaded { opacity: 1; scale: 1; }
+  .frame { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }
+  .frame img { position: absolute; max-width: none; opacity: 0; scale: 1.08; transition: opacity 1s, scale 6s ease-out; }
+  .frame img.loaded { opacity: 1; scale: 1; }
   .halo::before {
     content: ""; position: absolute; inset: -7px; border-radius: 50%; z-index: 1;
     background: conic-gradient(var(--gold), transparent 30%, var(--gold-2), transparent 70%, var(--gold));
@@ -88,8 +86,6 @@
     display: grid; place-items: center; font-size: 22px; background: #1b1446; border: 1px solid var(--line);
   }
   @keyframes pop { from { scale: .6; opacity: 0; } }
-  .credit { display: block; margin-top: 24px; font-size: .68rem; color: var(--muted); opacity: .6; }
-  .credit:hover { opacity: 1; }
   @keyframes glow {
     0%,100% { box-shadow: 0 0 40px 6px rgba(243,211,138,.25); }
     50%     { box-shadow: 0 0 70px 16px rgba(243,211,138,.45); }
@@ -188,7 +184,7 @@
     setAmbient(`https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=120`);
     $("card").innerHTML = `
       <div class="halo">
-        <img src="${src}" alt="${esc(s.name)}" onload="this.classList.add('loaded')" onerror="this.replaceWith('${s.symbol}')">
+        <div class="frame"><img src="${src}" alt="${esc(s.name)}"></div>
         <span class="sym">${s.symbol}</span>
       </div>
       <h1 class="fade" style="animation-delay:.1s">${esc(s.name)}</h1>
@@ -196,8 +192,18 @@
       <blockquote>${words}</blockquote>
       <div class="source fade" style="animation-delay:${after}s">— ${esc(s.source)}</div>
       <div class="divider fade" style="animation-delay:${after + .2}s"></div>
-      <p class="story fade" style="animation-delay:${after + .4}s">${esc(s.story)}</p>
-      <a class="credit" href="https://commons.wikimedia.org/wiki/File:${file}" target="_blank" rel="noopener">Obrázok: Wikimedia Commons</a>`;
+      <p class="story fade" style="animation-delay:${after + .4}s">${esc(s.story)}</p>`;
+    const img = $("card").querySelector(".frame img");
+    img.onload = () => { fit(img, s.focus || [.5, .3, 1.2]); img.classList.add("loaded"); };
+    img.onerror = () => img.parentNode.replaceWith(s.symbol);
+  }
+
+  // tvár (focus = [x, y, priblíženie]) do stredu kruhu, bez prázdnych okrajov
+  function fit(img, [fx, fy, z]) {
+    const B = img.parentNode.offsetWidth, w = img.naturalWidth, h = img.naturalHeight;
+    const k = Math.max(B / w, B / h) * z, W = w * k, H = h * k;
+    const clamp = (v, size) => Math.min(0, Math.max(B - size, v));
+    Object.assign(img.style, { width: W + "px", height: H + "px", left: clamp(B / 2 - fx * W, W) + "px", top: clamp(B / 2 - fy * H, H) + "px" });
   }
 
   // dve vrstvy pozadia sa prelínajú, aby zmena svätého bola plynulá
