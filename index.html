@@ -42,7 +42,7 @@
   @keyframes pulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
   canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-  /* všetko na jednu obrazovku: dátum hore, kríž voľne v strede, karta s navigáciou dole */
+  /* všetko na jednu obrazovku: dátum hore, karta s navigáciou vycentrovaná vo zvyšnom priestore */
   main {
     position: relative; z-index: 1; width: min(920px, 100%); margin: 0 auto; text-align: center;
     min-height: calc(100vh - 32px); min-height: calc(100dvh - 32px); display: flex; flex-direction: column;
@@ -114,7 +114,7 @@
   .fade { opacity: 0; translate: 0 -10px; animation: fadeUp .8s forwards; }
   @keyframes fadeUp { to { opacity: 1; translate: 0 0; } }
 
-  nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 1.6vh, 16px); }
+  nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 1.6vh, 16px); margin-bottom: auto; }
   button {
     font: inherit; font-size: .9rem; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9);
     border-radius: 999px; padding: 8px 16px; cursor: pointer; transition: .25s; backdrop-filter: blur(6px);
