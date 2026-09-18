@@ -9,4 +9,6 @@ Statická stránka bez buildu: `index.html` (dizajn + logika) a `saints.js` (dá
   Nevymýšľaj citáty. Ak je autorstvo len tradičné, napíš to do `source` („tradične pripisovaná“).
 - `story` = 2–3 vety: konkrétny fakt zo života + povzbudivé ponaučenie pre dnešok.
 - `symbol` = jedno emoji.
+- `img` = názov súboru na Wikimedia Commons (bez `File:`), len voľne použiteľný obrázok.
+  Nájdeš ho cez `page_image_free` z Wikipedia API (`prop=pageprops`) alebo Wikidata vlastnosť P18.
 - Zoznam udržuj zoradený podľa `feast`.

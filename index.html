@@ -22,14 +22,35 @@
     background: radial-gradient(ellipse at top, var(--bg3), var(--bg2) 45%, var(--bg1) 100%) fixed;
     display: grid; place-items: center; padding: 32px 16px; overflow-x: hidden;
   }
-  canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-  /* pomaly sa otáčajúce lúče svetla za kartou */
-  .rays {
-    position: fixed; left: 50%; top: 30%; width: 160vmax; height: 160vmax; translate: -50% -50%;
-    background: repeating-conic-gradient(from 0deg, rgba(243,211,138,.05) 0 6deg, transparent 6deg 18deg);
-    mask: radial-gradient(circle, #000 0, transparent 60%); animation: spin 120s linear infinite; z-index: 0;
+  canvas, .bg, .bg > * { position: fixed; pointer-events: none; }
+  canvas { inset: 0; z-index: 0; }
+  .bg { inset: 0; z-index: 0; overflow: hidden; }
+
+  /* portrét svätého rozmazaný cez celú scénu – každý deň iná farebnosť */
+  .ambient {
+    inset: -10%; background: center / cover no-repeat; filter: blur(70px) saturate(1.4);
+    opacity: 0; transition: opacity 1.4s ease;
+  }
+  .ambient.on { opacity: .38; }
+
+  /* polárna žiara vo farbách vitráže */
+  .aurora { width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(90px); opacity: .45; mix-blend-mode: screen; }
+  .a1 { background: #7b3fe4; left: -15vmax; top: -20vmax; animation: drift1 26s ease-in-out infinite alternate; }
+  .a2 { background: #c2410c; right: -20vmax; top: 10vh;   animation: drift2 32s ease-in-out infinite alternate; }
+  .a3 { background: #1e6fd9; left: 20vw;    bottom: -30vmax; animation: drift1 38s ease-in-out infinite alternate-reverse; }
+  @keyframes drift1 { to { translate: 18vw 14vh; scale: 1.2; } }
+  @keyframes drift2 { to { translate: -22vw 18vh; scale: .85; } }
+
+  /* rozeta gotickej katedrály, ktorá sa pomaly otáča za kartou */
+  .rose {
+    left: 50%; top: 42%; width: min(1100px, 170vw); aspect-ratio: 1; translate: -50% -50%;
+    opacity: .16; animation: spin 180s linear infinite;
+    mask: radial-gradient(circle, #000 35%, transparent 70%);
   }
   @keyframes spin { to { rotate: 360deg; } }
+
+  /* jemná vineta, aby text vždy vynikol */
+  .vignette { inset: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(5,6,20,.75)); }
 
   main { position: relative; z-index: 1; width: min(680px, 100%); text-align: center; }
   .date { font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
@@ -39,24 +60,36 @@
   }
 
   .card {
-    position: relative; padding: 84px 28px 36px; border-radius: 28px;
-    background: var(--glass); border: 1px solid rgba(255,255,255,.1);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    position: relative; padding: 112px 28px 36px; border-radius: 28px;
+    background: rgba(12,10,35,.45); border: 1px solid rgba(255,255,255,.1);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
-    margin-top: 64px;
+    margin-top: 96px;
   }
   .halo {
     position: absolute; left: 50%; top: 0; translate: -50% -50%;
-    width: 128px; height: 128px; border-radius: 50%; display: grid; place-items: center;
-    font-size: 52px; background: radial-gradient(circle, #2a2150 55%, transparent 56%);
-    animation: glow 4s ease-in-out infinite;
+    width: 176px; height: 176px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 64px; background: #2a2150;
+    animation: glow 4s ease-in-out infinite, pop 1s cubic-bezier(.2,1.4,.4,1) both;
   }
+  .halo img {
+    position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 20%;
+    opacity: 0; scale: 1.08; transition: opacity 1s, scale 6s ease-out;
+  }
+  .halo img.loaded { opacity: 1; scale: 1; }
   .halo::before {
-    content: ""; position: absolute; inset: -6px; border-radius: 50%;
+    content: ""; position: absolute; inset: -7px; border-radius: 50%; z-index: 1;
     background: conic-gradient(var(--gold), transparent 30%, var(--gold-2), transparent 70%, var(--gold));
-    mask: radial-gradient(circle, transparent 60px, #000 61px);
+    mask: radial-gradient(circle, transparent 87px, #000 88px);
     animation: spin 8s linear infinite;
   }
+  .halo .sym {
+    position: absolute; right: 2px; bottom: 6px; z-index: 2; width: 42px; height: 42px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 22px; background: #1b1446; border: 1px solid var(--line);
+  }
+  @keyframes pop { from { scale: .6; opacity: 0; } }
+  .credit { display: block; margin-top: 24px; font-size: .68rem; color: var(--muted); opacity: .6; }
+  .credit:hover { opacity: 1; }
   @keyframes glow {
     0%,100% { box-shadow: 0 0 40px 6px rgba(243,211,138,.25); }
     50%     { box-shadow: 0 0 70px 16px rgba(243,211,138,.45); }
@@ -101,7 +134,12 @@
 </style>
 </head>
 <body>
-<div class="rays"></div>
+<div class="bg" aria-hidden="true">
+  <div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div>
+  <div class="ambient" id="ambA"></div><div class="ambient" id="ambB"></div>
+  <svg class="rose" id="rose" viewBox="-100 -100 200 200" fill="none" stroke="#f3d38a" stroke-width=".4"></svg>
+  <div class="vignette"></div>
+</div>
 <canvas id="sky"></canvas>
 
 <main>
@@ -145,15 +183,38 @@
 
     const words = s.quote.split(" ").map((w, i) => `<span class="w" style="animation-delay:${.6 + i * .08}s">${esc(w)}</span>`).join(" ");
     const after = .6 + s.quote.split(" ").length * .08 + .3;
+    const file = encodeURIComponent(s.img);
+    const src = `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=500`;
+    setAmbient(`https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=120`);
     $("card").innerHTML = `
-      <div class="halo">${s.symbol}</div>
+      <div class="halo">
+        <img src="${src}" alt="${esc(s.name)}" onload="this.classList.add('loaded')" onerror="this.replaceWith('${s.symbol}')">
+        <span class="sym">${s.symbol}</span>
+      </div>
       <h1 class="fade" style="animation-delay:.1s">${esc(s.name)}</h1>
       <div class="meta fade" style="animation-delay:.3s">${esc(s.title)} · ${esc(s.years)}</div>
       <blockquote>${words}</blockquote>
       <div class="source fade" style="animation-delay:${after}s">— ${esc(s.source)}</div>
       <div class="divider fade" style="animation-delay:${after + .2}s"></div>
-      <p class="story fade" style="animation-delay:${after + .4}s">${esc(s.story)}</p>`;
+      <p class="story fade" style="animation-delay:${after + .4}s">${esc(s.story)}</p>
+      <a class="credit" href="https://commons.wikimedia.org/wiki/File:${file}" target="_blank" rel="noopener">Obrázok: Wikimedia Commons</a>`;
   }
+
+  // dve vrstvy pozadia sa prelínajú, aby zmena svätého bola plynulá
+  let ambFront = false;
+  function setAmbient(url) {
+    const [show, hide] = ambFront ? [$("ambA"), $("ambB")] : [$("ambB"), $("ambA")];
+    ambFront = !ambFront;
+    const img = new Image();
+    img.onload = () => { show.style.backgroundImage = `url("${url}")`; show.classList.add("on"); hide.classList.remove("on"); };
+    img.src = url;
+  }
+
+  // rozeta: sústredné kruhy + 12 lupeňov + lúče
+  $("rose").innerHTML = [30, 55, 80, 96].map(r => `<circle r="${r}"/>`).join("") +
+    Array.from({ length: 12 }, (_, i) => `<g transform="rotate(${i * 30})">
+      <circle cy="-42" r="13"/><circle cy="-68" r="12"/><circle cy="-88" r="6"/>
+      <path d="M0-30L0-96M-10-55Q0-80 10-55"/></g>`).join("");
 
   const go = n => { offset = n === 0 ? 0 : offset + n; render(); };
   $("prev").onclick = () => go(-1);
@@ -168,13 +229,22 @@
   // zlaté svetielka stúpajúce k nebu
   const c = $("sky"), ctx = c.getContext("2d");
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let W, H, motes = [];
-  const resize = () => { W = c.width = innerWidth * devicePixelRatio; H = c.height = innerHeight * devicePixelRatio; };
+  let W, H, motes = [], stars = [];
+  const resize = () => {
+    W = c.width = innerWidth * devicePixelRatio; H = c.height = innerHeight * devicePixelRatio;
+    stars = Array.from({ length: 140 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * devicePixelRatio, p: Math.random() * 6.28 }));
+  };
   const mote = (y = Math.random() * H) => ({ x: Math.random() * W, y, r: (Math.random() * 1.8 + .4) * devicePixelRatio, v: Math.random() * .4 + .15, p: Math.random() * 6.28 });
   resize(); addEventListener("resize", resize);
-  for (let i = 0; i < 90; i++) motes.push(mote());
+  for (let i = 0; i < 70; i++) motes.push(mote());
   (function tick() {
     ctx.clearRect(0, 0, W, H);
+    ctx.shadowBlur = 0;
+    for (const s of stars) {
+      s.p += .015;
+      ctx.fillStyle = `rgba(255,255,255,${.25 + Math.sin(s.p) * .25})`;
+      ctx.fillRect(s.x, s.y, s.r + .5, s.r + .5);
+    }
     for (const m of motes) {
       m.y -= m.v * devicePixelRatio; m.p += .02;
       if (m.y < -10) Object.assign(m, mote(H + 10));
