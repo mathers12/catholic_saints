@@ -1,8 +1,13 @@
-# Svätý dňa
+# Svätý dňa (Sanctus diei)
 
-Statická stránka bez buildu: `index.html` (dizajn + logika), `saints.js` (dáta, slovensky) a `i18n/en.js`, `i18n/de.js`
-(preklady: feast -> [name, title, years, quote, source, story]). Pri zmene záznamu v `saints.js`
-uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).
+Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do `_site/`:
+- dáta: `saints.js` (slovensky) a preklady `i18n/en.js`, `i18n/de.js` (feast -> [name, title, years, quote, source, story]);
+- vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`;
+- výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, sitemap.xml, robots.txt (SEO).
+- nasadenie: `.github/workflows/pages.yml` pri pushi a každú noc (dnešný svätý na domovskej). `_site/` sa necommituje.
+- lokálne: `node build.mjs && python -m http.server -d _site`. Adresa webu je konštanta `SITE` v `build.mjs`.
+
+Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).
 
 ## Pravidlá pre dáta v saints.js
 - Presne jeden záznam na každý deň roka (366 vrátane 29. 2.), zoradené podľa `feast` (`"MM-DD"`).
