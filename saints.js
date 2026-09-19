@@ -1317,7 +1317,7 @@ window.SAINTS = [
     story: "Biskup z Beneventa, sťatý počas prenasledovania. V Neapole sa dodnes niekoľkokrát do roka jeho zaschnutá krv v ampulke skvapalňuje. Neapolčania ho milujú ako otca. Mučeníci aj po stáročiach hovoria o živej viere."
   },
   {
-    name: "sv. Ondrej Kim Tae-gon a spoločníci", img: "Andrew_Kim_Tae-gŏn.jpg", feast: "09-20", years: "1821 – 1846", title: "kňaz a mučeníci v Kórei", symbol: "🇰🇷",
+    name: "sv. Ondrej Kim Tae-gon a spoločníci", img: "Andrew_Kim_Tae-gŏn.jpg", feast: "09-20", years: "1821 – 1846", title: "kňaz a mučeníci v Kórei", symbol: "🕊️",
     quote: "Utrpenia tohto času nemožno porovnávať s budúcou slávou, ktorá sa má na nás zjaviť.", source: "Rim 8, 18",
     story: "Kresťanstvo do Kórey priniesli laici, ktorí čítali knihy o viere. Ondrej bol prvým kórejským kňazom; umučili ho ako 25-ročného. S ním si pripomíname 103 kórejských mučeníkov. Viera môže prísť aj cez knihu – a prežiť prenasledovanie."
   },
@@ -1592,7 +1592,7 @@ window.SAINTS = [
     story: "Poľský šľachtic, ktorého vo Viedni šikanoval vlastný brat. Keď mu otec zakázal vstúpiť k jezuitom, prešiel pešo takmer 900 km do Ríma. Zomrel ako 18-ročný novic. Je patrónom mládeže. Aj ty si stvorený pre veľké veci."
   },
   {
-    name: "sv. Mikuláš Tavelić a spoločníci", img: "Sveti-Nikola-Tavelic.jpg", feast: "11-14", years: "okolo 1340 – 1391", title: "františkáni, mučeníci", symbol: "🇭🇷",
+    name: "sv. Mikuláš Tavelić a spoločníci", img: "Sveti-Nikola-Tavelic.jpg", feast: "11-14", years: "okolo 1340 – 1391", title: "františkáni, mučeníci", symbol: "⛪",
     quote: "Kto ma vyzná pred ľuďmi, toho aj ja vyznám pred svojím Otcom.", source: "Mt 10, 32",
     story: "Chorvátsky františkán, ktorý pôsobil v Bosne a potom v Jeruzaleme, kde sa staral o sväté miesta. Spolu s tromi bratmi verejne ohlasoval Krista pred súdom v meste; za to ich popravili. Je prvým chorvátskym svätým."
   },
@@ -1642,7 +1642,7 @@ window.SAINTS = [
     story: "Tretí nástupca sv. Petra, ktorý napísal list korintskej cirkvi, aby urovnal jej spory – jeden z najstarších kresťanských textov mimo Biblie. Podľa tradície ho s kotvou na krku hodili do mora. Jeho relikvie priniesol do Ríma sv. Cyril. Láska zjednocuje."
   },
   {
-    name: "sv. Ondrej Dung-Lac a spoločníci", img: "Martyrs_of_Tonkin.jpg", feast: "11-24", years: "† 1745 – 1862", title: "mučeníci vo Vietname", symbol: "🇻🇳",
+    name: "sv. Ondrej Dung-Lac a spoločníci", img: "Martyrs_of_Tonkin.jpg", feast: "11-24", years: "† 1745 – 1862", title: "mučeníci vo Vietname", symbol: "🕊️",
     quote: "Blahoslavení prenasledovaní pre spravodlivosť, lebo ich je nebeské kráľovstvo.", source: "Mt 5, 10",
     story: "Vietnamský kňaz a 116 spoločníkov – kňazi, biskupi, katechéti, matky aj otcovia – ktorí zomreli za vieru počas krutého prenasledovania. Vo Vietname vtedy zomrelo za vieru až 130 000 ľudí. Ich krv je semenom živej cirkvi v Ázii."
   },

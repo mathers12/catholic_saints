@@ -1,8 +1,8 @@
 # Svätý dňa
 
-Statická stránka bez buildu: `index.html` (dizajn + logika), `saints.js` (dáta, slovensky) a `i18n/en.js`
-(anglický preklad: feast -> [name, title, years, quote, source, story]). Pri zmene záznamu v `saints.js`
-uprav aj `i18n/en.js`; biblické odkazy v angličtine píš ako „Matt 5:8“.
+Statická stránka bez buildu: `index.html` (dizajn + logika), `saints.js` (dáta, slovensky) a `i18n/en.js`, `i18n/de.js`
+(preklady: feast -> [name, title, years, quote, source, story]). Pri zmene záznamu v `saints.js`
+uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).
 
 ## Pravidlá pre dáta v saints.js
 - Presne jeden záznam na každý deň roka (366 vrátane 29. 2.), zoradené podľa `feast` (`"MM-DD"`).

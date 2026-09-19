@@ -50,6 +50,7 @@
   }
   @keyframes rise { from { opacity: 0; translate: 0 -16px; } }
   .date { font-size: .75rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink); text-shadow: 0 0 12px #fff, 0 0 4px #fff; }
+  @media (max-width: 500px) { .date { letter-spacing: .12em; } }
   .badge {
     align-self: center; margin-top: 8px; padding: 5px 14px; border-radius: 999px;
     border: 1px solid var(--line); color: var(--gold); font-size: .75rem; letter-spacing: .08em;
@@ -123,12 +124,17 @@
     border-radius: 999px; padding: 8px 16px; cursor: pointer; transition: .25s; backdrop-filter: blur(6px);
     box-shadow: 0 4px 14px rgba(60,45,20,.15);
   }
+  button { white-space: nowrap; }
+  @media (max-width: 420px) {
+    nav { gap: 6px; }
+    button, .lang { padding: 7px 11px; font-size: .85rem; }
+  }
   button:hover, button:focus-visible { border-color: var(--gold-2); color: var(--gold); box-shadow: 0 0 20px rgba(212,162,76,.45); outline: none; }
 
   .lang {
-    position: fixed; top: 12px; right: 12px; z-index: 2; font: inherit; font-size: .8rem; color: var(--ink);
-    background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9); border-radius: 999px;
-    padding: 5px 8px; backdrop-filter: blur(6px); cursor: pointer;
+    font: inherit; font-size: .9rem; color: var(--ink); background: rgba(255,255,255,.7);
+    border: 1px solid rgba(255,255,255,.9); border-radius: 999px; padding: 8px 10px;
+    backdrop-filter: blur(6px); box-shadow: 0 4px 14px rgba(60,45,20,.15); cursor: pointer;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -142,10 +148,6 @@
 </div>
 <canvas id="motes"></canvas>
 
-<select class="lang" id="lang" aria-label="Jazyk / Language">
-  <option value="sk">SK</option><option value="en">EN</option>
-</select>
-
 <main>
   <div class="date" id="date"></div>
   <div class="badge" id="badge"></div>
@@ -154,6 +156,9 @@
     <button id="prev" aria-label="Predchádzajúci deň">‹ Včera</button>
     <button id="today">Dnes</button>
     <button id="next" aria-label="Nasledujúci deň">Zajtra ›</button>
+    <select class="lang" id="lang" aria-label="Jazyk / Language">
+      <option value="sk">SK</option><option value="en">EN</option><option value="de">DE</option>
+    </select>
   </nav>
 </main>
 
@@ -166,6 +171,7 @@
   const UI = {
     sk: { title: "Svätý dňa", badge: "Dnes si Cirkev pripomína", prev: "‹ Včera", today: "Dnes", next: "Zajtra ›", prevL: "Predchádzajúci deň", nextL: "Nasledujúci deň" },
     en: { title: "Saint of the Day", badge: "Today the Church remembers", prev: "‹ Yesterday", today: "Today", next: "Tomorrow ›", prevL: "Previous day", nextL: "Next day" },
+    de: { title: "Heiliger des Tages", badge: "Heute gedenkt die Kirche", prev: "‹ Gestern", today: "Heute", next: "Morgen ›", prevL: "Vorheriger Tag", nextL: "Nächster Tag" },
   };
   // jazyk: uložená voľba, inak prvý podporovaný jazyk prehliadača (čeština -> slovenčina), inak angličtina
   const store = { get: () => { try { return localStorage.getItem("lang"); } catch { return null; } },
