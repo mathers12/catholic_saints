@@ -31,8 +31,35 @@ if (img) {
   img.onerror = () => img.replaceWith(img.nextElementSibling.textContent);
 }
 
+// kalendár: klik na dátum otvorí mesiac, deň vedie na stránku svätého (bez JS odkaz vedie na celý kalendár)
+const dlg = $("cal");
+let view = new Date(date.getFullYear(), date.getMonth(), 1), names;
+const loadNames = () => names ||= fetch(`${page.root}${page.lang}/names.json`).then(r => r.json()).catch(() => ({}));
+function renderCal() {
+  const y = view.getFullYear(), mo = view.getMonth(), len = new Date(y, mo + 1, 0).getDate();
+  $("calTitle").textContent = view.toLocaleDateString(page.lang, { month: "long", year: "numeric" });
+  let h = [...Array(7)].map((_, i) => `<span class="wd">${new Date(2024, 0, 1 + i).toLocaleDateString(page.lang, { weekday: "short" })}</span>`).join("")
+    + "<span></span>".repeat((view.getDay() + 6) % 7);
+  for (let d = 1; d <= len; d++) {
+    const k = `${pad(mo + 1)}-${pad(d)}`;
+    const cls = [y === now.getFullYear() && k === todayKey && "today", k === page.feast && "cur"].filter(Boolean).join(" ");
+    h += `<a href="${page.root}${page.lang}/${k}/" data-k="${k}"${cls ? ` class="${cls}"` : ""}>${d}</a>`;
+  }
+  $("calGrid").innerHTML = h;
+  $("calTip").textContent = "";
+  $("calAll").hash = `m${mo + 1}`;
+  loadNames().then(n => $("calGrid").querySelectorAll("a").forEach(a => a.title = n[a.dataset.k] || ""));
+}
+const shiftMonth = n => { view.setMonth(view.getMonth() + n); renderCal(); };
+$("date").onclick = e => { e.preventDefault(); view = new Date(date.getFullYear(), date.getMonth(), 1); renderCal(); dlg.showModal(); };
+$("calPrev").onclick = () => shiftMonth(-1);
+$("calNext").onclick = () => shiftMonth(1);
+dlg.onclick = e => { if (e.target === dlg) dlg.close(); }; // klik mimo okna
+const tip = e => { if (e.target.dataset.k) $("calTip").textContent = e.target.title; };
+$("calGrid").onmouseover = tip; $("calGrid").onfocusin = tip;
+
 $("lang").onchange = e => { store.set(e.target.value); location.href = e.target.selectedOptions[0].dataset.href; };
-const go = id => $(id) && $(id).click();
+const go = id => dlg.open ? shiftMonth(id === "prev" ? -1 : 1) : $(id) && $(id).click();
 addEventListener("keydown", e => { if (e.key === "ArrowLeft") go("prev"); if (e.key === "ArrowRight") go("next"); });
 let x0 = null;
 addEventListener("touchstart", e => x0 = e.touches[0].clientX, { passive: true });

@@ -138,3 +138,31 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* kalendár po kliknutí na dátum (natívny <dialog>, mimo rozloženia – stránka sa neposúva) */
+#date::after { content: " ▾"; color: var(--gold); }
+#cal { margin: auto; padding: 0; border: 1px solid var(--gold-2); border-radius: 20px; background: #fffaf0; color: var(--ink);
+  width: min(340px, calc(100vw - 32px)); box-shadow: 0 30px 80px rgba(60,45,20,.35); animation: pop .35s ease-out; }
+#cal::backdrop { background: rgba(44,35,25,.35); backdrop-filter: blur(3px); }
+.cal-box { position: relative; padding: 18px 16px 14px; text-align: center; }
+.cal-x { position: absolute; top: 6px; right: 10px; border: 0; background: none; font-size: 1.4rem; color: var(--muted); cursor: pointer; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 22px 10px 0; }
+.cal-head b { font-family: "Cormorant Garamond", serif; font-size: 1.35rem; font-weight: 600; text-transform: capitalize; }
+.cal-head button { border: 1px solid var(--line); background: #fff; color: var(--gold); border-radius: 50%; width: 32px; height: 32px; font-size: 1.1rem; cursor: pointer; }
+.cal-grid, .mgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: .88rem; }
+.cal-grid .wd, .mgrid .wd { color: var(--gold); font-size: .72rem; padding: 4px 0; }
+.cal-grid a, .mgrid a { padding: 6px 0; border-radius: 8px; text-decoration: none; text-align: center; }
+.cal-grid a:hover, .cal-grid a:focus-visible, .mgrid a:hover { background: #f3e4c3; outline: none; }
+.cal-grid a.cur { box-shadow: inset 0 0 0 1px var(--gold-2); }
+.cal-grid a.today, .mgrid a.today { background: var(--gold); color: #fff; }
+.cal-tip { min-height: 1.4em; margin: 8px 0 4px; color: var(--gold); font-family: "Cormorant Garamond", serif; font-size: 1.1rem; font-style: italic; }
+.cal-all { font-size: .85rem; color: var(--gold); }
+
+/* celý kalendár: mesiac = mriežka + zoznam mien */
+.calendar .month { scroll-margin-top: 16px; }
+.calendar .mgrid { max-width: 260px; margin-bottom: 10px; }
+.calendar li.today { background: #f3e4c3; border-radius: 6px; }
+@media (min-width: 760px) {
+  .calendar .month { display: grid; grid-template-columns: 240px 1fr; column-gap: 32px; align-items: start; }
+  .calendar .month h2 { grid-column: 1 / -1; }
+}

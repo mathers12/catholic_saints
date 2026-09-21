@@ -28,15 +28,15 @@ const UI = {
   sk: { site: "Svätý dňa", every: "katolícky svätý na každý deň", prev: "‹ Včera", next: "Zajtra ›", today: "Dnes",
         prevL: "Predchádzajúci deň", nextL: "Nasledujúci deň", badgeToday: "Dnes si Cirkev pripomína", badgeDay: "V tento deň si Cirkev pripomína",
         cal: "Kalendár svätých", calSlug: "kalendar", calIntro: "Svätí a sviatky na každý deň roka podľa liturgického kalendára na Slovensku.",
-        dayTitle: (n, dt) => `${n} – svätý dňa ${dt}`, locale: "sk_SK", notFound: "Táto stránka neexistuje.", back: "Späť na svätého dňa" },
+        dayTitle: (n, dt) => `${n} – svätý dňa ${dt}`, prevM: "Predchádzajúci mesiac", nextM: "Nasledujúci mesiac", close: "Zavrieť", locale: "sk_SK", notFound: "Táto stránka neexistuje.", back: "Späť na svätého dňa" },
   en: { site: "Saint of the Day", every: "a Catholic saint for every day", prev: "‹ Yesterday", next: "Tomorrow ›", today: "Today",
         prevL: "Previous day", nextL: "Next day", badgeToday: "Today the Church remembers", badgeDay: "On this day the Church remembers",
         cal: "Calendar of Saints", calSlug: "calendar", calIntro: "Saints and feasts for every day of the year, following the liturgical calendar.",
-        dayTitle: (n, dt) => `${n} – Saint of the Day, ${dt}`, locale: "en_US", notFound: "This page does not exist.", back: "Back to the saint of the day" },
+        dayTitle: (n, dt) => `${n} – Saint of the Day, ${dt}`, prevM: "Previous month", nextM: "Next month", close: "Close", locale: "en_US", notFound: "This page does not exist.", back: "Back to the saint of the day" },
   de: { site: "Heiliger des Tages", every: "ein katholischer Heiliger für jeden Tag", prev: "‹ Gestern", next: "Morgen ›", today: "Heute",
         prevL: "Vorheriger Tag", nextL: "Nächster Tag", badgeToday: "Heute gedenkt die Kirche", badgeDay: "An diesem Tag gedenkt die Kirche",
         cal: "Heiligenkalender", calSlug: "kalender", calIntro: "Heilige und Feste für jeden Tag des Jahres nach dem liturgischen Kalender.",
-        dayTitle: (n, dt) => `${n} – Heiliger des Tages, ${dt}`, locale: "de_DE", notFound: "Diese Seite existiert nicht.", back: "Zurück zum Heiligen des Tages" },
+        dayTitle: (n, dt) => `${n} – Heiliger des Tages, ${dt}`, prevM: "Vorheriger Monat", nextM: "Nächster Monat", close: "Schließen", locale: "de_DE", notFound: "Diese Seite existiert nicht.", back: "Zurück zum Heiligen des Tages" },
 };
 
 // cesty (relatívne ku koreňu webu)
@@ -130,7 +130,7 @@ function dayView(lang, feast, home) {
           { "@type": "ListItem", position: 1, name: u.site, item: SITE + homePath(lang) },
           { "@type": "ListItem", position: 2, name: u.cal, item: SITE + calPath(lang) },
           { "@type": "ListItem", position: 3, name: s.name, item: SITE + path } ] } ] };
-  const bodyAttrs = `data-lang="${lang}" data-feast="${feast}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
+  const bodyAttrs = `data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), jsonld, bodyAttrs, body: rel => `<main>
 <a class="date" id="date" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
 <div class="badge">✦ ${home ? u.badgeToday : u.badgeDay} ✦</div>
@@ -141,7 +141,14 @@ ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.toda
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
 <select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select>
 </nav>
-</main>` });
+</main>
+<dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
+<form method="dialog"><button class="cal-x" aria-label="${u.close}">×</button></form>
+<div class="cal-head"><button type="button" id="calPrev" aria-label="${u.prevM}">‹</button><b id="calTitle"></b><button type="button" id="calNext" aria-label="${u.nextM}">›</button></div>
+<div class="cal-grid" id="calGrid"></div>
+<p class="cal-tip" id="calTip"></p>
+<a class="cal-all" id="calAll" href="${rel}${calPath(lang)}">${u.cal} ›</a>
+</div></dialog>` });
   out(path, html);
   return path;
 }
@@ -153,6 +160,11 @@ function calendar(lang) {
   const months = Array.from({ length: 12 }, (_, i) => SAINTS.filter(s => md(s.feast)[0] === i + 1));
   const monthName = i => lang === "sk" ? MONTHS_NOM_SK[i] : MONTHS[lang][i];
   const title = `${u.cal} | ${BRAND}`;
+  const year = new Date().getFullYear(); // stránka sa pregeneruje každú noc
+  const wd = Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(lang, { weekday: "short", timeZone: "UTC" }));
+  // ponytail: 29. 2. v neprestupnom roku sa ukáže za 28., v zozname je správne
+  const grid = (i, list, rel) => `<div class="mgrid">${wd.map(w => `<span class="wd">${w}</span>`).join("")}${"<span></span>".repeat((new Date(year, i, 1).getDay() + 6) % 7)}${
+    list.map(s => `<a href="${rel}${dayPath(lang, s.feast)}"${s.feast === todayKey ? ' class="today"' : ""} title="${esc(saint(lang, s).name)}">${md(s.feast)[1]}</a>`).join("")}</div>`;
   out(path, page({ lang, path, title, desc: u.calIntro, alts, image: imgUrl(SAINTS[0].img, 1200), scripts: false,
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: u.calIntro },
     body: rel => `<main class="calendar">
@@ -160,8 +172,9 @@ function calendar(lang) {
 <article class="card">
 <h1>${u.cal}</h1>
 <p>${u.calIntro}</p>
-${months.map((list, i) => `<h2>${monthName(i)}</h2>
-<ol>${list.map(s => `<li><a href="${rel}${dayPath(lang, s.feast)}"><span class="d">${md(s.feast)[1]}.</span> ${esc(saint(lang, s).name)}</a></li>`).join("")}</ol>`).join("\n")}
+${months.map((list, i) => `<section class="month" id="m${i + 1}"><h2>${monthName(i)}</h2>
+${grid(i, list, rel)}
+<ol>${list.map(s => `<li${s.feast === todayKey ? ' class="today"' : ""}><a href="${rel}${dayPath(lang, s.feast)}"><span class="d">${md(s.feast)[1]}.</span> ${esc(saint(lang, s).name)}</a></li>`).join("")}</ol></section>`).join("\n")}
 </article>
 <nav>${LANGS.filter(l => l !== lang).map(l => `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}">${UI[l].cal}</a>`).join("")}</nav>
 </main>` }));
@@ -176,6 +189,7 @@ const urls = [];
 for (const lang of LANGS) {
   urls.push({ path: dayView(lang, todayKey, true), alt: l => homePath(l), changefreq: "daily" });
   for (const f of FEASTS) urls.push({ path: dayView(lang, f, false), alt: l => dayPath(l, f), changefreq: "yearly" });
+  fs.writeFileSync(`${OUT}/${lang}/names.json`, JSON.stringify(Object.fromEntries(SAINTS.map(s => [s.feast, saint(lang, s).name]))));
   urls.push({ path: calendar(lang), alt: l => calPath(l), changefreq: "monthly" });
 }
 // /sk/ nie je samostatná stránka – slovenská domovská je koreň
