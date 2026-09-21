@@ -1,6 +1,7 @@
 :root {
   --ink: #2c2319; --muted: #6e5c46; --gold: #a8761f; --gold-2: #d4a24c; --line: rgba(168,118,31,.3);
   --t0: 2.6s; /* úvodné svitanie; pri ďalších stránkach v tej istej návšteve sa preskočí */
+  --pad: clamp(16px, 3vw, 32px); /* vnútorný okraj karty */
 }
 .seen { --t0: 0s; }
 .seen .scene, .seen main { animation: none; }
@@ -51,7 +52,7 @@ a.date:hover { text-decoration: underline; }
 }
 
 .card {
-  margin-top: auto; padding: clamp(16px, 2.6vh, 28px) clamp(16px, 3vw, 32px); border-radius: 24px;
+  margin-top: auto; padding: clamp(16px, 2.6vh, 28px) var(--pad); border-radius: 24px;
   background: rgba(255,251,243,.82); border: 1px solid rgba(255,255,255,.8);
   backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
   box-shadow: 0 30px 80px rgba(90,65,30,.25);
@@ -172,16 +173,31 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
 /* vždy len jeden mesiac: vybraný cez #mN, inak aktuálny; bez podpory :has sa ukážu všetky */
 .calendar:has(.month:target) .month:not(:target), .calendar:not(:has(.month:target)) .month:not(.now) { display: none; }
 .calendar .month { scroll-margin-top: 100vh; } /* pri prepnutí mesiaca zostane stránka hore */
-.mtabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
-.mtabs a { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; text-decoration: none; background: #fff; }
+/* záložky mesiacov: vždy jeden riadok, na mobile sa posúvajú do strán (nezaberú 3 riadky) */
+.mtabs { display: flex; gap: 6px; margin: 12px 0 4px; padding-bottom: 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.mtabs::-webkit-scrollbar { display: none; }
+.mtabs a { flex: none; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; text-decoration: none; background: #fff; }
 .mtabs a:hover { border-color: var(--gold-2); color: var(--gold); }
-.mnav { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+/* prepínač mesiaca zostane na mobile pri hornom okraji aj keď sa listuje zoznam mien */
+.mnav { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  position: sticky; top: 0; z-index: 2; background: rgba(255,251,243,.97); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  margin-inline: calc(-1 * var(--pad)); padding: 8px var(--pad); box-shadow: 0 6px 12px -10px rgba(90,65,30,.6); }
 .mnav a { font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap; }
 .mnav a:hover { text-decoration: underline; }
-.mnav h2 { text-align: center; }
-.calendar .mgrid { max-width: 260px; margin-bottom: 10px; }
+.mnav h2 { text-align: center; margin: 0; }
+.calendar .mgrid { margin-bottom: 12px; gap: 4px; } /* na mobile cez celú šírku karty – väčšie plôšky na ťuknutie */
+.calendar .mgrid a { padding: 9px 0; }
 .calendar li.today { background: #f3e4c3; border-radius: 6px; }
+@media (max-width: 560px) {
+  .calendar h1 { font-size: 1.7rem; }
+  .calendar .card > p { font-size: .88rem; color: var(--muted); }
+  .calendar h2 { font-size: 1.35rem; }
+  .calendar li { font-size: .95rem; padding: 4px 0; }
+}
 @media (min-width: 760px) {
   .calendar .month { display: grid; grid-template-columns: 240px 1fr; column-gap: 32px; align-items: start; }
   .calendar .month .mnav { grid-column: 1 / -1; }
+  .calendar .mgrid { max-width: 260px; }
+  .calendar .mgrid a { padding: 6px 0; }
+  .mnav { position: static; background: none; margin-inline: 0; padding-inline: 0; box-shadow: none; }
 }
