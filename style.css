@@ -131,7 +131,8 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
 .calendar h2 { font-family: "Cormorant Garamond", serif; color: var(--gold); font-size: 1.5rem; margin: 20px 0 6px; }
 .calendar ol { list-style: none; padding: 0; columns: 2 220px; column-gap: 32px; }
 .calendar li { padding: 3px 0; break-inside: avoid; font-size: .92rem; }
-.calendar li a { text-decoration: none; }
+.calendar li a { display: flex; text-decoration: none; }
+.calendar .d { flex: none; }
 .calendar li a:hover { color: var(--gold); text-decoration: underline; }
 .calendar .d { display: inline-block; min-width: 3.2em; color: var(--muted); }
 
@@ -168,7 +169,7 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
 /* celý kalendár: mesiac = mriežka + zoznam mien */
 /* vždy len jeden mesiac: vybraný cez #mN, inak aktuálny; bez podpory :has sa ukážu všetky */
 .calendar:has(.month:target) .month:not(:target), .calendar:not(:has(.month:target)) .month:not(.now) { display: none; }
-.calendar .month { scroll-margin-top: 16px; }
+.calendar .month { scroll-margin-top: 100vh; } /* pri prepnutí mesiaca zostane stránka hore */
 .mtabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
 .mtabs a { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; text-decoration: none; background: #fff; }
 .mtabs a:hover { border-color: var(--gold-2); color: var(--gold); }
