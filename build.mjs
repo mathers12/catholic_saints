@@ -50,8 +50,8 @@ const clip = (t, n = 158) => t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n
 const q = (lang, t) => lang === "en" ? `“${t}”` : `„${t}“`;
 const ld = o => JSON.stringify(o).replace(/</g, "\\u003c");
 
-function page({ lang, path, title, desc, alts, image, jsonld, bodyAttrs = "", body, scripts = true, noindex = false }) {
-  const rel = "../".repeat(path.split("/").length - 1); // počet priečinkov v ceste (súbor sa nepočíta)
+function page({ lang, path, title, desc, alts, image, jsonld, bodyAttrs = "", body, scripts = true, noindex = false,
+               rel = "../".repeat(path.split("/").length - 1) }) { // počet priečinkov v ceste (súbor sa nepočíta)
   const altLinks = alts ? Object.entries(alts).map(([l, p]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${p}">`).join("\n") : "";
   return `<!doctype html>
 <html lang="${lang}">
@@ -132,7 +132,7 @@ function dayView(lang, feast, home) {
           { "@type": "ListItem", position: 3, name: s.name, item: SITE + path } ] } ] };
   const bodyAttrs = `data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), jsonld, bodyAttrs, body: rel => `<main>
-<a class="date" id="date" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
+<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
 <div class="badge">✦ ${home ? u.badgeToday : u.badgeDay} ✦</div>
 ${card(s)}
 <nav>
@@ -160,7 +160,7 @@ function calendar(lang) {
   const months = Array.from({ length: 12 }, (_, i) => SAINTS.filter(s => md(s.feast)[0] === i + 1));
   const monthName = i => lang === "sk" ? MONTHS_NOM_SK[i] : MONTHS[lang][i];
   const title = `${u.cal} | ${BRAND}`;
-  const year = new Date().getFullYear(); // stránka sa pregeneruje každú noc
+  const year = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
   const wd = Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(lang, { weekday: "short", timeZone: "UTC" }));
   // ponytail: 29. 2. v neprestupnom roku sa ukáže za 28., v zozname je správne
   const grid = (i, list, rel) => `<div class="mgrid">${wd.map(w => `<span class="wd">${w}</span>`).join("")}${"<span></span>".repeat((new Date(year, i, 1).getDay() + 6) % 7)}${
@@ -197,7 +197,7 @@ for (const lang of LANGS) {
 }
 // /sk/ nie je samostatná stránka – slovenská domovská je koreň
 out("sk/", `<!doctype html><meta charset="utf-8"><link rel="canonical" href="${SITE}"><meta http-equiv="refresh" content="0; url=../"><title>${BRAND}</title>`);
-fs.writeFileSync(`${OUT}/404.html`, page({ lang: "sk", path: "404.html", title: `404 | ${BRAND}`, desc: UI.sk.notFound, image: imgUrl(SAINTS[0].img, 1200),
+fs.writeFileSync(`${OUT}/404.html`, page({ lang: "sk", path: "404.html", rel: SITE, title: `404 | ${BRAND}`, desc: UI.sk.notFound, image: imgUrl(SAINTS[0].img, 1200),
   scripts: false, noindex: true, body: () => `<main class="calendar"><article class="card"><h1>404</h1>${LANGS.map(l =>
   `<p>${UI[l].notFound} <a href="${SITE}${homePath(l)}">${UI[l].back}</a></p>`).join("")}</article></main>` }));
 
