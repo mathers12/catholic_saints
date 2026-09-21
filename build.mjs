@@ -172,7 +172,9 @@ function calendar(lang) {
 <article class="card">
 <h1>${u.cal}</h1>
 <p>${u.calIntro}</p>
-${months.map((list, i) => `<section class="month" id="m${i + 1}"><h2>${monthName(i)}</h2>
+<div class="mtabs">${months.map((_, i) => `<a href="#m${i + 1}">${monthName(i).slice(0, 3)}</a>`).join("")}</div>
+${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " now" : ""}" id="m${i + 1}">
+<div class="mnav"><a href="#m${(i + 11) % 12 + 1}">‹ ${monthName((i + 11) % 12)}</a><h2>${monthName(i)}</h2><a href="#m${(i + 1) % 12 + 1}">${monthName((i + 1) % 12)} ›</a></div>
 ${grid(i, list, rel)}
 <ol>${list.map(s => `<li${s.feast === todayKey ? ' class="today"' : ""}><a href="${rel}${dayPath(lang, s.feast)}"><span class="d">${md(s.feast)[1]}.</span> ${esc(saint(lang, s).name)}</a></li>`).join("")}</ol></section>`).join("\n")}
 </article>
