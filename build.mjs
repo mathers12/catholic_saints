@@ -178,7 +178,8 @@ ${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " 
 ${grid(i, list, rel)}
 <ol>${list.map(s => `<li${s.feast === todayKey ? ' class="today"' : ""}><a href="${rel}${dayPath(lang, s.feast)}"><span class="d">${md(s.feast)[1]}.</span> ${esc(saint(lang, s).name)}</a></li>`).join("")}</ol></section>`).join("\n")}
 </article>
-<nav>${LANGS.filter(l => l !== lang).map(l => `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}">${UI[l].cal}</a>`).join("")}</nav>
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
+  : `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}" title="${UI[l].cal}">${l.toUpperCase()}</a>`).join("")}</nav>
 </main>` }));
   return path;
 }

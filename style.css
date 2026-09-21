@@ -133,6 +133,8 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
 .calendar li { padding: 3px 0; break-inside: avoid; font-size: .92rem; }
 .calendar li a { display: flex; text-decoration: none; }
 .calendar .d { flex: none; }
+.calendar nav { margin-bottom: 16px; }
+.btn.on { background: var(--gold); color: #fff; cursor: default; }
 .calendar li a:hover { color: var(--gold); text-decoration: underline; }
 .calendar .d { display: inline-block; min-width: 3.2em; color: var(--muted); }
 
