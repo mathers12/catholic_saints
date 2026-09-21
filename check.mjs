@@ -3,25 +3,26 @@
 //   node check.mjs            – vzorka 12 dní na jazyk (jeden z každého mesiaca)
 //   node check.mjs --all      – všetkých 366 dní × jazyk (pomalé, pred vydaním)
 //   node check.mjs --days=30  – vlastná veľkosť vzorky
+//   node check.mjs --all --sizes=320x568,375x812  – len vybrané veľkosti (rýchlejší úplný prechod)
 // Čo overuje na každej veľkosti: žiadne vodorovné posúvanie, nič mimo obrazovky, plôšky na ťuknutie
 // aspoň MIN_TAP, a denné stránky sa zmestia na jednu obrazovku (od FIT_W × FIT_H vyššie).
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { execSync } from "node:child_process";
-import { createRequire } from "node:module";
 
 const SITE = "https://mathers12.github.io/catholic_saints/"; // musí sedieť s build.mjs (404 sa naň odkazuje absolútne)
 const ROOT = "_site";
 const MIN_TAP = 24;          // px – najmenší rozmer klikateľného prvku
 const FIT_W = 320, FIT_H = 568; // od tejto veľkosti sa denná stránka musí zmestiť bez posúvania
-const SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [768, 1024], [1366, 768], [1920, 1080]];
+const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [768, 1024], [1366, 768], [1920, 1080]];
 const LANGS = ["sk", "en", "de"];
 const CAL = { sk: "sk/kalendar", en: "en/calendar", de: "de/kalender" };
 
 const arg = n => process.argv.find(a => a.startsWith(`--${n}=`))?.split("=")[1];
 const all = process.argv.includes("--all");
 const sample = Number(arg("days") || 12);
+const SIZES = arg("sizes") ? arg("sizes").split(",").map(s => s.split("x").map(Number)) : ALL_SIZES;
 
 if (!fs.existsSync(ROOT)) { console.error(`Chýba ${ROOT}/ – spusti najprv: node build.mjs`); process.exit(2); }
 

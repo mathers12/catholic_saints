@@ -124,10 +124,12 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
   nav { gap: 6px; }
   .btn, .lang { padding: 7px 11px; font-size: .85rem; }
 }
-/* najužšie telefóny (a zväčšené písmo): tlačidlá sa musia zmestiť do jedného riadka */
+/* najužšie telefóny (a zväčšené písmo): dátum aj tlačidlá musia zostať v jednom riadku */
 @media (max-width: 360px) {
-  .btn { padding: 7px 9px; font-size: .8rem; }
-  .lang { padding: 7px 4px; font-size: .8rem; }
+  nav { gap: 4px; }
+  .btn { padding: 7px 7px; font-size: .78rem; }
+  .lang { padding: 7px 2px; font-size: .78rem; }
+  .date { letter-spacing: .04em; font-size: .7rem; }
 }
 /* úzke displeje: karta sa musí zmestiť bez posúvania */
 @media (max-width: 380px) {
@@ -142,8 +144,8 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
   .portrait { margin-bottom: 6px; }
   .frame img { height: clamp(64px, 12vh, 230px); }
   h1 { font-size: clamp(1.3rem, 3.4vh, 2.6rem); }
-  .meta { margin-top: 2px; }
-  blockquote { margin-top: 6px; }
+  .meta { margin-top: 2px; font-size: .72rem; }
+  blockquote { margin-top: 6px; font-size: clamp(.95rem, 2.4vh, 1.65rem); line-height: 1.25; }
   .divider { margin-block: 6px; }
   .story { font-size: clamp(.78rem, 1.7vh, 1rem); }
 }
