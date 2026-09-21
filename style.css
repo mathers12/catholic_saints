@@ -112,9 +112,9 @@ blockquote::before { content: open-quote; } blockquote::after { content: close-q
 .fade { opacity: 0; translate: 0 -10px; animation: fadeUp .8s forwards; }
 @keyframes fadeUp { to { opacity: 1; translate: 0 0; } }
 
-nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 1.6vh, 16px); margin-bottom: auto; }
+nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: clamp(8px, 1.6vh, 16px); margin-bottom: auto; }
 .btn, .lang {
-  font: inherit; font-size: .9rem; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9);
+  display: inline-block; font: inherit; font-size: .9rem; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9);
   border-radius: 999px; padding: 8px 16px; cursor: pointer; transition: .25s; backdrop-filter: blur(6px);
   box-shadow: 0 4px 14px rgba(60,45,20,.15); white-space: nowrap; text-decoration: none;
 }
@@ -124,15 +124,40 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
   nav { gap: 6px; }
   .btn, .lang { padding: 7px 11px; font-size: .85rem; }
 }
+/* najužšie telefóny (a zväčšené písmo): tlačidlá sa musia zmestiť do jedného riadka */
+@media (max-width: 360px) {
+  .btn { padding: 7px 9px; font-size: .8rem; }
+  .lang { padding: 7px 4px; font-size: .8rem; }
+}
+/* úzke displeje: karta sa musí zmestiť bez posúvania */
+@media (max-width: 380px) {
+  .badge { margin-top: 6px; padding: 4px 10px; font-size: .7rem; }
+  .frame img { height: clamp(72px, 14vh, 230px); }
+  .story { line-height: 1.45; }
+}
+/* nízke displeje (malé telefóny, na šírku): zvislé medzery na minimum */
+@media (max-height: 620px) {
+  .card { padding-block: 10px; }
+  .badge { margin-top: 4px; padding: 3px 10px; font-size: .68rem; }
+  .portrait { margin-bottom: 6px; }
+  .frame img { height: clamp(64px, 12vh, 230px); }
+  h1 { font-size: clamp(1.3rem, 3.4vh, 2.6rem); }
+  .meta { margin-top: 2px; }
+  blockquote { margin-top: 6px; }
+  .divider { margin-block: 6px; }
+  .story { font-size: clamp(.78rem, 1.7vh, 1rem); }
+}
 
 /* kalendár všetkých svätých */
 .calendar { min-height: 0; text-align: left; animation: none; }
 .calendar .card { display: block; margin: 16px 0; }
+.calendar .date { align-self: start; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.7);
+  border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(60,45,20,.15); backdrop-filter: blur(6px); text-shadow: none; }
 .calendar h1 { margin-bottom: 8px; }
 .calendar h2 { font-family: "Cormorant Garamond", serif; color: var(--gold); font-size: 1.5rem; margin: 20px 0 6px; }
 .calendar ol { list-style: none; padding: 0; columns: 2 220px; column-gap: 32px; }
-.calendar li { padding: 3px 0; break-inside: avoid; font-size: .92rem; }
-.calendar li a { display: flex; text-decoration: none; }
+.calendar li { break-inside: avoid; font-size: .92rem; }
+.calendar li a { display: flex; padding: 4px 0; text-decoration: none; }
 .calendar .d { flex: none; }
 .calendar nav { margin-bottom: 16px; }
 .btn.on { background: var(--gold); color: #fff; cursor: default; }
@@ -182,7 +207,7 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
 .mnav { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
   position: sticky; top: 0; z-index: 2; background: rgba(255,251,243,.97); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   margin-inline: calc(-1 * var(--pad)); padding: 8px var(--pad); box-shadow: 0 6px 12px -10px rgba(90,65,30,.6); }
-.mnav a { font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap; }
+.mnav a { padding: 7px 0; font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap; }
 .mnav a:hover { text-decoration: underline; }
 .mnav h2 { text-align: center; margin: 0; }
 .calendar .mgrid { margin-bottom: 12px; gap: 4px; } /* na mobile cez celú šírku karty – väčšie plôšky na ťuknutie */
@@ -192,7 +217,8 @@ nav { display: flex; gap: 10px; justify-content: center; margin-top: clamp(8px, 
   .calendar h1 { font-size: 1.7rem; }
   .calendar .card > p { font-size: .88rem; color: var(--muted); }
   .calendar h2 { font-size: 1.35rem; }
-  .calendar li { font-size: .95rem; padding: 4px 0; }
+  .calendar li { font-size: .95rem; }
+  .calendar li a { padding: 5px 0; }
 }
 @media (min-width: 760px) {
   .calendar .month { display: grid; grid-template-columns: 240px 1fr; column-gap: 32px; align-items: start; }
