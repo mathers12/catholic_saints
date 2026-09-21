@@ -14,6 +14,8 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
 - Poradie výberu na deň: slávenie podľa kalendára platného na Slovensku (Rímsky misál 2021 – Všeobecný
   kalendár + osobitný kalendár diecéz na Slovensku). Ak v ten deň nie je povinné slávenie, svätý z Rímskeho
   martyrológia na ten deň. Nevymýšľaj ani neposúvaj dátumy.
+  Overuj voči direktóriu KBS: https://lc.kbs.sk/?mesiac=RRRR-MM (HTML po mesiacoch; ber viac rokov, lebo nedele,
+  pôst a Veľká noc v danom roku sväté prekrývajú). Pohyblivé sviatky a slávenia jednej diecézy do `saints.js` nepatria.
 - Texty po slovensky, so správnou diakritikou.
 - `quote` musí byť skutočný, overiteľný výrok svätého, alebo verš z Písma súvisiaci s jeho životom,
   a `source` uvádza dielo alebo presný odkaz (napr. „Mt 5, 8“). Nevymýšľaj citáty; keď si nie si istý, použi Písmo.
