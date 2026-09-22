@@ -8,7 +8,8 @@
 * { box-sizing: border-box; margin: 0; }
 body {
   font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #f6ead6;
-  padding: 16px; overflow-x: hidden;
+  padding: 16px; overflow-x: clip; /* nie hidden – to robí z body posuvný kontajner a rozbíja sticky */
+  overflow-wrap: break-word; /* dlhé slová (napr. „Heiligenkalender“) sa pri zväčšenom písme zlomia, nepretečú */
 }
 a { color: inherit; }
 
@@ -152,7 +153,11 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
 
 /* kalendár všetkých svätých */
 .calendar { min-height: 0; text-align: left; animation: none; }
-.calendar .card { display: block; margin: 16px 0; }
+/* Karta kalendára je vysoká cez viac obrazoviek. Priesvitné pozadie s backdrop-filter Safari na takej
+   ploche odspodu nedokreslí (karta vyzerá odseknutá), a bez rozmazania by cez lepkavú lištu presvital
+   zoznam pod ňou. Preto tu jednofarebné nepriehľadné pozadie – rovnaké pre kartu aj lištu. */
+.calendar .card { display: block; margin: 16px 0; background: #fffbf3;
+  backdrop-filter: none; -webkit-backdrop-filter: none; }
 .calendar .date { align-self: start; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.7);
   border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(60,45,20,.15); backdrop-filter: blur(6px); text-shadow: none; }
 .calendar h1 { margin-bottom: 8px; }
@@ -180,7 +185,8 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
 #date:hover, #date:focus-visible { text-decoration: none; color: var(--gold); box-shadow: 0 0 20px rgba(212,162,76,.55); outline: none; }
 @keyframes hint { 50% { box-shadow: 0 0 0 6px rgba(212,162,76,.35); } }
 #cal { margin: auto; padding: 0; border: 1px solid var(--gold-2); border-radius: 20px; background: #fffaf0; color: var(--ink);
-  width: min(340px, calc(100vw - 32px)); box-shadow: 0 30px 80px rgba(60,45,20,.35); animation: pop .35s ease-out; }
+  width: min(340px, calc(100vw - 32px)); box-shadow: 0 30px 80px rgba(60,45,20,.35); animation: pop .35s ease-out;
+  max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; }
 #cal::backdrop { background: rgba(44,35,25,.35); backdrop-filter: blur(3px); }
 .cal-box { position: relative; padding: 18px 16px 14px; text-align: center; }
 .cal-x { position: absolute; top: 6px; right: 10px; border: 0; background: none; font-size: 1.4rem; color: var(--muted); cursor: pointer; }
@@ -207,11 +213,15 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
 .mtabs a:hover { border-color: var(--gold-2); color: var(--gold); }
 /* prepínač mesiaca zostane na mobile pri hornom okraji aj keď sa listuje zoznam mien */
 .mnav { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  position: sticky; top: 0; z-index: 2; background: rgba(255,251,243,.97); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  position: sticky; top: 0; z-index: 2; background: #fffbf3;
   margin-inline: calc(-1 * var(--pad)); padding: 8px var(--pad); box-shadow: 0 6px 12px -10px rgba(90,65,30,.6); }
-.mnav a { padding: 7px 0; font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap; }
+/* pri zväčšenom písme (Android: Chrome → Veľkosť textu) sa tri položky do riadka nezmestia;
+   nech sa radšej zalomia, než aby rozšírili dokument a nechali sa orezať */
+.mnav { flex-wrap: wrap; }
+.mnav a { padding: 7px 0; font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .mnav a:hover { text-decoration: underline; }
-.mnav h2 { text-align: center; margin: 0; }
+.mnav h2 { text-align: center; margin: 0; min-width: 0; }
 .calendar .mgrid { margin-bottom: 12px; gap: 4px; } /* na mobile cez celú šírku karty – väčšie plôšky na ťuknutie */
 .calendar .mgrid a { padding: 9px 0; }
 .calendar li.today { background: #f3e4c3; border-radius: 6px; }
