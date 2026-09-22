@@ -34,7 +34,10 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
   aspoň 24 px v menšom rozmere (`MIN_TAP` v `check.mjs`).
 - Denné stránky sa musia zmestiť na jednu obrazovku bez posúvania od 320×568 vyššie. Pod túto veľkosť smú
   rolovať, ale nesmú nič orezať ani preliezť do strán.
-- Zoznamové stránky (kalendár) smú rolovať, ale prepínač mesiaca a navigácia musia zostať po ruke (sticky).
+- Kalendár sa na mobile (do 759 px a od 480 px výšky) celý zmestí na obrazovku: karta má výšku okna,
+  vidno jej spodok aj navigáciu pod ňou a roluje sa až jej vnútro (`.mbody` = mriežka mesiaca + zoznam mien).
+  Hlavička karty a prepínač mesiaca teda z obrazovky nikdy nezmiznú. Na nízkych displejoch (na šírku)
+  by bolo vnútorné okno prislabé, tam sa roluje stránka. `check.mjs` toto overuje.
 - Rozmery odvodzuj z `clamp()` a relatívnych jednotiek. Pevnú šírku či výšku (napr. `max-width: 260px`) dávaj
   len do media query pre konkrétne rozloženie, nikdy nie globálne – inak to na mobile vyzerá odseknuté.
 - Vnútorné odsadenie karty je premenná `--pad`; lišty cez celú šírku karty rob cez `margin-inline: calc(-1 * var(--pad))`.

@@ -232,9 +232,21 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
   .calendar li { font-size: .95rem; }
   .calendar li a { padding: 5px 0; }
 }
+/* Karta sa celá zmestí na obrazovku (vidno jej spodok aj navigáciu pod ňou) a roluje sa až jej vnútro –
+   prepínač mesiaca zostáva navrchu. Na nízkych displejoch (na šírku) by vnútorné okno bolo prislabé,
+   tam sa roluje stránka ako predtým. */
+@media (max-width: 759px) and (min-height: 480px) {
+  .calendar { height: calc(100vh - 32px); height: calc(100dvh - 32px); }
+  .calendar .card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .calendar .month { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .calendar .mbody { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .calendar .mnav { position: static; } /* netreba lepiť, z rolovania karty nikdy nezmizne */
+  .calendar .mbody ol { padding-bottom: 4px; }
+  .calendar .card > p { display: none; } /* úvodná veta ustúpi zoznamu; zostáva v popise stránky pre SEO */
+  .calendar h1 { margin-bottom: 4px; }
+}
 @media (min-width: 760px) {
-  .calendar .month { display: grid; grid-template-columns: 240px 1fr; column-gap: 32px; align-items: start; }
-  .calendar .month .mnav { grid-column: 1 / -1; }
+  .calendar .mbody { display: grid; grid-template-columns: 240px 1fr; column-gap: 32px; align-items: start; }
   .calendar .mgrid { max-width: 260px; }
   .calendar .mgrid a { padding: 6px 0; }
   .mnav { position: static; background: none; margin-inline: 0; padding-inline: 0; box-shadow: none; }

@@ -105,6 +105,34 @@ for (const [w, h] of SIZES) {
     if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih + 1) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
   }
 
+  // kalendár na mobile: karta sa celá zmestí na obrazovku a roluje sa jej vnútro (.mbody)
+  if (w < 760 && h >= 480) {
+    const cp = await ctx.newPage();
+    for (const l of LANGS) {
+      await cp.goto(`${BASE}/${CAL[l]}/`, { waitUntil: "domcontentloaded" });
+      await cp.waitForTimeout(120);
+      const r = await cp.evaluate(() => {
+        const d = document.documentElement, card = document.querySelector(".card"), nav = document.querySelector("main > nav");
+        const body = document.querySelector(".month.now .mbody, .month:target .mbody");
+        if (!body) return { missing: true };
+        body.scrollTop = body.scrollHeight;
+        const last = body.querySelector("li:last-child");
+        return { pageScrolls: d.scrollHeight > innerHeight + 1,
+          cardBottom: Math.round(card.getBoundingClientRect().bottom), navBottom: Math.round(nav.getBoundingClientRect().bottom),
+          vh: innerHeight, scrollable: body.scrollHeight > body.clientHeight + 1,
+          endReached: !last || last.getBoundingClientRect().bottom <= body.getBoundingClientRect().bottom + 1 };
+      });
+      const at = `${w}×${h} /${CAL[l]}/`;
+      checks++;
+      if (r.missing) { problems.push(`${at}: chýba .mbody`); continue; }
+      if (r.pageScrolls) problems.push(`${at}: roluje sa celá stránka, nie vnútro karty`);
+      if (r.cardBottom > r.vh + 1) problems.push(`${at}: spodok karty mimo obrazovky (${r.cardBottom} > ${r.vh})`);
+      if (r.navBottom > r.vh + 1) problems.push(`${at}: navigácia mimo obrazovky (${r.navBottom} > ${r.vh})`);
+      if (r.scrollable && !r.endReached) problems.push(`${at}: vnútro sa nedá dorolovať na koniec`);
+    }
+    await cp.close();
+  }
+
   // zväčšené písmo na celých stránkach: kontroluje sa len orezanie a presah, nie zmestenie na obrazovku
   {
     const bigPages = [...LANGS.map(l => `/${l === "sk" ? "" : l + "/"}`), ...LANGS.map(l => `/${CAL[l]}/`),
