@@ -3,11 +3,17 @@
 // Lokálne: node build.mjs && python -m http.server -d _site
 import fs from "node:fs";
 import vm from "node:vm";
+import crypto from "node:crypto";
 
 const SITE = "https://mathers12.github.io/catholic_saints/"; // pri vlastnej doméne stačí zmeniť tu
 const BRAND = "Sanctus diei";
 const OUT = "_site";
 const LANGS = ["sk", "en", "de"];
+
+// Verzia v odkaze na style.css a app.js podľa obsahu súboru: po zmene sa zmení URL, takže prehliadač
+// nedrží starú verziu z cache. Bez toho návštevník vidí staré štýly, kým mu nevyprší cache.
+const asset = f => `${f}?v=${crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8)}`;
+const CSS = asset("style.css"), JS = asset("app.js");
 
 const load = f => { const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync(f, "utf8"), ctx); return ctx.window; };
 const SAINTS = load("saints.js").SAINTS;
@@ -75,7 +81,7 @@ ${altLinks}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="${rel}style.css">
+<link rel="stylesheet" href="${rel}${CSS}">
 <script>try{if(sessionStorage.seen)document.documentElement.classList.add("seen");sessionStorage.seen=1}catch(e){}</script>
 ${jsonld ? `<script type="application/ld+json">${ld(jsonld)}</script>` : ""}
 </head>
@@ -83,7 +89,7 @@ ${jsonld ? `<script type="application/ld+json">${ld(jsonld)}</script>` : ""}
 <div class="scene" aria-hidden="true"><div class="photo"></div><div class="veil"></div><div class="glow"></div></div>
 ${scripts ? '<canvas id="motes"></canvas>' : ""}
 ${body(rel)}
-${scripts ? `<script src="${rel}app.js" defer></script>` : ""}
+${scripts ? `<script src="${rel}${JS}" defer></script>` : ""}
 </body>
 </html>
 `;
