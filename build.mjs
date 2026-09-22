@@ -199,7 +199,8 @@ for (const lang of LANGS) {
 out("sk/", `<!doctype html><meta charset="utf-8"><link rel="canonical" href="${SITE}"><meta http-equiv="refresh" content="0; url=../"><title>${BRAND}</title>`);
 fs.writeFileSync(`${OUT}/404.html`, page({ lang: "sk", path: "404.html", rel: SITE, title: `404 | ${BRAND}`, desc: UI.sk.notFound, image: imgUrl(SAINTS[0].img, 1200),
   scripts: false, noindex: true, body: () => `<main class="calendar"><article class="card"><h1>404</h1>${LANGS.map(l =>
-  `<p>${UI[l].notFound} <a href="${SITE}${homePath(l)}">${UI[l].back}</a></p>`).join("")}</article></main>` }));
+  `<p>${UI[l].notFound}</p>`).join("")}<nav>${LANGS.map(l =>
+  `<a class="btn" hreflang="${l}" href="${SITE}${homePath(l)}">${UI[l].back}</a>`).join("")}</nav></article></main>` }));
 
 const today = new Date().toISOString().slice(0, 10);
 fs.writeFileSync(`${OUT}/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>
