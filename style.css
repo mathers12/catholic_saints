@@ -9,6 +9,7 @@
 body {
   font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #f6ead6;
   padding: 16px; overflow-x: clip; /* nie hidden – to robí z body posuvný kontajner a rozbíja sticky */
+  overflow-wrap: break-word; /* dlhé slová (napr. „Heiligenkalender“) sa pri zväčšenom písme zlomia, nepretečú */
 }
 a { color: inherit; }
 
@@ -214,9 +215,13 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
 .mnav { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
   position: sticky; top: 0; z-index: 2; background: #fffbf3;
   margin-inline: calc(-1 * var(--pad)); padding: 8px var(--pad); box-shadow: 0 6px 12px -10px rgba(90,65,30,.6); }
-.mnav a { padding: 7px 0; font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap; }
+/* pri zväčšenom písme (Android: Chrome → Veľkosť textu) sa tri položky do riadka nezmestia;
+   nech sa radšej zalomia, než aby rozšírili dokument a nechali sa orezať */
+.mnav { flex-wrap: wrap; }
+.mnav a { padding: 7px 0; font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .mnav a:hover { text-decoration: underline; }
-.mnav h2 { text-align: center; margin: 0; }
+.mnav h2 { text-align: center; margin: 0; min-width: 0; }
 .calendar .mgrid { margin-bottom: 12px; gap: 4px; } /* na mobile cez celú šírku karty – väčšie plôšky na ťuknutie */
 .calendar .mgrid a { padding: 9px 0; }
 .calendar li.today { background: #f3e4c3; border-radius: 6px; }

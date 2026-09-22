@@ -40,6 +40,14 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
 - Vnútorné odsadenie karty je premenná `--pad`; lišty cez celú šírku karty rob cez `margin-inline: calc(-1 * var(--pad))`.
 - Skúšaj aj nemčinu a angličtinu, sú dlhšie ako slovenčina a pretečú skôr; a aj nízke displeje (média
   `max-height`), nielen úzke.
+- Počítaj so zväčšeným písmom (Chrome na Androide: Nastavenia → Zjednodušenie prístupu → Veľkosť textu).
+  `check.mjs` preto prechádza stránky aj pri 20 px namiesto 16 px; vtedy stránka smie byť dlhšia, ale nesmie
+  pretiecť do šírky. Preto žiadne `white-space: nowrap` v lište, ktorá sa musí zmestiť, a dlhé slová nechaj
+  zlomiť (`overflow-wrap`).
+- Na plochy vyššie ako obrazovka nedávaj `backdrop-filter`. Prehliadače na mobile takú veľkú rozmazanú
+  plochu nemusia vykresliť celú a spodok vyzerá odseknutý; tam patrí jednofarebné pozadie.
+- `overflow-x` na `body` daj `clip`, nie `hidden` – `hidden` robí z `body` posuvný kontajner a rozbíja
+  `position: sticky`. Presah ale rieš tým, že ho odstrániš, nie tým, že ho orežeš.
 
 ## Ako pracovať s týmto projektom (šetrenie tokenov a času)
 - `saints.js` a `i18n/*.js` sú veľké (150–180 kB). Nečítaj ich celé; vyber si, čo potrebuješ:

@@ -105,6 +105,38 @@ for (const [w, h] of SIZES) {
     if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih + 1) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
   }
 
+  // zväčšené písmo na celých stránkach: kontroluje sa len orezanie a presah, nie zmestenie na obrazovku
+  {
+    const bigPages = [...LANGS.map(l => `/${l === "sk" ? "" : l + "/"}`), ...LANGS.map(l => `/${CAL[l]}/`),
+                      ...LANGS.flatMap(l => days.slice(0, 3).map(f => `/${l}/${f}/`))];
+    const bp = await ctx.newPage();
+    await bp.addInitScript(px => addEventListener("DOMContentLoaded",
+      () => document.documentElement.style.fontSize = px + "px"), BIG_FONT);
+    for (const url of bigPages) {
+      await bp.goto(BASE + url, { waitUntil: "domcontentloaded" });
+      await bp.waitForTimeout(80);
+      const r = await bp.evaluate(min => {
+        const d = document.documentElement, W = d.clientWidth, out = { over: [], tiny: [], sw: d.scrollWidth, cw: W };
+        const name = el => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "");
+        for (const el of document.querySelectorAll("main *")) {
+          if (el.closest(".mtabs")) continue;
+          const b = el.getBoundingClientRect();
+          if (!b.width && !b.height) continue;
+          if (b.right > W + 1 || b.left < -1) out.over.push(`${name(el)} [${Math.round(b.left)},${Math.round(b.right)}]`);
+          if (el.matches("a, button, select, [role=button]") && Math.min(b.width, b.height) < min)
+            out.tiny.push(`${name(el)} ${Math.round(b.width)}×${Math.round(b.height)}`);
+        }
+        return out;
+      }, MIN_TAP);
+      const at = `${w}×${h} ${url} (písmo ${BIG_FONT}px)`;
+      checks++;
+      if (r.sw > r.cw + 1) problems.push(`${at}: vodorovné posúvanie (${r.sw} > ${r.cw})`);
+      if (r.over.length) problems.push(`${at}: mimo obrazovky → ${[...new Set(r.over)].slice(0, 4).join(", ")}`);
+      if (r.tiny.length) problems.push(`${at}: plôška menšia ako ${MIN_TAP} px → ${[...new Set(r.tiny)].slice(0, 4).join(", ")}`);
+    }
+    await bp.close();
+  }
+
   // dialóg kalendára po ťuknutí na dátum – pri bežnom aj zväčšenom písme
   for (const font of [0, BIG_FONT]) {
     for (const l of LANGS) {
