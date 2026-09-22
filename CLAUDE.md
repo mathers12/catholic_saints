@@ -6,6 +6,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, sitemap.xml, robots.txt (SEO).
 - nasadenie: `.github/workflows/pages.yml` pri pushi a každú noc (dnešný svätý na domovskej). `_site/` sa necommituje.
 - lokálne: `node build.mjs && python -m http.server -d _site`. Adresa webu je konštanta `SITE` v `build.mjs`.
+- `style.css` a `app.js` sa odkazujú s `?v=<hash obsahu>`, aby prehliadač po nasadení nedržal starú verziu
+  z cache. Nové statické súbory pridávaj cez `asset()` v `build.mjs`, nie natvrdo.
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).
