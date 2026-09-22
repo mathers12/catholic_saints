@@ -6,6 +6,8 @@
 //   node check.mjs --all --sizes=320x568,375x812  – len vybrané veľkosti (rýchlejší úplný prechod)
 // Čo overuje na každej veľkosti: žiadne vodorovné posúvanie, nič mimo obrazovky, plôšky na ťuknutie
 // aspoň MIN_TAP, a denné stránky sa zmestia na jednu obrazovku (od FIT_W × FIT_H vyššie).
+// Navyše: dialóg kalendára (po ťuknutí na dátum) sa nesmie orezať a jeho obsah musí byť dosiahnuteľný,
+// a to aj pri zväčšenom písme (BIG_FONT) – vtedy sa kontroluje len orezanie, nie zmestenie na obrazovku.
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
@@ -15,6 +17,7 @@ const SITE = "https://mathers12.github.io/catholic_saints/"; // musí sedieť s 
 const ROOT = "_site";
 const MIN_TAP = 24;          // px – najmenší rozmer klikateľného prvku
 const FIT_W = 320, FIT_H = 568; // od tejto veľkosti sa denná stránka musí zmestiť bez posúvania
+const BIG_FONT = 20;         // px – používateľ so zväčšeným písmom (predvolené je 16)
 const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [768, 1024], [1366, 768], [1920, 1080]];
 const LANGS = ["sk", "en", "de"];
 const CAL = { sk: "sk/kalendar", en: "en/calendar", de: "de/kalender" };
@@ -100,6 +103,36 @@ for (const [w, h] of SIZES) {
     if (r.over.length) problems.push(`${at}: mimo obrazovky → ${[...new Set(r.over)].slice(0, 4).join(", ")}`);
     if (r.tiny.length) problems.push(`${at}: plôška menšia ako ${MIN_TAP} px → ${[...new Set(r.tiny)].slice(0, 4).join(", ")}`);
     if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih + 1) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
+  }
+
+  // dialóg kalendára po ťuknutí na dátum – pri bežnom aj zväčšenom písme
+  for (const font of [0, BIG_FONT]) {
+    for (const l of LANGS) {
+      const dp = await ctx.newPage();
+      if (font) await dp.addInitScript(px => addEventListener("DOMContentLoaded",
+        () => document.documentElement.style.fontSize = px + "px"), font);
+      await dp.goto(`${BASE}/${l}/09-22/`, { waitUntil: "domcontentloaded" });
+      await dp.waitForTimeout(250);
+      const opened = await dp.evaluate(() => { const d = document.getElementById("date"); if (!d) return false; d.click(); return true; });
+      await dp.waitForTimeout(250);
+      const r = await dp.evaluate(() => {
+        const d = document.getElementById("cal");
+        if (!d || !d.open) return { skip: true };
+        const b = d.getBoundingClientRect(), cs = getComputedStyle(d);
+        return { top: Math.round(b.top), bottom: Math.round(b.bottom), vh: innerHeight,
+          hidden: d.scrollHeight > d.clientHeight + 1, scrollable: /auto|scroll/.test(cs.overflowY),
+          sh: d.scrollHeight, ch: d.clientHeight };
+      });
+      const at = `${w}×${h} /${l}/ dialóg${font ? ` (písmo ${font}px)` : ""}`;
+      checks++;
+      if (!opened || r.skip) problems.push(`${at}: dialóg sa neotvoril`);
+      else {
+        if (r.top < -1 || r.bottom > r.vh + 1) problems.push(`${at}: orezaný obrazovkou (${r.top}–${r.bottom} v ${r.vh})`);
+        if (r.hidden && !r.scrollable) problems.push(`${at}: obsah sa nedá dorolovať (${r.sh} > ${r.ch})`);
+        if (!font && r.hidden) problems.push(`${at}: obsah sa nezmestí bez posúvania (${r.sh} > ${r.ch})`);
+      }
+      await dp.close();
+    }
   }
   await ctx.close();
 }
