@@ -2,6 +2,10 @@
   --ink: #2c2319; --muted: #6e5c46; --gold: #a8761f; --gold-2: #d4a24c; --line: rgba(168,118,31,.3);
   --t0: 2.6s; /* úvodné svitanie; pri ďalších stránkach v tej istej návšteve sa preskočí */
   --pad: clamp(16px, 3vw, 32px); /* vnútorný okraj karty */
+  /* pozadie – ladiace hodnoty na jednom mieste */
+  --bg-pos: 50% 35%;   /* ktorý výrez fotky je vidieť (po preklopení sa ľavá/pravá prehodí) */
+  --bg-dim: .88;       /* stmavenie fotky: 1 = originál, menej = tmavšie */
+  --bg-cross: 38%;     /* kde je kríž – tam smeruje svetlo aj dych fotky */
 }
 .seen { --t0: 0s; }
 .seen .scene, .seen main { animation: none; }
@@ -17,22 +21,23 @@ a { color: inherit; }
 .scene, .scene > * { position: fixed; pointer-events: none; }
 .scene { inset: 0; z-index: 0; overflow: hidden; animation: sunrise 4s ease-out both; }
 @keyframes sunrise { from { filter: brightness(.08) saturate(.4); } 40% { filter: brightness(.55) saturate(.8); } }
-/* fotka na šírku cez celé pozadie. Kríž je na 62 % šírky a 5–90 % výšky fotky.
-   Široká obrazovka: fotka vyplní šírku, zarovnaná hore → celý kríž nad kartou.
-   Úzka obrazovka: fotka vyplní výšku, posun 70 % dá kríž do stredu. */
-.photo { inset: 0; background: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=2400") 70% 0% / cover no-repeat;
-  transform-origin: 62% 26%; animation: breath 50s ease-in-out infinite alternate;
+/* Fotka cez celé pozadie (Unsplash CDN, voľná licencia). Je preklopená cez scaleX(-1),
+   takže kríž vychádza na ľavú stranu; výrez, stmavenie a poloha kríža sú premenné v :root. */
+.photo { inset: 0; background: url("https://images.unsplash.com/photo-1541346183200-e8e117d945dd?w=2400&q=80&fm=webp") var(--bg-pos) / cover no-repeat;
+  transform: scaleX(-1); filter: brightness(var(--bg-dim));
+  transform-origin: 50% 26%; /* preklopenie okolo stredu = čistá zrkadlová os, bez posunu výrezu */
+  animation: breath 50s ease-in-out infinite alternate;
 }
 @keyframes breath { to { scale: 1.06; } }
 /* zosvetlenie – nádych svitania */
-.veil { inset: 0; background: linear-gradient(rgba(255,250,240,.28), rgba(255,250,240,.05) 45%, rgba(255,244,225,.25)); }
+.veil { inset: 0; background: linear-gradient(rgba(255,250,240,.16), rgba(255,250,240,.02) 45%, rgba(255,244,225,.14)); }
 /* Božie svetlo, ktoré pokojne dýcha za krížom */
 .glow {
   inset: 0; mix-blend-mode: screen;
   background: radial-gradient(circle at var(--cx, 50%) 26%, rgba(255,247,225,.55), rgba(255,230,180,.18) 22%, transparent 45%);
   animation: pulse 8s ease-in-out infinite;
 }
-@media (min-aspect-ratio: 3/2) { .glow { --cx: 62%; } }
+@media (min-aspect-ratio: 3/2) { .glow { --cx: var(--bg-cross); } }
 @keyframes pulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
 canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
