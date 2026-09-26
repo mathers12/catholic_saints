@@ -159,6 +159,22 @@ ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.toda
   return path;
 }
 
+// kalendár: potiahnutie prstom doľava/doprava (a šípky) prepne mesiac; bez JS fungujú odkazy #mN
+const CAL_JS = `(() => {
+  const cur = () => +(/^#m(\\d+)$/.exec(location.hash) || [])[1] || +document.querySelector(".month.now").id.slice(1);
+  const go = n => location.replace("#m" + ((cur() - 1 + n + 12) % 12 + 1));
+  addEventListener("keydown", e => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); });
+  let p = null;
+  const card = document.querySelector(".calendar .card");
+  card.addEventListener("touchstart", e => p = e.touches.length === 1 && !e.target.closest(".mtabs") ? e.touches[0] : null, { passive: true });
+  card.addEventListener("touchend", e => {
+    if (!p) return;
+    const t = e.changedTouches[0], dx = t.clientX - p.clientX, dy = t.clientY - p.clientY;
+    p = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) go(dx > 0 ? -1 : 1);
+  });
+})();`;
+
 function calendar(lang) {
   const u = UI[lang], path = calPath(lang);
   const alts = Object.fromEntries(LANGS.map(l => [l, calPath(l)]));
@@ -186,7 +202,8 @@ ${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " 
 </article>
 <nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
   : `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}" title="${UI[l].cal}">${l.toUpperCase()}</a>`).join("")}</nav>
-</main>` }));
+</main>
+<script>${CAL_JS}</script>` }));
   return path;
 }
 
