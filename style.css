@@ -139,6 +139,8 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
   .lang { padding: 7px 2px; font-size: .78rem; }
   .date { letter-spacing: .04em; font-size: .7rem; }
 }
+/* úzke displeje: nápis hore (nemčina je najdlhšia) nech ostane v jednom riadku – dva riadky by vytlačili stránku pod obrazovku */
+@media (max-width: 420px) { .badge { letter-spacing: .02em; padding-inline: 10px; } .badge .orn { display: none; } }
 /* úzke displeje: karta sa musí zmestiť bez posúvania */
 @media (max-width: 380px) {
   .badge { margin-top: 6px; padding: 4px 10px; font-size: .7rem; }

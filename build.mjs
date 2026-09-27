@@ -145,7 +145,7 @@ function dayView(lang, feast, home) {
   const bodyAttrs = `data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), jsonld, bodyAttrs, body: rel => `<main>
 <a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
-<div class="badge">✦ ${home ? u.badgeToday : u.badgeDay} ✦</div>
+<div class="badge"><span class="orn" aria-hidden="true">✦ </span>${home ? u.badgeToday : u.badgeDay}<span class="orn" aria-hidden="true"> ✦</span></div>
 ${card(s)}
 <nav>
 <a class="btn" id="prev" rel="prev" href="${rel}${dayPath(lang, neighbour(feast, -1))}" aria-label="${u.prevL}">${u.prev}</a>
