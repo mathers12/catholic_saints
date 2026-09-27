@@ -34,17 +34,17 @@ const dayText = (lang, feast) => { const [m, d] = md(feast); return lang === "en
 
 const UI = {
   sk: { site: "Svätý dňa", every: "rímskokatolícky svätý na každý deň", prev: "‹ Včera", next: "Zajtra ›", today: "Dnes",
-        prevL: "Predchádzajúci deň", nextL: "Nasledujúci deň", badgeToday: "Dnes si Cirkev pripomína", badgeDay: "V tento deň si Cirkev pripomína",
+        prevL: "Predchádzajúci deň", nextL: "Nasledujúci deň", badgeToday: "Dnes si Katolícka cirkev pripomína", badgeDay: "V tento deň si Katolícka cirkev pripomína",
         cal: "Kalendár svätých", calSlug: "kalendar", calIntro: "Svätí a sviatky na každý deň roka podľa rímskokatolíckeho liturgického kalendára na Slovensku.",
         dayTitle: (n, dt) => `${n} – svätý dňa ${dt}`, prevM: "Predchádzajúci mesiac", nextM: "Nasledujúci mesiac", close: "Zavrieť", locale: "sk_SK", notFound: "Táto stránka neexistuje.", back: "Späť na svätého dňa",
         faith: "Rímskokatolícka stránka", about: "O stránke", aboutSlug: "o-stranke" },
   en: { site: "Saint of the Day", every: "a Roman Catholic saint for every day", prev: "‹ Yesterday", next: "Tomorrow ›", today: "Today",
-        prevL: "Previous day", nextL: "Next day", badgeToday: "Today the Church remembers", badgeDay: "On this day the Church remembers",
+        prevL: "Previous day", nextL: "Next day", badgeToday: "Today the Catholic Church remembers", badgeDay: "On this day the Catholic Church remembers",
         cal: "Calendar of Saints", calSlug: "calendar", calIntro: "Saints and feasts for every day of the year, following the Roman Catholic liturgical calendar.",
         dayTitle: (n, dt) => `${n} – Saint of the Day, ${dt}`, prevM: "Previous month", nextM: "Next month", close: "Close", locale: "en_US", notFound: "This page does not exist.", back: "Back to the saint of the day",
         faith: "Roman Catholic website", about: "About", aboutSlug: "about" },
   de: { site: "Heiliger des Tages", every: "ein römisch-katholischer Heiliger für jeden Tag", prev: "‹ Gestern", next: "Morgen ›", today: "Heute",
-        prevL: "Vorheriger Tag", nextL: "Nächster Tag", badgeToday: "Heute gedenkt die Kirche", badgeDay: "An diesem Tag gedenkt die Kirche",
+        prevL: "Vorheriger Tag", nextL: "Nächster Tag", badgeToday: "Heute gedenkt die katholische Kirche", badgeDay: "An diesem Tag gedenkt die katholische Kirche",
         cal: "Heiligenkalender", calSlug: "kalender", calIntro: "Heilige und Feste für jeden Tag des Jahres nach dem römisch-katholischen liturgischen Kalender.",
         dayTitle: (n, dt) => `${n} – Heiliger des Tages, ${dt}`, prevM: "Vorheriger Monat", nextM: "Nächster Monat", close: "Schließen", locale: "de_DE", notFound: "Diese Seite existiert nicht.", back: "Zurück zum Heiligen des Tages",
         faith: "Römisch-katholische Website", about: "Über uns", aboutSlug: "ueber-uns" },
@@ -153,7 +153,7 @@ ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.toda
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
 <select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select>
 </nav>
-<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}">✝ ${u.faith}</a>
+<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}"><span class="cross" aria-hidden="true">✝</span>${u.faith}</a>
 </main>
 <dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
 <form method="dialog"><button class="cal-x" aria-label="${u.close}">×</button></form>

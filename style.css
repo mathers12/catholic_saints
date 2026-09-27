@@ -122,9 +122,12 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
 .lang { padding: 8px 10px; }
 .btn:hover, .btn:focus-visible { border-color: var(--gold-2); color: var(--gold); box-shadow: 0 0 20px rgba(212,162,76,.45); outline: none; }
 /* znak rímskokatolíckej stránky pod navigáciou dennej stránky – vedie na „O stránke“ */
-.faith { align-self: center; display: inline-flex; align-items: center; min-height: 26px; margin-top: 8px; padding: 2px 12px; font-size: .72rem; letter-spacing: .06em; color: var(--ink);
-  text-decoration: none; text-shadow: 0 0 10px #fff, 0 0 3px #fff; }
-.faith:hover, .faith:focus-visible { color: var(--gold); text-decoration: underline; outline: none; }
+.faith { align-self: center; display: inline-flex; align-items: center; gap: 8px; min-height: 26px; margin-top: 8px; padding: 2px 14px 2px 4px;
+  border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.6); backdrop-filter: blur(6px);
+  font-family: "Cormorant Garamond", serif; font-size: .9rem; font-weight: 600; letter-spacing: .04em; color: var(--gold); text-decoration: none; transition: .25s; }
+.faith .cross { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: .75rem;
+  background: linear-gradient(135deg, #f3d38a, #a8761f); color: #fff; }
+.faith:hover, .faith:focus-visible { border-color: var(--gold-2); box-shadow: 0 0 16px rgba(212,162,76,.45); outline: none; }
 @media (max-width: 420px) {
   nav { gap: 6px; }
   .btn, .lang { padding: 7px 11px; font-size: .85rem; }
