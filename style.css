@@ -142,18 +142,20 @@ nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin
   .frame img { height: clamp(72px, 14vh, 230px); }
   .story { line-height: 1.45; }
 }
+/* odkaz „Rímskokatolícka stránka“ nesmie na bežných telefónoch (360×640) pretlačiť stránku pod obrazovku */
+@media (max-height: 680px) { .faith { margin-top: 0; min-height: 24px; padding-block: 0; } }
 /* nízke displeje (malé telefóny, na šírku): zvislé medzery na minimum */
 @media (max-height: 620px) {
-  .card { padding-block: 10px; }
+  .card { padding-block: 6px; }
   .badge { margin-top: 4px; padding: 3px 10px; font-size: .68rem; }
   .portrait { margin-bottom: 6px; }
-  .frame img { height: clamp(64px, 12vh, 230px); }
+  .frame img { height: clamp(56px, 10vh, 230px); }
   h1 { font-size: clamp(1.3rem, 3.4vh, 2.6rem); }
   .meta { margin-top: 2px; font-size: .72rem; }
   blockquote { margin-top: 6px; font-size: clamp(.95rem, 2.4vh, 1.65rem); line-height: 1.25; }
   .divider { margin-block: 6px; }
   .story { font-size: clamp(.78rem, 1.7vh, 1rem); }
-  .faith { margin-top: 0; min-height: 24px; padding-block: 0; }
+  nav { margin-top: 6px; }
 }
 
 /* kalendár všetkých svätých */
