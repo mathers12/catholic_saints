@@ -9,6 +9,8 @@ const SITE = "https://mathers12.github.io/catholic_saints/"; // pri vlastnej dom
 const BRAND = "Sanctus diei";
 const OUT = "_site";
 const LANGS = ["sk", "en", "de"];
+// meno pápeža na stránke „O stránke“ – pri novom pápežovi zmeň tu (sk, en, de)
+const POPE = { sk: "Levom XIV.", en: "Pope Leo XIV", de: "Papst Leo XIV." };
 
 // Verzia v odkaze na style.css a app.js podľa obsahu súboru: po zmene sa zmení URL, takže prehliadač
 // nedrží starú verziu z cache. Bez toho návštevník vidí staré štýly, kým mu nevyprší cache.
@@ -31,24 +33,28 @@ const md = feast => feast.split("-").map(Number);
 const dayText = (lang, feast) => { const [m, d] = md(feast); return lang === "en" ? `${MONTHS.en[m - 1]} ${d}` : `${d}. ${MONTHS[lang][m - 1]}`; };
 
 const UI = {
-  sk: { site: "Svätý dňa", every: "katolícky svätý na každý deň", prev: "‹ Včera", next: "Zajtra ›", today: "Dnes",
+  sk: { site: "Svätý dňa", every: "rímskokatolícky svätý na každý deň", prev: "‹ Včera", next: "Zajtra ›", today: "Dnes",
         prevL: "Predchádzajúci deň", nextL: "Nasledujúci deň", badgeToday: "Dnes si Cirkev pripomína", badgeDay: "V tento deň si Cirkev pripomína",
-        cal: "Kalendár svätých", calSlug: "kalendar", calIntro: "Svätí a sviatky na každý deň roka podľa liturgického kalendára na Slovensku.",
-        dayTitle: (n, dt) => `${n} – svätý dňa ${dt}`, prevM: "Predchádzajúci mesiac", nextM: "Nasledujúci mesiac", close: "Zavrieť", locale: "sk_SK", notFound: "Táto stránka neexistuje.", back: "Späť na svätého dňa" },
-  en: { site: "Saint of the Day", every: "a Catholic saint for every day", prev: "‹ Yesterday", next: "Tomorrow ›", today: "Today",
+        cal: "Kalendár svätých", calSlug: "kalendar", calIntro: "Svätí a sviatky na každý deň roka podľa rímskokatolíckeho liturgického kalendára na Slovensku.",
+        dayTitle: (n, dt) => `${n} – svätý dňa ${dt}`, prevM: "Predchádzajúci mesiac", nextM: "Nasledujúci mesiac", close: "Zavrieť", locale: "sk_SK", notFound: "Táto stránka neexistuje.", back: "Späť na svätého dňa",
+        faith: "Rímskokatolícka stránka", about: "O stránke", aboutSlug: "o-stranke" },
+  en: { site: "Saint of the Day", every: "a Roman Catholic saint for every day", prev: "‹ Yesterday", next: "Tomorrow ›", today: "Today",
         prevL: "Previous day", nextL: "Next day", badgeToday: "Today the Church remembers", badgeDay: "On this day the Church remembers",
-        cal: "Calendar of Saints", calSlug: "calendar", calIntro: "Saints and feasts for every day of the year, following the liturgical calendar.",
-        dayTitle: (n, dt) => `${n} – Saint of the Day, ${dt}`, prevM: "Previous month", nextM: "Next month", close: "Close", locale: "en_US", notFound: "This page does not exist.", back: "Back to the saint of the day" },
-  de: { site: "Heiliger des Tages", every: "ein katholischer Heiliger für jeden Tag", prev: "‹ Gestern", next: "Morgen ›", today: "Heute",
+        cal: "Calendar of Saints", calSlug: "calendar", calIntro: "Saints and feasts for every day of the year, following the Roman Catholic liturgical calendar.",
+        dayTitle: (n, dt) => `${n} – Saint of the Day, ${dt}`, prevM: "Previous month", nextM: "Next month", close: "Close", locale: "en_US", notFound: "This page does not exist.", back: "Back to the saint of the day",
+        faith: "Roman Catholic website", about: "About", aboutSlug: "about" },
+  de: { site: "Heiliger des Tages", every: "ein römisch-katholischer Heiliger für jeden Tag", prev: "‹ Gestern", next: "Morgen ›", today: "Heute",
         prevL: "Vorheriger Tag", nextL: "Nächster Tag", badgeToday: "Heute gedenkt die Kirche", badgeDay: "An diesem Tag gedenkt die Kirche",
-        cal: "Heiligenkalender", calSlug: "kalender", calIntro: "Heilige und Feste für jeden Tag des Jahres nach dem liturgischen Kalender.",
-        dayTitle: (n, dt) => `${n} – Heiliger des Tages, ${dt}`, prevM: "Vorheriger Monat", nextM: "Nächster Monat", close: "Schließen", locale: "de_DE", notFound: "Diese Seite existiert nicht.", back: "Zurück zum Heiligen des Tages" },
+        cal: "Heiligenkalender", calSlug: "kalender", calIntro: "Heilige und Feste für jeden Tag des Jahres nach dem römisch-katholischen liturgischen Kalender.",
+        dayTitle: (n, dt) => `${n} – Heiliger des Tages, ${dt}`, prevM: "Vorheriger Monat", nextM: "Nächster Monat", close: "Schließen", locale: "de_DE", notFound: "Diese Seite existiert nicht.", back: "Zurück zum Heiligen des Tages",
+        faith: "Römisch-katholische Website", about: "Über uns", aboutSlug: "ueber-uns" },
 };
 
 // cesty (relatívne ku koreňu webu)
 const homePath = lang => lang === "sk" ? "" : `${lang}/`;
 const dayPath = (lang, feast) => `${lang}/${feast}/`;
 const calPath = lang => `${lang}/${UI[lang].calSlug}/`;
+const aboutPath = lang => `${lang}/${UI[lang].aboutSlug}/`;
 
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const imgUrl = (f, w) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=${w}`;
@@ -128,7 +134,7 @@ function dayView(lang, feast, home) {
   const desc = clip(home ? `${u.site} – ${u.every}. ${u.badgeToday}: ${s.name}. ${q(lang, s.quote)}` : `${q(lang, s.quote)} ${s.story}`);
   const person = s.years ? { "@type": "Person", name: s.name, image: imgUrl(s.img, 1200) } : { "@type": "Thing", name: s.name, image: imgUrl(s.img, 1200) };
   const jsonld = home
-    ? { "@context": "https://schema.org", "@type": "WebSite", name: BRAND, alternateName: u.site, url: SITE, inLanguage: lang, description: desc }
+    ? { "@context": "https://schema.org", "@type": "WebSite", name: BRAND, alternateName: u.site, url: SITE, inLanguage: lang, description: desc, about: CHURCH }
     : { "@context": "https://schema.org", "@graph": [
         { "@type": "WebPage", name: title, url: SITE + path, inLanguage: lang, description: desc, about: person,
           isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
@@ -147,6 +153,7 @@ ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.toda
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
 <select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select>
 </nav>
+<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}">✝ ${u.faith}</a>
 </main>
 <dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
 <form method="dialog"><button class="cal-x" aria-label="${u.close}">×</button></form>
@@ -200,10 +207,64 @@ ${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " 
 <div class="mbody">${grid(i, list, rel)}
 <ol>${list.map(s => `<li${s.feast === todayKey ? ' class="today"' : ""}><a href="${rel}${dayPath(lang, s.feast)}"><span class="d">${md(s.feast)[1]}.</span> ${esc(saint(lang, s).name)}</a></li>`).join("")}</ol></div></section>`).join("\n")}
 </article>
-<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
   : `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}" title="${UI[l].cal}">${l.toUpperCase()}</a>`).join("")}</nav>
 </main>
 <script>${CAL_JS}</script>` }));
+  return path;
+}
+
+// stránka „O stránke“: jasne hovorí, že web je rímskokatolícky, podľa čoho vyberá svätých a kto za ním (ne)stojí
+const LINKS = [["https://www.vatican.va/", "vatican.va"], ["https://www.kbs.sk/", "kbs.sk"], ["https://lc.kbs.sk/", "lc.kbs.sk"]];
+const ABOUT = {
+  sk: { desc: "Sanctus diei je rímskokatolícka stránka: svätý na každý deň podľa liturgického kalendára Katolíckej cirkvi, v jednote so Svätým Otcom.",
+    lead: "Sanctus diei je <b>rímskokatolícka</b> stránka. Každý deň predstavuje svätého alebo sviatok, ktorý si v ten deň pripomína Katolícka cirkev.",
+    parts: [
+      ["Viera", [`Stránka verne nasleduje učenie Katolíckej cirkvi, ako ho podáva Katechizmus Katolíckej cirkvi – v jednote so Svätým Otcom, pápežom ${POPE.sk}, nástupcom apoštola Petra, a s biskupmi, ktorí sú s ním v spoločenstve.`,
+        "Spolu s Cirkvou vyznávame Najsvätejšiu Trojicu a Ježiša Krista, pravého Boha a pravého človeka, prítomného v Eucharistii. Uctievame Pannu Máriu, Bohorodičku, i všetkých svätých, ktorí nás povzbudzujú príkladom a prihovárajú sa za nás u Boha."]],
+      ["Podľa čoho vyberáme svätých", ["Slávenia podľa Rímskeho misála (2021) – Všeobecného rímskeho kalendára a osobitného kalendára diecéz na Slovensku, ako ich uvádza liturgické direktórium Konferencie biskupov Slovenska. V dni bez povinného slávenia uvádzame svätého z Rímskeho martyrológia.",
+        "Citáty sú overiteľné výroky svätých alebo verše zo Svätého písma s presným odkazom."]],
+      ["Kto za stránkou stojí", ["Stránka je súkromná iniciatíva na povzbudenie vo viere. Nie je oficiálnou stránkou Svätej stolice ani Konferencie biskupov Slovenska. Oficiálne informácie nájdete tu:"]] ] },
+  en: { desc: "Sanctus diei is a Roman Catholic website: a saint for every day following the liturgical calendar of the Catholic Church, in communion with the Holy Father.",
+    lead: "Sanctus diei is a <b>Roman Catholic</b> website. Each day it presents the saint or feast the Catholic Church remembers on that day.",
+    parts: [
+      ["Faith", [`The website faithfully follows the teaching of the Catholic Church as set out in the Catechism of the Catholic Church – in communion with the Holy Father, ${POPE.en}, successor of the Apostle Peter, and with the bishops in communion with him.`,
+        "With the Church we profess the Most Holy Trinity and Jesus Christ, true God and true man, present in the Eucharist. We honour the Virgin Mary, Mother of God, and all the saints, who encourage us by their example and intercede for us with God."]],
+      ["How the saints are chosen", ["Celebrations according to the Roman Missal (2021) – the General Roman Calendar and the proper calendar of the dioceses of Slovakia, as listed in the liturgical directory of the Slovak Bishops' Conference. On days without an obligatory celebration, a saint from the Roman Martyrology.",
+        "Quotations are verifiable sayings of the saints or verses from Holy Scripture with an exact reference."]],
+      ["Who is behind the website", ["The website is a private initiative to encourage people in the faith. It is not an official website of the Holy See or of the Slovak Bishops' Conference. Official information can be found here:"]] ] },
+  de: { desc: "Sanctus diei ist eine römisch-katholische Website: ein Heiliger für jeden Tag nach dem liturgischen Kalender der katholischen Kirche, in Einheit mit dem Heiligen Vater.",
+    lead: "Sanctus diei ist eine <b>römisch-katholische</b> Website. Jeden Tag stellt sie den Heiligen oder das Fest vor, dessen die katholische Kirche an diesem Tag gedenkt.",
+    parts: [
+      ["Glaube", [`Die Website folgt treu der Lehre der katholischen Kirche, wie sie der Katechismus der Katholischen Kirche darlegt – in Einheit mit dem Heiligen Vater, ${POPE.de}, dem Nachfolger des Apostels Petrus, und mit den Bischöfen, die mit ihm in Gemeinschaft stehen.`,
+        "Mit der Kirche bekennen wir die Heiligste Dreifaltigkeit und Jesus Christus, wahrer Gott und wahrer Mensch, gegenwärtig in der Eucharistie. Wir verehren die Jungfrau Maria, die Gottesmutter, und alle Heiligen, die uns durch ihr Beispiel ermutigen und bei Gott für uns eintreten."]],
+      ["Wie die Heiligen ausgewählt werden", ["Feiern nach dem Römischen Messbuch (2021) – dem Allgemeinen Römischen Kalender und dem Eigenkalender der Diözesen der Slowakei, wie sie das liturgische Direktorium der Slowakischen Bischofskonferenz angibt. An Tagen ohne gebotene Feier ein Heiliger aus dem Römischen Martyrologium.",
+        "Zitate sind überprüfbare Worte der Heiligen oder Verse der Heiligen Schrift mit genauer Stellenangabe."]],
+      ["Wer hinter der Website steht", ["Die Website ist eine private Initiative zur Ermutigung im Glauben. Sie ist keine offizielle Website des Heiligen Stuhls oder der Slowakischen Bischofskonferenz. Offizielle Informationen finden Sie hier:"]] ] },
+};
+// Katolícka cirkev na Wikidata – pre vyhľadávače, o čom (a v akej viere) web je
+const CHURCH = { "@type": "Organization", name: "Catholic Church", sameAs: ["https://www.wikidata.org/wiki/Q9592", "https://www.vatican.va/"] };
+
+function aboutPage(lang) {
+  const u = UI[lang], a = ABOUT[lang], path = aboutPath(lang);
+  const alts = Object.fromEntries(LANGS.map(l => [l, aboutPath(l)]));
+  alts["x-default"] = aboutPath("en");
+  const title = `${u.about} – ${u.faith} | ${BRAND}`;
+  out(path, page({ lang, path, title, desc: a.desc, alts, image: imgUrl(SAINTS[0].img, 1200), scripts: false,
+    jsonld: { "@context": "https://schema.org", "@type": "AboutPage", name: title, url: SITE + path, inLanguage: lang, description: a.desc, about: CHURCH,
+              isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
+    body: rel => `<main class="prose">
+<a class="date" href="${rel}${homePath(lang)}">‹ ${u.site}</a>
+<article class="card">
+<p class="seal" aria-hidden="true">✝</p>
+<h1>${u.about}</h1>
+<p class="lead">${a.lead}</p>
+${a.parts.map(([h, ps]) => `<h2>${h}</h2>\n${ps.map(p => `<p>${esc(p)}</p>`).join("\n")}`).join("\n")}
+<ul>${LINKS.map(([href, t]) => `<li><a href="${href}" rel="noopener">${t}</a></li>`).join("")}</ul>
+</article>
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
+  : `<a class="btn" hreflang="${l}" href="${rel}${aboutPath(l)}" title="${UI[l].about}">${l.toUpperCase()}</a>`).join("")}</nav>
+</main>` }));
   return path;
 }
 
@@ -217,6 +278,7 @@ for (const lang of LANGS) {
   for (const f of FEASTS) urls.push({ path: dayView(lang, f, false), alt: l => dayPath(l, f), changefreq: "yearly" });
   fs.writeFileSync(`${OUT}/${lang}/names.json`, JSON.stringify(Object.fromEntries(SAINTS.map(s => [s.feast, saint(lang, s).name]))));
   urls.push({ path: calendar(lang), alt: l => calPath(l), changefreq: "monthly" });
+  urls.push({ path: aboutPage(lang), alt: l => aboutPath(l), changefreq: "yearly" });
 }
 // /sk/ nie je samostatná stránka – slovenská domovská je koreň
 out("sk/", `<!doctype html><meta charset="utf-8"><link rel="canonical" href="${SITE}"><meta http-equiv="refresh" content="0; url=../"><title>${BRAND}</title>`);

@@ -21,6 +21,7 @@ const BIG_FONT = 20;         // px – používateľ so zväčšeným písmom (p
 const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [768, 1024], [1366, 768], [1920, 1080]];
 const LANGS = ["sk", "en", "de"];
 const CAL = { sk: "sk/kalendar", en: "en/calendar", de: "de/kalender" };
+const ABOUT = { sk: "sk/o-stranke", en: "en/about", de: "de/ueber-uns" };
 
 const arg = n => process.argv.find(a => a.startsWith(`--${n}=`))?.split("=")[1];
 const all = process.argv.includes("--all");
@@ -60,6 +61,7 @@ for (const l of LANGS) {
   pages.push({ url: `/${l === "sk" ? "" : l + "/"}`, day: true });
   for (const f of days) pages.push({ url: `/${l}/${f}/`, day: true });
   pages.push({ url: `/${CAL[l]}/`, day: false });
+  pages.push({ url: `/${ABOUT[l]}/`, day: false });
 }
 pages.push({ url: "/404.html", day: false });
 
@@ -135,7 +137,7 @@ for (const [w, h] of SIZES) {
 
   // zväčšené písmo na celých stránkach: kontroluje sa len orezanie a presah, nie zmestenie na obrazovku
   {
-    const bigPages = [...LANGS.map(l => `/${l === "sk" ? "" : l + "/"}`), ...LANGS.map(l => `/${CAL[l]}/`),
+    const bigPages = [...LANGS.map(l => `/${l === "sk" ? "" : l + "/"}`), ...LANGS.map(l => `/${CAL[l]}/`), ...LANGS.map(l => `/${ABOUT[l]}/`),
                       ...LANGS.flatMap(l => days.slice(0, 3).map(f => `/${l}/${f}/`))];
     const bp = await ctx.newPage();
     await bp.addInitScript(px => addEventListener("DOMContentLoaded",
