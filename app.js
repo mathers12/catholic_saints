@@ -28,7 +28,7 @@ const img = document.querySelector(".frame img");
 if (img) {
   if (img.complete && img.naturalWidth) img.classList.add("loaded");
   img.onload = () => img.classList.add("loaded");
-  img.onerror = () => img.replaceWith(img.nextElementSibling.textContent);
+  img.onerror = () => { const sym = img.nextElementSibling; img.replaceWith(sym.textContent); sym.remove(); };
 }
 
 // kalendár: klik na dátum otvorí mesiac, deň vedie na stránku svätého (bez JS odkaz vedie na celý kalendár)
@@ -60,7 +60,7 @@ $("calGrid").onmouseover = tip; $("calGrid").onfocusin = tip;
 
 $("lang").onchange = e => { store.set(e.target.value); location.href = e.target.selectedOptions[0].dataset.href; };
 const go = id => dlg.open ? shiftMonth(id === "prev" ? -1 : 1) : $(id) && $(id).click();
-addEventListener("keydown", e => { if (e.key === "ArrowLeft") go("prev"); if (e.key === "ArrowRight") go("next"); });
+addEventListener("keydown", e => { if (e.altKey || e.ctrlKey || e.metaKey || e.target.tagName === "SELECT") return; if (e.key === "ArrowLeft") go("prev"); if (e.key === "ArrowRight") go("next"); });
 let x0 = null;
 addEventListener("touchstart", e => x0 = e.touches[0].clientX, { passive: true });
 addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 60) go(dx > 0 ? "prev" : "next"); x0 = null; });
