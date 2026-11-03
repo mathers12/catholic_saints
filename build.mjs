@@ -107,12 +107,12 @@ function card(s, when, foot) {
   const D = x => `style="animation-delay:calc(var(--t0) + ${x.toFixed(2)}s)"`;
   return `<article class="card">
 <div class="head fade"><div class="frame"><img src="${imgUrl(s.img, 500)}" alt="${esc(s.name)}"><span class="sym" aria-hidden="true">${s.symbol}</span></div><div class="when">${when}</div></div>
-<h1 class="fade" ${D(.2)}>${esc(s.name)}</h1>
-<div class="meta fade" ${D(.35)}>${[s.title, s.years].filter(Boolean).map(esc).join(" · ")}</div>
-<blockquote class="fade" ${D(.7)}>${esc(s.quote)}</blockquote>
-<div class="source fade" ${D(.9)}>${esc(s.source)}</div>
-<p class="story fade" ${D(1.2)}>${esc(s.story)}</p>
-<div class="fade" ${D(1.5)}>${foot}</div>
+<h1 class="fade" ${D(.1)}>${esc(s.name)}</h1>
+<div class="meta fade" ${D(.2)}>${[s.title, s.years].filter(Boolean).map(esc).join(" · ")}</div>
+<blockquote class="fade" ${D(.35)}>${esc(s.quote)}</blockquote>
+<div class="source fade" ${D(.45)}>${esc(s.source)}</div>
+<p class="story fade" ${D(.55)}>${esc(s.story)}</p>
+<div class="fade" ${D(.7)}>${foot}</div>
 </article>`;
 }
 

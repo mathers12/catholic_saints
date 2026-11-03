@@ -1,7 +1,7 @@
 /* „Pred svitaním“: nočná fotka kríža cez celé pozadie, text beží na tmavom podklade */
 :root {
   --ink: #f2f0ea; --muted: #d2d4da; --gold: #e6dcb8; --night: #060a14; --line: rgba(230,220,184,.4);
-  --t0: .4s; /* úvodné objavenie textu; pri ďalších stránkach v tej istej návšteve sa preskočí */
+  --t0: .15s; /* úvodné objavenie textu; pri ďalších stránkach v tej istej návšteve sa preskočí */
   --pad: clamp(16px, 4vw, 56px); /* vnútorný okraj karty */
   --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=1920");
   --w: max(100vw, 150vh); /* šírka javiska: fotka má pomer 3:2 a vždy pokryje obrazovku */
@@ -94,7 +94,7 @@ blockquote { quotes: "„" "“"; }
 blockquote::before { content: open-quote; } blockquote::after { content: close-quote; }
 .source { font-size: clamp(.8rem, 1.8vh, .98rem); color: var(--muted); }
 .story { margin-top: clamp(2px, .7vh, 8px); max-width: 72ch; font-size: clamp(.84rem, 2.2vh, 1.13rem); line-height: 1.3; text-wrap: pretty; }
-.fade { animation: fadeUp 1.2s ease-out both; }
+.fade { animation: fadeUp .7s ease-out both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(-8px); } }
 
 nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
