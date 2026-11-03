@@ -29,7 +29,7 @@ Návšteva je krátke každodenné zastavenie alebo príchod z vyhľadávača na
 - Citát je skutočný výrok svätého alebo verš z Písma s presným odkazom. Citáty, dátumy ani slávenia sa nevymýšľajú a neposúvajú.
 - Denná stránka sa od 320×568 zmestí na jednu obrazovku bez posúvania.
 - Statický web generovaný skriptom, obrázky sú voľne použiteľné súbory z Wikimedia Commons.
-- Nepotvrdené: či sa má pri 11. novembri naďalej používať obraz `Simone_Martini_040.jpg`, ktorý má na ornáte stredoveký ornament v tvare svastiky.
+- Rozhodnuté majiteľom webu: pri 11. novembri ostáva obraz `Simone_Martini_040.jpg` bez orezania, hoci má na ornáte stredoveký ornament v tvare svastiky.
 
 ## Brand Commitments
 - Názov je Sanctus diei, po slovensky Svätý dňa.
