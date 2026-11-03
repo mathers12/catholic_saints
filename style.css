@@ -1,6 +1,6 @@
 /* „Pred svitaním“: nočná fotka kríža cez celé pozadie, text beží na tmavom podklade */
 :root {
-  --ink: #f2f0ea; --muted: #d2d4da; --gold: #e6dcb8; --night: #060a14; --line: rgba(230,220,184,.4);
+  --ink: #f4f6fb; --muted: #dbe1f0; --accent: #cfdcff; --night: #071432; --line: rgba(207,220,255,.4);
   --t0: .15s; /* úvodné objavenie textu; pri ďalších stránkach v tej istej návšteve sa preskočí */
   --pad: clamp(16px, 4vw, 56px); /* vnútorný okraj karty */
   --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=1920");
@@ -16,8 +16,8 @@ body {
   overflow-wrap: break-word; /* dlhé slová (napr. „Heiligenkalender“) sa pri zväčšenom písme zlomia, nepretečú */
 }
 a { color: inherit; }
-a:hover { color: var(--gold); }
-a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+a:hover { color: var(--accent); }
+a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* scéna: fotka je zrkadlovo otočená (kríž vľavo, text vpravo). Súradnice vnútri .stage sú v pôvodnej fotke:
    priesečník kríža 62,2 % × 26,6 %, ramená 47,75–76,85 % šírky, spodok ramien 30,2 % výšky.
@@ -28,7 +28,7 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid
 .move { position: absolute; inset: 0; transform-origin: 62.2% 26.6%; animation: breath 54s ease-in-out infinite alternate; }
 .photo, .dark, .stars, .stars::before, .stars::after { position: absolute; inset: 0; }
 .photo { background: var(--photo) center / 100% 100% no-repeat; }
-.dark { background: #050916; opacity: .4; animation: dawn 36s ease-in-out infinite alternate; } /* noc pomaly bledne k prvému svetlu */
+.dark { background: #0b2467; opacity: .4; animation: dawn 36s ease-in-out infinite alternate; } /* noc pomaly bledne k prvému svetlu */
 .stars { animation: starsfade 36s ease-in-out infinite alternate; }
 .stars::before, .stars::after, .stars i { content: ""; animation: blink 5s ease-in-out infinite; }
 .stars i { position: absolute; inset: 0; animation-duration: 7s; animation-delay: -2s;
@@ -50,15 +50,15 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid
     radial-gradient(circle 1.6px at 55% 19%, #fff 55%, transparent), radial-gradient(circle 1.3px at 66% 7%, #fff 55%, transparent),
     radial-gradient(circle 1.3px at 21% 6%, #fff 55%, transparent), radial-gradient(circle 1.6px at 76% 8%, #fff 55%, transparent); }
 .halo { position: absolute; left: 62.2%; top: 26.6%; width: 56%; aspect-ratio: 1; transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(236,242,255,.7), rgba(214,226,250,.26) 28%, rgba(214,226,250,0) 64%); animation: pulse 11s ease-in-out infinite; }
+  background: radial-gradient(circle, rgba(223,233,255,.7), rgba(223,233,255,.26) 28%, rgba(223,233,255,0) 64%); animation: pulse 11s ease-in-out infinite; }
 .fog { position: absolute; left: -30%; width: 160%; top: 42%; height: 30%; animation: drift 50s ease-in-out infinite alternate;
-  background: radial-gradient(ellipse at 30% 50%, rgba(205,218,240,.2), rgba(205,218,240,0) 55%), radial-gradient(ellipse at 72% 60%, rgba(205,218,240,.15), rgba(205,218,240,0) 50%); }
+  background: radial-gradient(ellipse at 30% 50%, rgba(189,210,250,.2), rgba(189,210,250,0) 55%), radial-gradient(ellipse at 72% 60%, rgba(189,210,250,.15), rgba(189,210,250,0) 50%); }
 .cross { clip-path: polygon(60.25% 6.25%, 61.15% 5.05%, 63.55% 5.05%, 64.45% 6.25%, 64.4% 23.3%, 76.15% 23.3%, 76.72% 24.25%, 76.72% 28.45%, 75.95% 30.05%, 64.4% 30.05%, 64.25% 91%, 59.95% 91%, 60.1% 30.05%, 48.85% 30.05%, 47.88% 28.8%, 47.88% 24.85%, 48.85% 23.3%, 60.2% 23.3%); }
 /* tieň pod textom je pod vrstvou kríža, aby kríž nestmavol ani neprekryl */
-.shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,10,20,.58), rgba(6,10,20,.36) 50%, rgba(6,10,20,0)) top / 100% 150px no-repeat; }
+.shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,20,50,.68), rgba(7,20,50,.44) 50%, rgba(7,20,50,0)) top / 100% 150px no-repeat; }
 @keyframes breath { to { transform: scale(1.04); } }
 @keyframes dawn { from { opacity: .62; } to { opacity: .16; } }
-@keyframes dawnwide { from { opacity: .68; } to { opacity: .44; } }
+@keyframes dawnwide { from { opacity: .68; } to { opacity: .52; } }
 @keyframes starsfade { from { opacity: 1; } to { opacity: .15; } }
 @keyframes blink { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 @keyframes pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
@@ -72,30 +72,30 @@ main { position: relative; z-index: 1; display: flex; flex-direction: column; mi
 .links a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 .about-link { display: none !important; } /* na mobile vedie na „O stránke“ odkaz pod kartou */
 @media (max-width: 479px) { .cal-link { display: none !important; } } /* kalendár otvorí aj dátum */
-.lang { min-height: 36px; padding: 0 6px; background: rgba(6,10,20,.6); color: var(--ink); border: 1px solid rgba(242,240,234,.4); border-radius: 2px; font: inherit; cursor: pointer; }
+.lang { min-height: 36px; padding: 0 6px; background: rgba(7,20,50,.6); color: var(--ink); border: 1px solid rgba(244,246,251,.4); border-radius: 2px; font: inherit; cursor: pointer; }
 .lang option { color: var(--ink); background: var(--night); }
 
 .card { margin-top: auto; padding: clamp(8px, 1.6vh, 16px) var(--pad) 2px; background: var(--night); border-top: 1px solid var(--line); }
 .head { display: flex; align-items: center; gap: 12px; }
 .frame { flex: none; display: grid; place-items: center; height: clamp(52px, 9.5vh, 96px); aspect-ratio: 3 / 4; overflow: hidden; font-size: 1.6rem;
-  border: 1px solid var(--line); border-radius: 999px 999px 3px 3px; background: #141a2a; }
+  border: 1px solid var(--line); border-radius: 999px 999px 3px 3px; background: #12234d; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; filter: saturate(.7); opacity: 0; transition: opacity .8s; }
 .frame img.loaded { opacity: 1; }
 .sym { display: none; } /* symbol sa ukáže len vtedy, keď sa obrázok nenačíta (app.js) */
-.date { display: inline-block; min-height: 26px; padding: 4px 0; font-family: Cinzel, Georgia, serif; font-size: clamp(.72rem, 1.9vh, .98rem); letter-spacing: .05em; color: var(--gold); text-decoration: none; }
-/* dátum otvára kalendár, preto vyzerá ako tlačidlo; JS mení jeho text, ikona a šípka sú preto v pseudoprvkoch */
-#date { display: inline-flex; align-items: center; gap: .5em; padding: 2px .6em; border: 1px solid var(--gold); border-radius: 2px; background: rgba(6,10,20,.55); text-shadow: none; transition: background-color .2s, color .2s; }
+.date { display: inline-block; min-height: 26px; padding: 4px 0; font-family: Cinzel, Georgia, serif; font-size: clamp(.72rem, 1.9vh, .98rem); letter-spacing: .05em; color: var(--accent); text-decoration: none; }
+/* dátum otvára kalendár: tichá linka, ikona a šípka to naznačia bez rámu; JS mení jeho text, ikona a šípka sú preto v pseudoprvkoch */
+#date { display: inline-flex; align-items: center; gap: .45em; padding: 2px 0; border-bottom: 1px solid var(--line); transition: color .2s, border-color .2s; }
 #date::before { content: ""; flex: none; width: 1.15em; height: 1.15em; background: currentColor;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='1'/%3E%3Cpath d='M3 10h18M8 2v5M16 2v5'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='1'/%3E%3Cpath d='M3 10h18M8 2v5M16 2v5'/%3E%3C/svg%3E") center / contain no-repeat; }
 #date::after { content: ""; flex: none; width: .45em; height: .45em; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.15em) rotate(45deg); }
-#date:hover, #date:focus-visible { background: var(--gold); color: var(--night); }
+#date:hover, #date:focus-visible { color: var(--ink); border-bottom-color: currentColor; }
 .badge { margin-top: 3px; }
 @media (max-width: 479px) { .date { font-size: clamp(.72rem, 3.4vw, .84rem); letter-spacing: .03em; } } /* dlhý nemecký dátum nech ostane v jednom riadku a karta neprekryje ramená kríža */
 .badge { font-size: clamp(.84rem, 2vh, 1.06rem); font-style: italic; line-height: 1.3; text-wrap: pretty; }
 h1 { margin-top: clamp(2px, .8vh, 8px); font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: clamp(1.12rem, 3.4vh, 1.8rem); line-height: 1.12; }
 .meta { font-size: clamp(.84rem, 2vh, 1.06rem); line-height: 1.25; color: var(--muted); }
-blockquote { margin-top: clamp(2px, .8vh, 8px); font-style: italic; font-size: clamp(1.02rem, 3vh, 1.65rem); line-height: 1.14; color: var(--gold); }
+blockquote { margin-top: clamp(2px, .8vh, 8px); font-style: italic; font-size: clamp(1.02rem, 3vh, 1.65rem); line-height: 1.14; color: var(--accent); }
 /* úvodzovky podľa jazyka */
 blockquote { quotes: "„" "“"; }
 :lang(en) blockquote { quotes: "“" "”"; }
@@ -108,10 +108,10 @@ blockquote::before { content: open-quote; } blockquote::after { content: close-q
 nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: clamp(30px, 6vh, 44px); font-size: clamp(.98rem, 2.4vh, 1.13rem); text-underline-offset: 3px; }
 #today { font-weight: 500; }
-.btn.on { color: var(--gold); font-weight: 500; text-decoration: none; }
+.btn.on { color: var(--accent); font-weight: 500; text-decoration: none; }
 /* znak rímskokatolíckej stránky – vedie na „O stránke“ */
 .faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.84rem, 1.9vh, 1rem); font-style: italic; color: var(--muted); text-decoration: none; }
-.cross-sign { color: var(--gold); font-style: normal; }
+.cross-sign { color: var(--accent); font-style: normal; }
 
 /* počítač: kríž vľavo voľne, text vpravo priamo na fotke */
 @media (min-width: 1024px) and (min-aspect-ratio: 1/1) {
@@ -120,7 +120,7 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   /* text stojí priamo na fotke bez tmavého pásu: čitateľnosť drží tieň písmen a noc, ktorá sa tu rozvidnieva menej */
   .dark { animation-name: dawnwide; }
   .card { width: min(560px, 43vw); margin: auto var(--pad) auto auto; padding: 0; background: none; border: 0;
-    text-shadow: 0 1px 2px rgba(6,10,20,.95), 0 0 10px rgba(6,10,20,.9), 0 0 24px rgba(6,10,20,.7); }
+    text-shadow: 0 1px 2px rgba(7,20,50,.95), 0 0 10px rgba(7,20,50,.9), 0 0 24px rgba(7,20,50,.7); }
   .calendar .card, .prose .card { text-shadow: none; }
   .head { gap: 18px; }
   .frame { height: clamp(96px, 18vh, 168px); }
@@ -134,9 +134,9 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   .card nav { margin-top: clamp(2px, 1vh, 10px); justify-content: flex-start; gap: 0 20px; }
   .faith { flex-basis: auto; margin-left: auto; }
   /* kalendár a „O stránke“: panel vpravo, kríž ostáva vľavo voľný */
-  .calendar, .prose { --pad: clamp(16px, 2.6vw, 40px); width: max(46vw, 520px); margin-left: auto; background: rgba(6,10,20,.62); border-left: 1px solid var(--line); }
+  .calendar, .prose { --pad: clamp(16px, 2.6vw, 40px); width: max(46vw, 520px); margin-left: auto; background: rgba(7,20,50,.62); border-left: 1px solid var(--line); }
   .calendar > nav, .prose > nav, .calendar .card, .prose .card { background: none; }
-  .mgrid a { background: rgba(6,10,20,.3); }
+  .mgrid a { background: rgba(7,20,50,.3); }
   .calendar .card, .prose .card { width: auto; margin: 0; padding: 0 var(--pad) 8px; }
 }
 
@@ -147,13 +147,13 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .calendar h1, .prose h1 { margin: 0 0 4px; font-size: clamp(1.3rem, 3.6vh, 2.2rem); }
 .calendar .card > p { color: var(--muted); line-height: 1.3; margin-bottom: 6px; text-wrap: pretty; }
 .card > p:has(+ .mtabs) { display: none; } /* úvodná veta na mobile ustúpi zoznamu; zostáva v popise stránky pre SEO */
-.calendar h2, .prose h2 { font-family: Cinzel, Georgia, serif; font-weight: 400; color: var(--gold); }
+.calendar h2, .prose h2 { font-family: Cinzel, Georgia, serif; font-weight: 400; color: var(--accent); }
 .calendar h2 { font-size: 1.2rem; }
 .calendar ol { list-style: none; padding: 0; margin-top: 8px; columns: 2 220px; column-gap: 28px; }
 .calendar li { break-inside: avoid; font-size: 1.06rem; line-height: 1.15; }
-.calendar li a { display: flex; align-items: center; min-height: 40px; padding: 4px 0; text-decoration: none; border-bottom: 1px solid rgba(230,220,184,.16); }
-.calendar li.today a { color: var(--gold); font-weight: 500; }
-.calendar .d { flex: none; display: inline-block; min-width: 2.2em; color: var(--gold); }
+.calendar li a { display: flex; align-items: center; min-height: 40px; padding: 4px 0; text-decoration: none; border-bottom: 1px solid rgba(207,220,255,.16); }
+.calendar li.today a { color: var(--accent); font-weight: 500; }
+.calendar .d { flex: none; display: inline-block; min-width: 2.2em; color: var(--accent); }
 /* vždy len jeden mesiac: vybraný cez #mN, inak aktuálny; bez podpory :has sa ukážu všetky */
 .calendar:has(.month:target) .month:not(:target), .calendar:not(:has(.month:target)) .month:not(.now) { display: none; }
 .calendar .month { scroll-margin-top: 100vh; } /* pri prepnutí mesiaca zostane stránka hore */
@@ -161,22 +161,22 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .mtabs { display: flex; gap: 2px; margin-bottom: 2px; padding-bottom: 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .mtabs::-webkit-scrollbar { display: none; }
 .mtabs a { flex: 1 0 auto; padding: 5px 7px; text-align: center; font-size: 1rem; text-decoration: none; border: 1px solid transparent; }
-.mtabs a.now { color: var(--gold); border-color: var(--line); }
-.mtabs a:hover { color: var(--gold); }
+.mtabs a.now { color: var(--accent); border-color: var(--line); }
+.mtabs a:hover { color: var(--accent); }
 .mnav { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 8px; }
-.mnav a { padding: 6px 0; font-size: 1rem; color: var(--gold); text-decoration: none; min-width: 0; }
+.mnav a { padding: 6px 0; font-size: 1rem; color: var(--accent); text-decoration: none; min-width: 0; }
 .mnav a:hover { text-decoration: underline; }
 .mnav h2 { text-align: center; min-width: 0; }
 /* mesiac ako mriežka oddelená tenkými linkami */
 .cal-grid, .mgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; }
 .mgrid { gap: 1px; padding: 1px; font-size: 1.1rem; }
-.mgrid > * { box-shadow: 0 0 0 1px rgba(230,220,184,.22); }
-.mgrid a { background: #0a0f1c; }
-.cal-grid .wd, .mgrid .wd { padding: 3px 0; color: var(--gold); font-size: .85rem; }
+.mgrid > * { box-shadow: 0 0 0 1px rgba(207,220,255,.22); }
+.mgrid a { background: #0b1a3e; }
+.cal-grid .wd, .mgrid .wd { padding: 3px 0; color: var(--accent); font-size: .85rem; }
 .cal-grid a, .mgrid a { padding: 7px 0; text-decoration: none; }
-.cal-grid a:hover, .cal-grid a:focus-visible, .mgrid a:hover { background: rgba(230,220,184,.2); color: inherit; outline: none; }
-.cal-grid a.cur { box-shadow: inset 0 0 0 1px var(--gold); }
-.cal-grid a.today, .mgrid a.today { background: var(--gold); color: var(--night); font-weight: 500; }
+.cal-grid a:hover, .cal-grid a:focus-visible, .mgrid a:hover { background: rgba(207,220,255,.2); color: inherit; outline: none; }
+.cal-grid a.cur { box-shadow: inset 0 0 0 1px var(--accent); }
+.cal-grid a.today, .mgrid a.today { background: var(--accent); color: var(--night); font-weight: 500; }
 /* Celý kalendár sa zmestí na obrazovku (vidno jeho spodok aj navigáciu) a roluje sa až jeho vnútro – prepínač
    mesiaca zostáva navrchu. Na nízkych displejoch (na šírku) by vnútorné okno bolo prislabé, tam sa roluje stránka. */
 @media (min-height: 480px) {
@@ -193,29 +193,29 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 
 /* „O stránke“: text sa číta, stránka sa roluje; panel je vyšší ako obrazovka → jednofarebné pozadie, žiadny backdrop-filter */
 .prose .card { flex: 1; }
-.prose .seal { font-size: 2rem; line-height: 1; color: var(--gold); margin-bottom: 4px; }
+.prose .seal { font-size: 2rem; line-height: 1; color: var(--accent); margin-bottom: 4px; }
 .prose h2 { font-size: 1.25rem; margin: 20px 0 6px; line-height: 1.2; }
 .prose p, .prose li { font-size: 1.15rem; line-height: 1.42; text-wrap: pretty; }
 .prose p + p { margin-top: 8px; }
 .prose .lead { font-size: 1.4rem; font-style: italic; line-height: 1.3; }
-.prose .lead b { font-weight: 400; color: var(--gold); }
+.prose .lead b { font-weight: 400; color: var(--accent); }
 .prose ul { margin-top: 6px; padding-left: 1.2em; }
-.prose li a { display: inline-block; padding: 4px 0; color: var(--gold); }
+.prose li a { display: inline-block; padding: 4px 0; color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   .scene *, .scene *::before, .scene *::after, .fade { animation: none !important; }
 }
 
 /* kalendár po kliknutí na dátum (natívny <dialog>, mimo rozloženia – stránka sa neposúva) */
-#cal { margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: #0a0f1c; color: var(--ink);
+#cal { margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: #0b1a3e; color: var(--ink);
   width: min(340px, calc(100vw - 32px)); box-shadow: 0 30px 80px rgba(0,0,0,.6); animation: fadeUp .3s ease-out;
   max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; }
-#cal::backdrop { background: rgba(6,10,20,.6); }
+#cal::backdrop { background: rgba(7,20,50,.6); }
 .cal-box { position: relative; padding: 18px 16px 14px; text-align: center; }
 .cal-x { position: absolute; top: 6px; right: 10px; border: 0; background: none; font-size: 1.5rem; color: var(--muted); cursor: pointer; }
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 26px 10px 0; }
 .cal-head b { font-family: Cinzel, Georgia, serif; font-size: 1rem; font-weight: 400; text-transform: capitalize; }
-.cal-head button { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 2px; background: none; color: var(--gold); font-size: 1.1rem; cursor: pointer; }
+.cal-head button { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 2px; background: none; color: var(--accent); font-size: 1.1rem; cursor: pointer; }
 .cal-grid { gap: 2px; font-size: 1.02rem; }
-.cal-tip { min-height: 1.3em; margin: 8px 0 4px; color: var(--gold); font-size: 1.1rem; font-style: italic; line-height: 1.2; }
-.cal-all { font-size: 1rem; color: var(--gold); }
+.cal-tip { min-height: 1.3em; margin: 8px 0 4px; color: var(--accent); font-size: 1.1rem; font-style: italic; line-height: 1.2; }
+.cal-all { font-size: 1rem; color: var(--accent); }
