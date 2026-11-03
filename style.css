@@ -11,7 +11,7 @@
 .seen .fade { animation: none; }
 * { box-sizing: border-box; margin: 0; }
 body {
-  font-family: "EB Garamond", Georgia, serif; color: var(--ink); background: var(--night);
+  font-family: Spectral, Georgia, serif; color: var(--ink); background: var(--night);
   overflow-x: clip; /* nie hidden – to robí z body posuvný kontajner a rozbíja sticky */
   overflow-wrap: break-word; /* dlhé slová (napr. „Heiligenkalender“) sa pri zväčšenom písme zlomia, nepretečú */
 }
@@ -65,10 +65,22 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid
 @keyframes drift { from { transform: translateX(-7%); } to { transform: translateX(7%); } }
 
 /* všetko na jednu obrazovku: kríž hore, karta pri spodnom okraji */
+/* mobil a tablet na výšku: scéna vypĺňa miesto nad kartou a fotka sa zmenší tak, aby bolo vidno celý kríž.
+   Výšku karty pozná len prehliadač, preto riadky mriežky a jednotky cqh (výška scény). Na nízkych displejoch sa roluje, tam ostáva pozadie cez celú obrazovku. */
+@supports (container-type: size) {
+  @media (min-height: 480px) and (max-width: 1023px), (min-height: 480px) and (max-aspect-ratio: 1/1) {
+    body.day { display: grid; grid-template: minmax(120px, 1fr) auto / minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+    body.day main { display: contents; }
+    body.day .scene { position: relative; inset: auto; grid-area: 1 / 1; container-type: size; }
+    body.day .stage { --w: max(100vw, 150cqh); top: max(calc(var(--w) / -40), min(0px, calc(100cqh - var(--w) / 1.5))); } /* v tesnom priestore radšej menej neba než spodku kríža */
+    body.day .top { position: relative; z-index: 1; grid-area: 1 / 1; align-self: start; }
+    body.day .card { position: relative; z-index: 1; grid-area: 2 / 1; margin-top: 0; }
+  }
+}
 main { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
 .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 20px; padding: clamp(0px, .8vh, 10px) var(--pad); }
-.brand { display: inline-flex; align-items: center; min-height: 44px; font-family: Cinzel, Georgia, serif; font-size: clamp(.92rem, 2.4vh, 1.25rem); letter-spacing: .05em; text-decoration: none; }
-.links { display: flex; align-items: center; gap: 0 18px; font-size: 1.1rem; }
+.brand { display: inline-flex; align-items: center; min-height: 44px; font-family: Marcellus, Georgia, serif; font-size: clamp(.9rem, 2.3vh, 1.2rem); letter-spacing: .04em; text-decoration: none; }
+.links { display: flex; align-items: center; gap: 0 18px; font-size: 1.05rem; }
 .links a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 .about-link { display: none !important; } /* na mobile vedie na „O stránke“ odkaz pod kartou */
 @media (max-width: 479px) { .cal-link { display: none !important; } } /* kalendár otvorí aj dátum */
@@ -76,13 +88,14 @@ main { position: relative; z-index: 1; display: flex; flex-direction: column; mi
 .lang option { color: var(--ink); background: var(--night); }
 
 .card { margin-top: auto; padding: clamp(8px, 1.6vh, 16px) var(--pad) 2px; background: var(--night); border-top: 1px solid var(--line); }
-.head { display: flex; align-items: center; gap: 12px; }
-.frame { flex: none; display: grid; place-items: center; height: clamp(52px, 9.5vh, 96px); aspect-ratio: 3 / 4; overflow: hidden; font-size: 1.6rem;
+.head { display: flex; align-items: center; gap: clamp(10px, 3vw, 16px); }
+.who { flex: 1; min-width: 0; }
+.frame { flex: none; display: grid; place-items: center; height: clamp(84px, 16vh, 150px); aspect-ratio: 3 / 4; overflow: hidden; font-size: 1.6rem;
   border: 1px solid var(--line); border-radius: 999px 999px 3px 3px; background: #12234d; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; filter: saturate(.7); opacity: 0; transition: opacity .8s; }
 .frame img.loaded { opacity: 1; }
 .sym { display: none; } /* symbol sa ukáže len vtedy, keď sa obrázok nenačíta (app.js) */
-.date { display: inline-block; min-height: 26px; padding: 4px 0; font-family: Cinzel, Georgia, serif; font-size: clamp(.72rem, 1.9vh, .98rem); letter-spacing: .05em; color: var(--accent); text-decoration: none; }
+.date { display: inline-block; min-height: 26px; padding: 4px 0; font-size: clamp(.69rem, 1.81vh, .94rem); letter-spacing: .03em; color: var(--accent); text-decoration: none; }
 /* dátum otvára kalendár: tichá linka, ikona a šípka to naznačia bez rámu; JS mení jeho text, ikona a šípka sú preto v pseudoprvkoch */
 #date { display: inline-flex; align-items: center; gap: .45em; padding: 2px 0; border-bottom: 1px solid var(--line); transition: color .2s, border-color .2s; }
 #date::before { content: ""; flex: none; width: 1.15em; height: 1.15em; background: currentColor;
@@ -91,26 +104,26 @@ main { position: relative; z-index: 1; display: flex; flex-direction: column; mi
 #date::after { content: ""; flex: none; width: .45em; height: .45em; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.15em) rotate(45deg); }
 #date:hover, #date:focus-visible { color: var(--ink); border-bottom-color: currentColor; }
 .badge { margin-top: 3px; }
-@media (max-width: 479px) { .date { font-size: clamp(.72rem, 3.4vw, .84rem); letter-spacing: .03em; } } /* dlhý nemecký dátum nech ostane v jednom riadku a karta neprekryje ramená kríža */
-.badge { font-size: clamp(.84rem, 2vh, 1.06rem); font-style: italic; line-height: 1.3; text-wrap: pretty; }
-h1 { margin-top: clamp(2px, .8vh, 8px); font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: clamp(1.12rem, 3.4vh, 1.8rem); line-height: 1.12; }
-.meta { font-size: clamp(.84rem, 2vh, 1.06rem); line-height: 1.25; color: var(--muted); }
-blockquote { margin-top: clamp(2px, .8vh, 8px); font-style: italic; font-size: clamp(1.02rem, 3vh, 1.65rem); line-height: 1.14; color: var(--accent); }
+@media (max-width: 479px) { .date { font-size: clamp(.69rem, 3.25vw, .8rem); letter-spacing: .02em; } } /* dlhý nemecký dátum nech ostane v jednom riadku a karta neprekryje ramená kríža */
+.badge { font-size: clamp(.8rem, 1.91vh, 1.01rem); font-style: italic; line-height: 1.3; text-wrap: pretty; }
+h1 { margin-top: clamp(2px, .8vh, 8px); font-family: Marcellus, Georgia, serif; font-weight: 400; font-size: clamp(1.02rem, 2.9vh, 1.55rem); line-height: 1.12; }
+.meta { font-size: clamp(.8rem, 1.91vh, 1.01rem); line-height: 1.25; color: var(--muted); }
+blockquote { margin-top: clamp(2px, .8vh, 8px); font-style: italic; font-size: clamp(.97rem, 2.87vh, 1.58rem); line-height: 1.14; color: var(--accent); }
 /* úvodzovky podľa jazyka */
 blockquote { quotes: "„" "“"; }
 :lang(en) blockquote { quotes: "“" "”"; }
 blockquote::before { content: open-quote; } blockquote::after { content: close-quote; }
-.source { font-size: clamp(.8rem, 1.8vh, .98rem); color: var(--muted); }
-.story { margin-top: clamp(2px, .7vh, 8px); max-width: 72ch; font-size: clamp(.84rem, 2.1vh, 1.13rem); line-height: 1.3; text-wrap: pretty; }
+.source { font-size: clamp(.76rem, 1.72vh, .94rem); color: var(--muted); }
+.story { margin-top: clamp(2px, .7vh, 8px); max-width: 72ch; font-size: clamp(.8rem, 2.01vh, 1.08rem); line-height: 1.3; text-wrap: pretty; }
 .fade { animation: fadeUp .7s ease-out both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(-8px); } }
 
 nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
-.btn { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: clamp(30px, 6vh, 44px); font-size: clamp(.98rem, 2.4vh, 1.13rem); text-underline-offset: 3px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: clamp(30px, 6vh, 44px); font-size: clamp(.94rem, 2.29vh, 1.08rem); text-underline-offset: 3px; }
 #today { font-weight: 500; }
 .btn.on { color: var(--accent); font-weight: 500; text-decoration: none; }
 /* znak rímskokatolíckej stránky – vedie na „O stránke“ */
-.faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.84rem, 1.9vh, 1rem); font-style: italic; color: var(--muted); text-decoration: none; }
+.faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.8rem, 1.81vh, .96rem); font-style: italic; color: var(--muted); text-decoration: none; }
 .cross-sign { color: var(--accent); font-style: normal; }
 
 /* počítač: kríž vľavo voľne, text vpravo priamo na fotke */
@@ -122,15 +135,15 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   .card { width: min(560px, 43vw); margin: auto var(--pad) auto auto; padding: 0; background: none; border: 0;
     text-shadow: 0 1px 2px rgba(7,20,50,.95), 0 0 10px rgba(7,20,50,.9), 0 0 24px rgba(7,20,50,.7); }
   .calendar .card, .prose .card { text-shadow: none; }
-  .head { gap: 18px; }
-  .frame { height: clamp(96px, 18vh, 168px); }
-  .date { font-size: clamp(.9rem, 2vh, 1.1rem); }
-  .badge { font-size: clamp(1rem, 2.1vh, 1.15rem); }
-  h1 { margin-top: clamp(4px, 1.2vh, 14px); font-size: clamp(1.8rem, 5vh, 3.1rem); line-height: 1.1; }
-  .meta { font-size: clamp(1rem, 2.2vh, 1.25rem); }
-  blockquote { margin-top: clamp(6px, 1.4vh, 14px); font-size: clamp(1.5rem, 4vh, 2.5rem); }
-  .source { font-size: clamp(.95rem, 1.9vh, 1.06rem); }
-  .story { margin-top: clamp(6px, 1.2vh, 12px); font-size: clamp(1.02rem, 2.4vh, 1.25rem); line-height: 1.38; }
+  .head { gap: 20px; }
+  .frame { height: clamp(130px, 28vh, 280px); }
+  .date { font-size: clamp(.86rem, 1.91vh, 1.05rem); }
+  .badge { font-size: clamp(.96rem, 2.01vh, 1.1rem); }
+  h1 { margin-top: clamp(4px, 1.2vh, 14px); font-size: clamp(1.45rem, 3.8vh, 2.5rem); line-height: 1.1; }
+  .meta { font-size: clamp(.96rem, 2.1vh, 1.19rem); }
+  blockquote { margin-top: clamp(6px, 1.4vh, 14px); font-size: clamp(1.43rem, 3.82vh, 2.39rem); }
+  .source { font-size: clamp(.91rem, 1.81vh, 1.01rem); }
+  .story { margin-top: clamp(6px, 1.2vh, 12px); font-size: clamp(.97rem, 2.29vh, 1.19rem); line-height: 1.38; }
   .card nav { margin-top: clamp(2px, 1vh, 10px); justify-content: flex-start; gap: 0 20px; }
   .faith { flex-basis: auto; margin-left: auto; }
   /* kalendár a „O stránke“: panel vpravo, kríž ostáva vľavo voľný */
@@ -142,15 +155,21 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 
 /* kalendár všetkých svätých */
 .calendar .top, .prose .top { min-height: 33vh; align-items: flex-start; } /* na mobile necháva voľné ramená kríža */
+/* mobil: horný priestor je taký vysoký, aby sa do neho zmestil celý kríž */
+@media (min-height: 480px) and (max-width: 1023px), (min-height: 480px) and (max-aspect-ratio: 1/1) {
+  :root { --sky: min(max(33vh, 63vw), 50vh); }
+  body:not(.day) .stage { --w: max(100vw, calc(var(--sky) * 1.5)); }
+  .calendar .top, .prose .top { min-height: var(--sky); }
+}
 .calendar .card, .prose .card { margin-top: 0; padding-bottom: 8px; }
 .calendar > nav, .prose > nav { padding: 2px var(--pad) 4px; background: var(--night); border-top: 1px solid var(--line); gap: 0 12px; }
-.calendar h1, .prose h1 { margin: 0 0 4px; font-size: clamp(1.3rem, 3.6vh, 2.2rem); }
+.calendar h1, .prose h1 { margin: 0 0 4px; font-size: clamp(1.2rem, 3.3vh, 2rem); }
 .calendar .card > p { color: var(--muted); line-height: 1.3; margin-bottom: 6px; text-wrap: pretty; }
 .card > p:has(+ .mtabs) { display: none; } /* úvodná veta na mobile ustúpi zoznamu; zostáva v popise stránky pre SEO */
-.calendar h2, .prose h2 { font-family: Cinzel, Georgia, serif; font-weight: 400; color: var(--accent); }
-.calendar h2 { font-size: 1.2rem; }
+.calendar h2, .prose h2 { font-family: Marcellus, Georgia, serif; font-weight: 400; color: var(--accent); }
+.calendar h2 { font-size: 1.1rem; }
 .calendar ol { list-style: none; padding: 0; margin-top: 8px; columns: 2 220px; column-gap: 28px; }
-.calendar li { break-inside: avoid; font-size: 1.06rem; line-height: 1.15; }
+.calendar li { break-inside: avoid; font-size: 1.01rem; line-height: 1.15; }
 .calendar li a { display: flex; align-items: center; min-height: 40px; padding: 4px 0; text-decoration: none; border-bottom: 1px solid rgba(207,220,255,.16); }
 .calendar li.today a { color: var(--accent); font-weight: 500; }
 .calendar .d { flex: none; display: inline-block; min-width: 2.2em; color: var(--accent); }
@@ -160,19 +179,19 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 /* záložky mesiacov: vždy jeden riadok, na mobile sa posúvajú do strán (nezaberú 3 riadky) */
 .mtabs { display: flex; gap: 2px; margin-bottom: 2px; padding-bottom: 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .mtabs::-webkit-scrollbar { display: none; }
-.mtabs a { flex: 1 0 auto; padding: 5px 7px; text-align: center; font-size: 1rem; text-decoration: none; border: 1px solid transparent; }
+.mtabs a { flex: 1 0 auto; padding: 5px 7px; text-align: center; font-size: .96rem; text-decoration: none; border: 1px solid transparent; }
 .mtabs a.now { color: var(--accent); border-color: var(--line); }
 .mtabs a:hover { color: var(--accent); }
 .mnav { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 8px; }
-.mnav a { padding: 6px 0; font-size: 1rem; color: var(--accent); text-decoration: none; min-width: 0; }
+.mnav a { padding: 6px 0; font-size: .96rem; color: var(--accent); text-decoration: none; min-width: 0; }
 .mnav a:hover { text-decoration: underline; }
 .mnav h2 { text-align: center; min-width: 0; }
 /* mesiac ako mriežka oddelená tenkými linkami */
 .cal-grid, .mgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; }
-.mgrid { gap: 1px; padding: 1px; font-size: 1.1rem; }
+.mgrid { gap: 1px; padding: 1px; font-size: 1.05rem; }
 .mgrid > * { box-shadow: 0 0 0 1px rgba(207,220,255,.22); }
 .mgrid a { background: #0b1a3e; }
-.cal-grid .wd, .mgrid .wd { padding: 3px 0; color: var(--accent); font-size: .85rem; }
+.cal-grid .wd, .mgrid .wd { padding: 3px 0; color: var(--accent); font-size: .81rem; }
 .cal-grid a, .mgrid a { padding: 7px 0; text-decoration: none; }
 .cal-grid a:hover, .cal-grid a:focus-visible, .mgrid a:hover { background: rgba(207,220,255,.2); color: inherit; outline: none; }
 .cal-grid a.cur { box-shadow: inset 0 0 0 1px var(--accent); }
@@ -194,10 +213,10 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 /* „O stránke“: text sa číta, stránka sa roluje; panel je vyšší ako obrazovka → jednofarebné pozadie, žiadny backdrop-filter */
 .prose .card { flex: 1; }
 .prose .seal { font-size: 2rem; line-height: 1; color: var(--accent); margin-bottom: 4px; }
-.prose h2 { font-size: 1.25rem; margin: 20px 0 6px; line-height: 1.2; }
-.prose p, .prose li { font-size: 1.15rem; line-height: 1.42; text-wrap: pretty; }
+.prose h2 { font-size: 1.15rem; margin: 20px 0 6px; line-height: 1.2; }
+.prose p, .prose li { font-size: 1.1rem; line-height: 1.42; text-wrap: pretty; }
 .prose p + p { margin-top: 8px; }
-.prose .lead { font-size: 1.4rem; font-style: italic; line-height: 1.3; }
+.prose .lead { font-size: 1.34rem; font-style: italic; line-height: 1.3; }
 .prose .lead b { font-weight: 400; color: var(--accent); }
 .prose ul { margin-top: 6px; padding-left: 1.2em; }
 .prose li a { display: inline-block; padding: 4px 0; color: var(--accent); }
@@ -214,8 +233,8 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .cal-box { position: relative; padding: 18px 16px 14px; text-align: center; }
 .cal-x { position: absolute; top: 6px; right: 10px; border: 0; background: none; font-size: 1.5rem; color: var(--muted); cursor: pointer; }
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 26px 10px 0; }
-.cal-head b { font-family: Cinzel, Georgia, serif; font-size: 1rem; font-weight: 400; text-transform: capitalize; }
+.cal-head b { font-family: Marcellus, Georgia, serif; font-size: .95rem; font-weight: 400; text-transform: capitalize; }
 .cal-head button { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 2px; background: none; color: var(--accent); font-size: 1.1rem; cursor: pointer; }
-.cal-grid { gap: 2px; font-size: 1.02rem; }
-.cal-tip { min-height: 1.3em; margin: 8px 0 4px; color: var(--accent); font-size: 1.1rem; font-style: italic; line-height: 1.2; }
-.cal-all { font-size: 1rem; color: var(--accent); }
+.cal-grid { gap: 2px; font-size: .97rem; }
+.cal-tip { min-height: 1.3em; margin: 8px 0 4px; color: var(--accent); font-size: 1.05rem; font-style: italic; line-height: 1.2; }
+.cal-all { font-size: .96rem; color: var(--accent); }

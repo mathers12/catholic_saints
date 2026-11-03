@@ -43,7 +43,7 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
   rolovať, ale nesmú nič orezať ani preliezť do strán.
 - Kalendár sa (od 480 px výšky) celý zmestí na obrazovku: karta má výšku okna,
   vidno jej spodok aj navigáciu pod ňou a roluje sa až jej vnútro (`.mbody` = mriežka mesiaca + zoznam mien).
-  Hlavička karty a prepínač mesiaca teda z obrazovky nikdy nezmiznú. Denná karta nesmie od 640 px výšky zakryť ramená kríža a na počítači (od 1024 px) je text vpravo od nich. Na nízkych displejoch (na šírku)
+  Hlavička karty a prepínač mesiaca teda z obrazovky nikdy nezmiznú. Denná karta nesmie od 640 px výšky zakryť kríž: na mobile a tablete na výšku je celá scéna nad kartou (mriežka na `body.day`, jednotky `cqh`) a kríž sa zmenší tak, aby ho bolo vidno celý. Na počítači (od 1024 px) je text vpravo od neho. Na nízkych displejoch (na šírku)
   by bolo vnútorné okno prislabé, tam sa roluje stránka. `check.mjs` toto overuje.
 - Rozmery odvodzuj z `clamp()` a relatívnych jednotiek. Pevnú šírku či výšku (napr. `max-width: 260px`) dávaj
   len do media query pre konkrétne rozloženie, nikdy nie globálne – inak to na mobile vyzerá odseknuté.

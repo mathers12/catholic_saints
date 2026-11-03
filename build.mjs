@@ -87,7 +87,7 @@ ${altLinks}
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${rel}${CSS}">
 <link rel="preload" as="image" href="${PHOTO}1920" media="(min-width: 760px)">
 <link rel="preload" as="image" href="${PHOTO}1280" media="(max-width: 759px)">
@@ -106,9 +106,9 @@ ${scripts ? `<script src="${rel}${JS}" defer></script>` : ""}
 function card(s, when, foot) {
   const D = x => `style="animation-delay:calc(var(--t0) + ${x.toFixed(2)}s)"`;
   return `<article class="card">
-<div class="head fade"><div class="frame"><img src="${imgUrl(s.img, 500)}" alt="${esc(s.name)}"><span class="sym" aria-hidden="true">${s.symbol}</span></div><div class="when">${when}</div></div>
+<div class="head fade"><div class="frame"><img src="${imgUrl(s.img, 500)}" alt="${esc(s.name)}"><span class="sym" aria-hidden="true">${s.symbol}</span></div><div class="who"><div class="when">${when}</div>
 <h1 class="fade" ${D(.1)}>${esc(s.name)}</h1>
-<div class="meta fade" ${D(.2)}>${[s.title, s.years].filter(Boolean).map(esc).join(" · ")}</div>
+<div class="meta fade" ${D(.2)}>${[s.title, s.years].filter(Boolean).map(esc).join(" · ")}</div></div></div>
 <blockquote class="fade" ${D(.35)}>${esc(s.quote)}</blockquote>
 <div class="source fade" ${D(.45)}>${esc(s.source)}</div>
 <p class="story fade" ${D(.55)}>${esc(s.story)}</p>
@@ -140,7 +140,7 @@ function dayView(lang, feast, home) {
           { "@type": "ListItem", position: 1, name: u.site, item: SITE + homePath(lang) },
           { "@type": "ListItem", position: 2, name: u.cal, item: SITE + calPath(lang) },
           { "@type": "ListItem", position: 3, name: s.name, item: SITE + path } ] } ] };
-  const bodyAttrs = `data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
+  const bodyAttrs = `class="day" data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), jsonld, bodyAttrs, body: rel => `<main>
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
 ${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
