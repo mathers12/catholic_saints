@@ -83,7 +83,7 @@ ${altLinks}
 <meta property="og:image" content="${esc(image)}">
 <meta property="og:locale" content="${UI[lang].locale}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#060a14">
+<meta name="theme-color" content="#071432">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
