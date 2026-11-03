@@ -26,9 +26,10 @@ if (date.getMonth() === m - 1) $("date").textContent = date.toLocaleDateString(p
 
 const img = document.querySelector(".frame img");
 if (img) {
-  if (img.complete && img.naturalWidth) img.classList.add("loaded");
-  img.onload = () => img.classList.add("loaded");
-  img.onerror = () => { const sym = img.nextElementSibling; img.replaceWith(sym.textContent); sym.remove(); };
+  const loaded = () => img.classList.add("loaded");
+  const failed = () => { const sym = img.nextElementSibling; img.replaceWith(sym.textContent); sym.remove(); };
+  img.onload = loaded; img.onerror = failed;
+  if (img.complete) (img.naturalWidth ? loaded : failed)(); // obrázok mohol doraziť (alebo zlyhať) skôr, než sa spustil tento skript
 }
 
 // kalendár: klik na dátum otvorí mesiac, deň vedie na stránku svätého (bez JS odkaz vedie na celý kalendár)
@@ -64,24 +65,3 @@ addEventListener("keydown", e => { if (e.altKey || e.ctrlKey || e.metaKey || e.t
 let x0 = null;
 addEventListener("touchstart", e => x0 = e.touches[0].clientX, { passive: true });
 addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 60) go(dx > 0 ? "prev" : "next"); x0 = null; });
-
-// svetielka stúpajú zo zeme k nebu ako modlitby
-const c = $("motes"), ctx = c.getContext("2d");
-const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const dpr = devicePixelRatio;
-let W, H, motes = [];
-const resize = () => { W = c.width = innerWidth * dpr; H = c.height = innerHeight * dpr; };
-const mote = (y = Math.random() * H) => ({ x: Math.random() * W, y, s: (Math.random() * 1.8 + .6) * dpr, v: Math.random() * .35 + .12, p: Math.random() * 6.28 });
-resize(); addEventListener("resize", resize);
-for (let i = 0; i < 60; i++) motes.push(mote());
-(function tick() {
-  ctx.clearRect(0, 0, W, H);
-  for (const mo of motes) {
-    mo.y -= mo.v * dpr; mo.p += .02;
-    if (mo.y < -10) Object.assign(mo, mote(H + 10));
-    const a = (.55 + Math.sin(mo.p) * .35) * Math.min(1, mo.y / (H * .3));
-    ctx.beginPath(); ctx.arc(mo.x + Math.sin(mo.p) * 8, mo.y, mo.s, 0, 6.28);
-    ctx.fillStyle = `rgba(255,250,235,${a})`; ctx.shadowColor = "#ffd98a"; ctx.shadowBlur = 10; ctx.fill();
-  }
-  if (!still) requestAnimationFrame(tick);
-})();

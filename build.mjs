@@ -16,6 +16,7 @@ const POPE = { sk: "Levom XIV.", en: "Pope Leo XIV", de: "Papst Leo XIV." };
 // nedrží starú verziu z cache. Bez toho návštevník vidí staré štýly, kým mu nevyprší cache.
 const asset = f => `${f}?v=${crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8)}`;
 const CSS = asset("style.css"), JS = asset("app.js");
+const PHOTO = "https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width="; // rovnaké adresy ako --photo v style.css
 
 const load = f => { const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync(f, "utf8"), ctx); return ctx.window; };
 const SAINTS = load("saints.js").SAINTS;
@@ -82,18 +83,19 @@ ${altLinks}
 <meta property="og:image" content="${esc(image)}">
 <meta property="og:locale" content="${UI[lang].locale}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#f6ead6">
+<meta name="theme-color" content="#060a14">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${rel}${CSS}">
+<link rel="preload" as="image" href="${PHOTO}1920" media="(min-width: 760px)">
+<link rel="preload" as="image" href="${PHOTO}1280" media="(max-width: 759px)">
 <script>try{if(sessionStorage.seen)document.documentElement.classList.add("seen");sessionStorage.seen=1}catch(e){}</script>
 ${jsonld ? `<script type="application/ld+json">${ld(jsonld)}</script>` : ""}
 </head>
 <body ${bodyAttrs}>
-<div class="scene" aria-hidden="true"><div class="photo"></div><div class="veil"></div><div class="glow"></div></div>
-${scripts ? '<canvas id="motes"></canvas>' : ""}
+<div class="scene" aria-hidden="true"><div class="stage"><div class="move"><div class="photo"></div><div class="dark"></div><div class="stars"><i></i></div><div class="halo"></div><div class="fog"></div><div class="shade"></div><div class="photo cross"></div></div></div></div>
 ${body(rel)}
 ${scripts ? `<script src="${rel}${JS}" defer></script>` : ""}
 </body>
@@ -101,20 +103,16 @@ ${scripts ? `<script src="${rel}${JS}" defer></script>` : ""}
 `;
 }
 
-function card(s) {
+function card(s, when, foot) {
   const D = x => `style="animation-delay:calc(var(--t0) + ${x.toFixed(2)}s)"`;
-  const words = s.quote.split(" ");
-  const after = .6 + words.length * .08 + .3;
   return `<article class="card">
-<div class="portrait"><div class="frame"><img src="${imgUrl(s.img, 500)}" alt="${esc(s.name)}"><span class="sym" aria-hidden="true">${s.symbol}</span></div></div>
-<div class="text">
-<h1 class="fade" ${D(.1)}>${esc(s.name)}</h1>
-<div class="meta fade" ${D(.3)}>${[s.title, s.years].filter(Boolean).map(esc).join(" · ")}</div>
-<blockquote>${words.map((w, i) => `<span class="w" ${D(.6 + i * .08)}>${esc(w)}</span>`).join(" ")}</blockquote>
-<div class="source fade" ${D(after)}>— ${esc(s.source)}</div>
-<div class="divider fade" ${D(after + .2)}></div>
-<p class="story fade" ${D(after + .4)}>${esc(s.story)}</p>
-</div>
+<div class="head fade"><div class="frame"><img src="${imgUrl(s.img, 500)}" alt="${esc(s.name)}"><span class="sym" aria-hidden="true">${s.symbol}</span></div><div class="when">${when}</div></div>
+<h1 class="fade" ${D(.2)}>${esc(s.name)}</h1>
+<div class="meta fade" ${D(.35)}>${[s.title, s.years].filter(Boolean).map(esc).join(" · ")}</div>
+<blockquote class="fade" ${D(.7)}>${esc(s.quote)}</blockquote>
+<div class="source fade" ${D(.9)}>${esc(s.source)}</div>
+<p class="story fade" ${D(1.2)}>${esc(s.story)}</p>
+<div class="fade" ${D(1.5)}>${foot}</div>
 </article>`;
 }
 
@@ -144,16 +142,14 @@ function dayView(lang, feast, home) {
           { "@type": "ListItem", position: 3, name: s.name, item: SITE + path } ] } ] };
   const bodyAttrs = `data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), jsonld, bodyAttrs, body: rel => `<main>
-<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
-<div class="badge"><span class="orn" aria-hidden="true">✦ </span>${home ? u.badgeToday : u.badgeDay}<span class="orn" aria-hidden="true"> ✦</span></div>
-${card(s)}
-<nav>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
+${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
+<p class="badge">${home ? u.badgeToday : u.badgeDay}</p>`, `<nav>
 <a class="btn" id="prev" rel="prev" href="${rel}${dayPath(lang, neighbour(feast, -1))}" aria-label="${u.prevL}">${u.prev}</a>
 ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.today}</a>`}
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
-<select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select>
-</nav>
-<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}"><span class="cross" aria-hidden="true">✝</span>${u.faith}</a>
+<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}"><span class="cross-sign" aria-hidden="true">✝</span>${u.faith}</a>
+</nav>`)}
 </main>
 <dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
 <form method="dialog"><button class="cal-x" aria-label="${u.close}">×</button></form>
@@ -168,6 +164,8 @@ ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.toda
 
 // kalendár: potiahnutie prstom doľava/doprava (a šípky) prepne mesiac; bez JS fungujú odkazy #mN
 const CAL_JS = `(() => {
+  const tabs = document.querySelector('.mtabs'), now = tabs.querySelector('.now');
+  if (now) tabs.scrollLeft = now.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - now.offsetWidth) / 2;
   const cur = () => +(/^#m(\\d+)$/.exec(location.hash) || [])[1] || +document.querySelector(".month.now").id.slice(1);
   const go = n => location.replace("#m" + ((cur() - 1 + n + 12) % 12 + 1));
   addEventListener("keydown", e => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); });
@@ -197,11 +195,11 @@ function calendar(lang) {
   out(path, page({ lang, path, title, desc: u.calIntro, alts, image: imgUrl(SAINTS[0].img, 1200), scripts: false,
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: u.calIntro },
     body: rel => `<main class="calendar">
-<a class="date" href="${rel}${homePath(lang)}">‹ ${u.site}</a>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
 <article class="card">
 <h1>${u.cal}</h1>
 <p>${u.calIntro}</p>
-<div class="mtabs">${months.map((_, i) => `<a href="#m${i + 1}">${monthName(i).slice(0, 3)}</a>`).join("")}</div>
+<div class="mtabs">${months.map((_, i) => `<a href="#m${i + 1}"${i + 1 === md(todayKey)[0] ? ' class="now"' : ""}>${monthName(i).slice(0, 3)}</a>`).join("")}</div>
 ${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " now" : ""}" id="m${i + 1}">
 <div class="mnav"><a href="#m${(i + 11) % 12 + 1}">‹ ${monthName((i + 11) % 12)}</a><h2>${monthName(i)}</h2><a href="#m${(i + 1) % 12 + 1}">${monthName((i + 1) % 12)} ›</a></div>
 <div class="mbody">${grid(i, list, rel)}
@@ -254,7 +252,7 @@ function aboutPage(lang) {
     jsonld: { "@context": "https://schema.org", "@type": "AboutPage", name: title, url: SITE + path, inLanguage: lang, description: a.desc, about: CHURCH,
               isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
     body: rel => `<main class="prose">
-<a class="date" href="${rel}${homePath(lang)}">‹ ${u.site}</a>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
 <article class="card">
 <p class="seal" aria-hidden="true">✝</p>
 <h1>${u.about}</h1>

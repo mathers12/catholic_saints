@@ -1,279 +1,213 @@
+/* „Pred svitaním“: nočná fotka kríža cez celé pozadie, text beží na tmavom podklade */
 :root {
-  --ink: #2c2319; --muted: #6e5c46; --gold: #a8761f; --gold-2: #d4a24c; --line: rgba(168,118,31,.3);
-  --t0: 2.6s; /* úvodné svitanie; pri ďalších stránkach v tej istej návšteve sa preskočí */
-  --pad: clamp(16px, 3vw, 32px); /* vnútorný okraj karty */
+  --ink: #f2f0ea; --muted: #d2d4da; --gold: #e6dcb8; --night: #060a14; --line: rgba(230,220,184,.4);
+  --t0: .4s; /* úvodné objavenie textu; pri ďalších stránkach v tej istej návšteve sa preskočí */
+  --pad: clamp(16px, 4vw, 56px); /* vnútorný okraj karty */
+  --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=1920");
+  --w: max(100vw, 150vh); /* šírka javiska: fotka má pomer 3:2 a vždy pokryje obrazovku */
 }
+@media (max-width: 759px) { :root { --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=1280"); } }
 .seen { --t0: 0s; }
-.seen .scene, .seen main { animation: none; }
+.seen .fade { animation: none; }
 * { box-sizing: border-box; margin: 0; }
 body {
-  font-family: Inter, system-ui, sans-serif; color: var(--ink); background: #f6ead6;
-  padding: 16px; overflow-x: clip; /* nie hidden – to robí z body posuvný kontajner a rozbíja sticky */
+  font-family: "EB Garamond", Georgia, serif; color: var(--ink); background: var(--night);
+  overflow-x: clip; /* nie hidden – to robí z body posuvný kontajner a rozbíja sticky */
   overflow-wrap: break-word; /* dlhé slová (napr. „Heiligenkalender“) sa pri zväčšenom písme zlomia, nepretečú */
 }
 a { color: inherit; }
+a:hover { color: var(--gold); }
+a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-/* scéna: skutočná fotografia kríža nad údolím pri svitaní (CC0, Unsplash) */
-.scene, .scene > * { position: fixed; pointer-events: none; }
-.scene { inset: 0; z-index: 0; overflow: hidden; animation: sunrise 4s ease-out both; }
-@keyframes sunrise { from { filter: brightness(.08) saturate(.4); } 40% { filter: brightness(.55) saturate(.8); } }
-/* fotka na šírku cez celé pozadie. Kríž je na 62 % šírky a 5–90 % výšky fotky.
-   Široká obrazovka: fotka vyplní šírku, zarovnaná hore → celý kríž nad kartou.
-   Úzka obrazovka: fotka vyplní výšku, posun 70 % dá kríž do stredu. */
-.photo { inset: 0; background: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=2400") 70% 0% / cover no-repeat;
-  transform-origin: 62% 26%; animation: breath 50s ease-in-out infinite alternate;
-}
-@keyframes breath { to { scale: 1.06; } }
-/* zosvetlenie – nádych svitania */
-.veil { inset: 0; background: linear-gradient(rgba(255,250,240,.28), rgba(255,250,240,.05) 45%, rgba(255,244,225,.25)); }
-/* Božie svetlo, ktoré pokojne dýcha za krížom */
-.glow {
-  inset: 0; mix-blend-mode: screen;
-  background: radial-gradient(circle at var(--cx, 50%) 26%, rgba(255,247,225,.55), rgba(255,230,180,.18) 22%, transparent 45%);
-  animation: pulse 8s ease-in-out infinite;
-}
-@media (min-aspect-ratio: 3/2) { .glow { --cx: 62%; } }
-@keyframes pulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+/* scéna: fotka je zrkadlovo otočená (kríž vľavo, text vpravo). Súradnice vnútri .stage sú v pôvodnej fotke:
+   priesečník kríža 62,2 % × 26,6 %, ramená 47,75–76,85 % šírky, spodok ramien 30,2 % výšky.
+   Kríž je vrchná vrstva tej istej fotky orezaná na jeho tvar, takže svetlo, hmla ani hviezdy cez neho neprejdú.
+   Nepoužívaj color-dodge: tmavý kríž by zafarbil. Filtre a blend-mode sa pri animácii prekresľujú, preto len opacity a transform. */
+.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--night); }
+.stage { position: absolute; top: 0; left: min(0px, calc(50vw - var(--w) * .378)); width: var(--w); height: calc(var(--w) / 1.5); transform: scaleX(-1); }
+.move { position: absolute; inset: 0; transform-origin: 62.2% 26.6%; animation: breath 54s ease-in-out infinite alternate; }
+.photo, .dark, .stars, .stars::before, .stars::after { position: absolute; inset: 0; }
+.photo { background: var(--photo) center / 100% 100% no-repeat; }
+.dark { background: #050916; opacity: .4; animation: dawn 36s ease-in-out infinite alternate; } /* noc pomaly bledne k prvému svetlu */
+.stars { animation: starsfade 36s ease-in-out infinite alternate; }
+.stars::before, .stars::after, .stars i { content: ""; animation: blink 5s ease-in-out infinite; }
+.stars i { position: absolute; inset: 0; animation-duration: 7s; animation-delay: -2s;
+  background:
+    radial-gradient(circle 1.6px at 22% 9%, #fff 55%, transparent), radial-gradient(circle 1.3px at 31% 17%, #fff 55%, transparent),
+    radial-gradient(circle 1.6px at 41% 7%, #fff 55%, transparent), radial-gradient(circle 1.3px at 53% 14%, #fff 55%, transparent),
+    radial-gradient(circle 1.6px at 68% 19%, #fff 55%, transparent), radial-gradient(circle 1.3px at 73% 11%, #fff 55%, transparent),
+    radial-gradient(circle 1.3px at 26% 21%, #fff 55%, transparent), radial-gradient(circle 1.6px at 46% 20%, #fff 55%, transparent); }
+.stars::before {
+  background:
+    radial-gradient(circle 1.3px at 19% 14%, #fff 55%, transparent), radial-gradient(circle 1.9px at 28% 6%, #fff 55%, transparent),
+    radial-gradient(circle 1.3px at 36% 12%, #fff 55%, transparent), radial-gradient(circle 1.6px at 44% 16%, #fff 55%, transparent),
+    radial-gradient(circle 1.3px at 57% 8%, #fff 55%, transparent), radial-gradient(circle 1.9px at 70% 15%, #fff 55%, transparent),
+    radial-gradient(circle 1.3px at 34% 22%, #fff 55%, transparent), radial-gradient(circle 1.3px at 75% 21%, #fff 55%, transparent); }
+.stars::after { animation-duration: 9s; animation-delay: -5s;
+  background:
+    radial-gradient(circle 1.6px at 24% 18%, #fff 55%, transparent), radial-gradient(circle 1.3px at 33% 8%, #fff 55%, transparent),
+    radial-gradient(circle 1.9px at 39% 19%, #fff 55%, transparent), radial-gradient(circle 1.3px at 49% 10%, #fff 55%, transparent),
+    radial-gradient(circle 1.6px at 55% 19%, #fff 55%, transparent), radial-gradient(circle 1.3px at 66% 7%, #fff 55%, transparent),
+    radial-gradient(circle 1.3px at 21% 6%, #fff 55%, transparent), radial-gradient(circle 1.6px at 76% 8%, #fff 55%, transparent); }
+.halo { position: absolute; left: 62.2%; top: 26.6%; width: 56%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(236,242,255,.7), rgba(214,226,250,.26) 28%, rgba(214,226,250,0) 64%); animation: pulse 11s ease-in-out infinite; }
+.fog { position: absolute; left: -30%; width: 160%; top: 42%; height: 30%; animation: drift 50s ease-in-out infinite alternate;
+  background: radial-gradient(ellipse at 30% 50%, rgba(205,218,240,.2), rgba(205,218,240,0) 55%), radial-gradient(ellipse at 72% 60%, rgba(205,218,240,.15), rgba(205,218,240,0) 50%); }
+.cross { clip-path: polygon(60.25% 6.25%, 61.15% 5.05%, 63.55% 5.05%, 64.45% 6.25%, 64.4% 23.3%, 76.15% 23.3%, 76.72% 24.25%, 76.72% 28.45%, 75.95% 30.05%, 64.4% 30.05%, 64.25% 91%, 59.95% 91%, 60.1% 30.05%, 48.85% 30.05%, 47.88% 28.8%, 47.88% 24.85%, 48.85% 23.3%, 60.2% 23.3%); }
+/* tieň pod textom je pod vrstvou kríža, aby kríž nestmavol ani neprekryl */
+.shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,10,20,.58), rgba(6,10,20,.36) 50%, rgba(6,10,20,0)) top / 100% 150px no-repeat; }
+@keyframes breath { to { transform: scale(1.04); } }
+@keyframes dawn { from { opacity: .62; } to { opacity: .16; } }
+@keyframes dawnwide { from { opacity: .68; } to { opacity: .44; } }
+@keyframes starsfade { from { opacity: 1; } to { opacity: .15; } }
+@keyframes blink { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes drift { from { transform: translateX(-7%); } to { transform: translateX(7%); } }
 
-/* všetko na jednu obrazovku: dátum hore, karta s navigáciou vycentrovaná vo zvyšnom priestore */
-main {
-  position: relative; z-index: 1; width: min(920px, 100%); margin: 0 auto; text-align: center;
-  min-height: calc(100vh - 32px); min-height: calc(100dvh - 32px); display: flex; flex-direction: column;
-  animation: rise 1.6s calc(var(--t0) - .6s) both;
-}
-@keyframes rise { from { opacity: 0; translate: 0 -16px; } }
-.date { font-size: .75rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink); text-shadow: 0 0 12px #fff, 0 0 4px #fff; text-decoration: none; }
-a.date:hover { text-decoration: underline; }
-@media (max-width: 500px) { .date { letter-spacing: .12em; } }
-.badge {
-  align-self: center; margin-top: 8px; padding: 5px 14px; border-radius: 999px;
-  border: 1px solid var(--line); color: var(--gold); font-size: .75rem; letter-spacing: .08em;
-  background: rgba(255,255,255,.6); backdrop-filter: blur(6px);
-}
+/* všetko na jednu obrazovku: kríž hore, karta pri spodnom okraji */
+main { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 20px; padding: clamp(0px, .8vh, 10px) var(--pad); }
+.brand { display: inline-flex; align-items: center; min-height: 44px; font-family: Cinzel, Georgia, serif; font-size: clamp(.92rem, 2.4vh, 1.25rem); letter-spacing: .05em; text-decoration: none; }
+.links { display: flex; align-items: center; gap: 0 18px; font-size: 1.1rem; }
+.links a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.about-link { display: none !important; } /* na mobile vedie na „O stránke“ odkaz pod kartou */
+@media (max-width: 479px) { .cal-link { display: none !important; } } /* kalendár otvorí aj dátum */
+.lang { min-height: 36px; padding: 0 6px; background: rgba(6,10,20,.6); color: var(--ink); border: 1px solid rgba(242,240,234,.4); border-radius: 2px; font: inherit; cursor: pointer; }
+.lang option { color: var(--ink); background: var(--night); }
 
-.card {
-  margin-top: auto; padding: clamp(16px, 2.6vh, 28px) var(--pad); border-radius: 24px;
-  background: rgba(255,251,243,.82); border: 1px solid rgba(255,255,255,.8);
-  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  box-shadow: 0 30px 80px rgba(90,65,30,.25);
-}
-.portrait { display: grid; place-items: center; margin-bottom: clamp(8px, 1.6vh, 16px); font-size: 48px; }
-.frame {
-  position: relative; padding: 4px; border-radius: 12px;
-  background: linear-gradient(135deg, #f3d38a, #8a5a12 45%, var(--gold-2) 70%, #fff3cf);
-  animation: glow 4s ease-in-out infinite, pop 1s cubic-bezier(.2,1.4,.4,1) both;
-}
-.frame img { display: block; height: clamp(90px, 17vh, 230px); width: auto; max-width: 60vw; border-radius: 9px; opacity: 0; transition: opacity 1s; }
+.card { margin-top: auto; padding: clamp(8px, 1.6vh, 16px) var(--pad) 2px; background: var(--night); border-top: 1px solid var(--line); }
+.head { display: flex; align-items: center; gap: 12px; }
+.frame { flex: none; display: grid; place-items: center; height: clamp(52px, 9.5vh, 96px); aspect-ratio: 3 / 4; overflow: hidden; font-size: 1.6rem;
+  border: 1px solid var(--line); border-radius: 999px 999px 3px 3px; background: #141a2a; }
+.frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; filter: saturate(.7); opacity: 0; transition: opacity .8s; }
 .frame img.loaded { opacity: 1; }
-.frame .sym {
-  position: absolute; right: -12px; bottom: -12px; width: 34px; height: 34px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 18px; background: #fffaf0; border: 1px solid var(--line);
-}
-@keyframes pop { from { scale: .8; opacity: 0; } }
-@keyframes glow {
-  0%,100% { box-shadow: 0 6px 24px rgba(168,118,31,.25); }
-  50%     { box-shadow: 0 6px 40px rgba(212,162,76,.5); }
-}
-
-h1 {
-  font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: clamp(1.5rem, 3.8vh, 2.6rem); line-height: 1.1;
-  background: linear-gradient(90deg, #7a4e0e, #c8912e, #7a4e0e);
-  background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: shimmer 6s linear infinite;
-}
-@keyframes shimmer { to { background-position: 200% center; } }
-.meta { margin-top: 4px; color: var(--muted); font-size: clamp(.75rem, 1.6vh, .9rem); }
-
-blockquote {
-  margin: clamp(8px, 1.8vh, 18px) 0 4px; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500;
-  font-size: clamp(1.05rem, 2.5vh, 1.65rem); line-height: 1.3;
-}
-blockquote::before, blockquote::after { color: var(--gold); }
+.sym { display: none; } /* symbol sa ukáže len vtedy, keď sa obrázok nenačíta (app.js) */
+.date { display: inline-block; min-height: 26px; padding: 4px 0; font-family: Cinzel, Georgia, serif; font-size: clamp(.72rem, 1.9vh, .98rem); letter-spacing: .05em; color: var(--gold); text-decoration: none; }
+#date::after { content: " ▾"; letter-spacing: 0; }
+.badge { font-size: clamp(.84rem, 2vh, 1.06rem); font-style: italic; line-height: 1.3; text-wrap: pretty; }
+h1 { margin-top: clamp(2px, .8vh, 8px); font-family: Cinzel, Georgia, serif; font-weight: 400; font-size: clamp(1.12rem, 3.4vh, 1.8rem); line-height: 1.12; }
+.meta { font-size: clamp(.84rem, 2vh, 1.06rem); line-height: 1.25; color: var(--muted); }
+blockquote { margin-top: clamp(2px, .8vh, 8px); font-style: italic; font-size: clamp(1.02rem, 3vh, 1.65rem); line-height: 1.14; color: var(--gold); }
 /* úvodzovky podľa jazyka */
 blockquote { quotes: "„" "“"; }
 :lang(en) blockquote { quotes: "“" "”"; }
 blockquote::before { content: open-quote; } blockquote::after { content: close-quote; }
-.w { display: inline-block; opacity: 0; filter: blur(6px); translate: 0 -8px; animation: word .7s forwards; }
-@keyframes word { to { opacity: 1; filter: blur(0); translate: 0 0; } }
-.source { color: var(--muted); font-size: clamp(.7rem, 1.5vh, .82rem); }
+.source { font-size: clamp(.8rem, 1.8vh, .98rem); color: var(--muted); }
+.story { margin-top: clamp(2px, .7vh, 8px); max-width: 72ch; font-size: clamp(.84rem, 2.2vh, 1.13rem); line-height: 1.3; text-wrap: pretty; }
+.fade { animation: fadeUp 1.2s ease-out both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(-8px); } }
 
-.divider { width: 60px; height: 1px; margin: clamp(8px, 1.6vh, 16px) auto; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-.story { color: #3d3226; line-height: 1.5; font-size: clamp(.8rem, 1.75vh, 1rem); max-width: 60ch; margin: 0 auto; }
+nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: clamp(30px, 6vh, 44px); font-size: clamp(.98rem, 2.4vh, 1.13rem); text-underline-offset: 3px; }
+#today { font-weight: 500; }
+.btn.on { color: var(--gold); font-weight: 500; text-decoration: none; }
+/* znak rímskokatolíckej stránky – vedie na „O stránke“ */
+.faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.84rem, 1.9vh, 1rem); font-style: italic; color: var(--muted); text-decoration: none; }
+.cross-sign { color: var(--gold); font-style: normal; }
 
-/* široká obrazovka: portrét vľavo, text vpravo – karta je nízka a kríž nad ňou zostane celý */
-@media (min-width: 760px) {
-  .card { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; text-align: left; }
-  .portrait { margin: 0; }
-  .frame img { height: clamp(140px, 26vh, 260px); max-width: 240px; }
-  .divider { margin-left: 0; background: linear-gradient(90deg, var(--gold), transparent); }
-  .story { margin: 0; }
-}
-
-.fade { opacity: 0; translate: 0 -10px; animation: fadeUp .8s forwards; }
-@keyframes fadeUp { to { opacity: 1; translate: 0 0; } }
-
-nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: clamp(8px, 1.6vh, 16px); margin-bottom: auto; }
-.btn, .lang {
-  display: inline-block; font: inherit; font-size: .9rem; color: var(--ink); background: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.9);
-  border-radius: 999px; padding: 8px 16px; cursor: pointer; transition: .25s; backdrop-filter: blur(6px);
-  box-shadow: 0 4px 14px rgba(60,45,20,.15); white-space: nowrap; text-decoration: none;
-}
-.lang { padding: 8px 10px; }
-.btn:hover, .btn:focus-visible { border-color: var(--gold-2); color: var(--gold); box-shadow: 0 0 20px rgba(212,162,76,.45); outline: none; }
-/* znak rímskokatolíckej stránky pod navigáciou dennej stránky – vedie na „O stránke“ */
-.faith { align-self: center; display: inline-flex; align-items: center; gap: 8px; min-height: 26px; margin-top: 8px; padding: 2px 14px 2px 4px;
-  border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.6); backdrop-filter: blur(6px);
-  font-family: "Cormorant Garamond", serif; font-size: .9rem; font-weight: 600; letter-spacing: .04em; color: var(--gold); text-decoration: none; transition: .25s; }
-.faith .cross { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: .75rem;
-  background: linear-gradient(135deg, #f3d38a, #a8761f); color: #fff; }
-.faith:hover, .faith:focus-visible { border-color: var(--gold-2); box-shadow: 0 0 16px rgba(212,162,76,.45); outline: none; }
-@media (max-width: 420px) {
-  nav { gap: 6px; }
-  .btn, .lang { padding: 7px 11px; font-size: .85rem; }
-}
-/* najužšie telefóny (a zväčšené písmo): dátum aj tlačidlá musia zostať v jednom riadku */
-@media (max-width: 360px) {
-  nav { gap: 4px; }
-  .btn { padding: 7px 7px; font-size: .78rem; }
-  .lang { padding: 7px 2px; font-size: .78rem; }
-  .date { letter-spacing: .04em; font-size: .7rem; }
-}
-/* úzke displeje: nápis hore (nemčina je najdlhšia) nech ostane v jednom riadku – dva riadky by vytlačili stránku pod obrazovku */
-@media (max-width: 420px) { .badge { letter-spacing: .02em; padding-inline: 10px; } .badge .orn { display: none; } }
-/* úzke displeje: karta sa musí zmestiť bez posúvania */
-@media (max-width: 380px) {
-  .badge { margin-top: 6px; padding: 4px 10px; font-size: .7rem; }
-  .frame img { height: clamp(72px, 14vh, 230px); }
-  .story { line-height: 1.45; }
-}
-/* odkaz „Rímskokatolícka stránka“ nesmie na bežných telefónoch (360×640) pretlačiť stránku pod obrazovku */
-@media (max-height: 680px) { .faith { margin-top: 0; min-height: 24px; padding-block: 0; } }
-/* nízke displeje (malé telefóny, na šírku): zvislé medzery na minimum */
-@media (max-height: 620px) {
-  .card { padding-block: 6px; }
-  .badge { margin-top: 4px; padding: 3px 10px; font-size: .68rem; }
-  .portrait { margin-bottom: 6px; }
-  .frame img { height: clamp(56px, 10vh, 230px); }
-  h1 { font-size: clamp(1.3rem, 3.4vh, 2.6rem); }
-  .meta { margin-top: 2px; font-size: .72rem; }
-  blockquote { margin-top: 6px; font-size: clamp(.95rem, 2.4vh, 1.65rem); line-height: 1.25; }
-  .divider { margin-block: 6px; }
-  .story { font-size: clamp(.78rem, 1.7vh, 1rem); }
-  nav { margin-top: 6px; }
+/* počítač: kríž vľavo voľne, text vpravo priamo na fotke */
+@media (min-width: 1024px) and (min-aspect-ratio: 1/1) {
+  .stage { left: min(0px, calc(38vw - var(--w) * .378)); }
+  .about-link { display: inline-flex !important; }
+  /* text stojí priamo na fotke bez tmavého pásu: čitateľnosť drží tieň písmen a noc, ktorá sa tu rozvidnieva menej */
+  .dark { animation-name: dawnwide; }
+  .card { width: min(560px, 43vw); margin: auto var(--pad) auto auto; padding: 0; background: none; border: 0;
+    text-shadow: 0 1px 2px rgba(6,10,20,.95), 0 0 10px rgba(6,10,20,.9), 0 0 24px rgba(6,10,20,.7); }
+  .calendar .card, .prose .card { text-shadow: none; }
+  .head { gap: 18px; }
+  .frame { height: clamp(96px, 18vh, 168px); }
+  .date { font-size: clamp(.9rem, 2vh, 1.1rem); }
+  .badge { font-size: clamp(1rem, 2.1vh, 1.15rem); }
+  h1 { margin-top: clamp(4px, 1.2vh, 14px); font-size: clamp(1.8rem, 5vh, 3.1rem); line-height: 1.1; }
+  .meta { font-size: clamp(1rem, 2.2vh, 1.25rem); }
+  blockquote { margin-top: clamp(6px, 1.4vh, 14px); font-size: clamp(1.5rem, 4vh, 2.5rem); }
+  .source { font-size: clamp(.95rem, 1.9vh, 1.06rem); }
+  .story { margin-top: clamp(6px, 1.2vh, 12px); font-size: clamp(1.02rem, 2.4vh, 1.25rem); line-height: 1.38; }
+  .card nav { margin-top: clamp(2px, 1vh, 10px); justify-content: flex-start; gap: 0 20px; }
+  .faith { flex-basis: auto; margin-left: auto; }
+  /* kalendár a „O stránke“: panel vpravo, kríž ostáva vľavo voľný */
+  .calendar, .prose { --pad: clamp(16px, 2.6vw, 40px); width: max(46vw, 520px); margin-left: auto; background: rgba(6,10,20,.62); border-left: 1px solid var(--line); }
+  .calendar > nav, .prose > nav, .calendar .card, .prose .card { background: none; }
+  .mgrid a { background: rgba(6,10,20,.3); }
+  .calendar .card, .prose .card { width: auto; margin: 0; padding: 0 var(--pad) 8px; }
 }
 
 /* kalendár všetkých svätých */
-.calendar { min-height: 0; text-align: left; animation: none; }
-/* Karta kalendára je vysoká cez viac obrazoviek. Priesvitné pozadie s backdrop-filter Safari na takej
-   ploche odspodu nedokreslí (karta vyzerá odseknutá), a bez rozmazania by cez lepkavú lištu presvital
-   zoznam pod ňou. Preto tu jednofarebné nepriehľadné pozadie – rovnaké pre kartu aj lištu. */
-.calendar .card { display: block; margin: 16px 0; background: #fffbf3;
-  backdrop-filter: none; -webkit-backdrop-filter: none; }
-.calendar .date, .prose .date { align-self: start; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.7);
-  border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(60,45,20,.15); backdrop-filter: blur(6px); text-shadow: none; }
-.calendar h1 { margin-bottom: 8px; }
-.calendar h2 { font-family: "Cormorant Garamond", serif; color: var(--gold); font-size: 1.5rem; margin: 20px 0 6px; }
-.calendar ol { list-style: none; padding: 0; columns: 2 220px; column-gap: 32px; }
-.calendar li { break-inside: avoid; font-size: .92rem; }
-.calendar li a { display: flex; padding: 4px 0; text-decoration: none; }
-.calendar .d { flex: none; }
-.calendar nav { margin-bottom: 16px; }
-.btn.on { background: var(--gold); color: #fff; cursor: default; }
-.calendar li a:hover { color: var(--gold); text-decoration: underline; }
-.calendar .d { display: inline-block; min-width: 3.2em; color: var(--muted); }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
-}
-
-/* kalendár po kliknutí na dátum (natívny <dialog>, mimo rozloženia – stránka sa neposúva) */
-/* dátum vyzerá ako tlačidlo, aby bolo jasné, že otvára kalendár */
-#date { align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px;
-  background: rgba(255,255,255,.7); border: 1px solid var(--gold-2); box-shadow: 0 4px 14px rgba(60,45,20,.15);
-  backdrop-filter: blur(6px); text-shadow: none; transition: .25s; animation: hint 2.4s calc(var(--t0) + 2s) 2; }
-#date::before { content: "📅"; letter-spacing: 0; }
-#date::after { content: "▾"; color: var(--gold); letter-spacing: 0; }
-#date:hover, #date:focus-visible { text-decoration: none; color: var(--gold); box-shadow: 0 0 20px rgba(212,162,76,.55); outline: none; }
-@keyframes hint { 50% { box-shadow: 0 0 0 6px rgba(212,162,76,.35); } }
-#cal { margin: auto; padding: 0; border: 1px solid var(--gold-2); border-radius: 20px; background: #fffaf0; color: var(--ink);
-  width: min(340px, calc(100vw - 32px)); box-shadow: 0 30px 80px rgba(60,45,20,.35); animation: pop .35s ease-out;
-  max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; }
-#cal::backdrop { background: rgba(44,35,25,.35); backdrop-filter: blur(3px); }
-.cal-box { position: relative; padding: 18px 16px 14px; text-align: center; }
-.cal-x { position: absolute; top: 6px; right: 10px; border: 0; background: none; font-size: 1.4rem; color: var(--muted); cursor: pointer; }
-.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 22px 10px 0; }
-.cal-head b { font-family: "Cormorant Garamond", serif; font-size: 1.35rem; font-weight: 600; text-transform: capitalize; }
-.cal-head button { border: 1px solid var(--line); background: #fff; color: var(--gold); border-radius: 50%; width: 32px; height: 32px; font-size: 1.1rem; cursor: pointer; }
-.cal-grid, .mgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: .88rem; }
-.cal-grid .wd, .mgrid .wd { color: var(--gold); font-size: .72rem; padding: 4px 0; }
-.cal-grid a, .mgrid a { padding: 6px 0; border-radius: 8px; text-decoration: none; text-align: center; }
-.cal-grid a:hover, .cal-grid a:focus-visible, .mgrid a:hover { background: #f3e4c3; outline: none; }
-.cal-grid a.cur { box-shadow: inset 0 0 0 1px var(--gold-2); }
-.cal-grid a.today, .mgrid a.today { background: var(--gold); color: #fff; }
-.cal-tip { min-height: 1.4em; margin: 8px 0 4px; color: var(--gold); font-family: "Cormorant Garamond", serif; font-size: 1.1rem; font-style: italic; }
-.cal-all { font-size: .85rem; color: var(--gold); }
-
-/* celý kalendár: mesiac = mriežka + zoznam mien */
+.calendar .top, .prose .top { min-height: 33vh; align-items: flex-start; } /* na mobile necháva voľné ramená kríža */
+.calendar .card, .prose .card { margin-top: 0; padding-bottom: 8px; }
+.calendar > nav, .prose > nav { padding: 2px var(--pad) 4px; background: var(--night); border-top: 1px solid var(--line); gap: 0 12px; }
+.calendar h1, .prose h1 { margin: 0 0 4px; font-size: clamp(1.3rem, 3.6vh, 2.2rem); }
+.calendar .card > p { color: var(--muted); line-height: 1.3; margin-bottom: 6px; text-wrap: pretty; }
+.card > p:has(+ .mtabs) { display: none; } /* úvodná veta na mobile ustúpi zoznamu; zostáva v popise stránky pre SEO */
+.calendar h2, .prose h2 { font-family: Cinzel, Georgia, serif; font-weight: 400; color: var(--gold); }
+.calendar h2 { font-size: 1.2rem; }
+.calendar ol { list-style: none; padding: 0; margin-top: 8px; columns: 2 220px; column-gap: 28px; }
+.calendar li { break-inside: avoid; font-size: 1.06rem; line-height: 1.15; }
+.calendar li a { display: flex; align-items: center; min-height: 40px; padding: 4px 0; text-decoration: none; border-bottom: 1px solid rgba(230,220,184,.16); }
+.calendar li.today a { color: var(--gold); font-weight: 500; }
+.calendar .d { flex: none; display: inline-block; min-width: 2.2em; color: var(--gold); }
 /* vždy len jeden mesiac: vybraný cez #mN, inak aktuálny; bez podpory :has sa ukážu všetky */
 .calendar:has(.month:target) .month:not(:target), .calendar:not(:has(.month:target)) .month:not(.now) { display: none; }
 .calendar .month { scroll-margin-top: 100vh; } /* pri prepnutí mesiaca zostane stránka hore */
 /* záložky mesiacov: vždy jeden riadok, na mobile sa posúvajú do strán (nezaberú 3 riadky) */
-.mtabs { display: flex; gap: 6px; margin: 12px 0 4px; padding-bottom: 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.mtabs { display: flex; gap: 2px; margin-bottom: 2px; padding-bottom: 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .mtabs::-webkit-scrollbar { display: none; }
-.mtabs a { flex: none; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: .85rem; text-decoration: none; background: #fff; }
-.mtabs a:hover { border-color: var(--gold-2); color: var(--gold); }
-/* prepínač mesiaca zostane na mobile pri hornom okraji aj keď sa listuje zoznam mien */
-.mnav { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  position: sticky; top: 0; z-index: 2; background: #fffbf3;
-  margin-inline: calc(-1 * var(--pad)); padding: 8px var(--pad); box-shadow: 0 6px 12px -10px rgba(90,65,30,.6); }
-/* pri zväčšenom písme (Android: Chrome → Veľkosť textu) sa tri položky do riadka nezmestia;
-   nech sa radšej zalomia, než aby rozšírili dokument a nechali sa orezať */
-.mnav { flex-wrap: wrap; }
-.mnav a { padding: 7px 0; font-size: .85rem; color: var(--gold); text-decoration: none; white-space: nowrap;
-  min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mtabs a { flex: 1 0 auto; padding: 5px 7px; text-align: center; font-size: 1rem; text-decoration: none; border: 1px solid transparent; }
+.mtabs a.now { color: var(--gold); border-color: var(--line); }
+.mtabs a:hover { color: var(--gold); }
+.mnav { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 8px; }
+.mnav a { padding: 6px 0; font-size: 1rem; color: var(--gold); text-decoration: none; min-width: 0; }
 .mnav a:hover { text-decoration: underline; }
-.mnav h2 { text-align: center; margin: 0; min-width: 0; }
-.calendar .mgrid { margin-bottom: 12px; gap: 4px; } /* na mobile cez celú šírku karty – väčšie plôšky na ťuknutie */
-.calendar .mgrid a { padding: 9px 0; }
-.calendar li.today { background: #f3e4c3; border-radius: 6px; }
-@media (max-width: 560px) {
-  .calendar h1 { font-size: 1.7rem; }
-  .calendar .card > p { font-size: .88rem; color: var(--muted); }
-  .calendar h2 { font-size: 1.35rem; }
-  .calendar li { font-size: .95rem; }
-  .calendar li a { padding: 5px 0; }
-}
-/* Karta sa celá zmestí na obrazovku (vidno jej spodok aj navigáciu pod ňou) a roluje sa až jej vnútro –
-   prepínač mesiaca zostáva navrchu. Na nízkych displejoch (na šírku) by vnútorné okno bolo prislabé,
-   tam sa roluje stránka ako predtým. */
-@media (max-width: 759px) and (min-height: 480px) {
-  .calendar { height: calc(100vh - 32px); height: calc(100dvh - 32px); }
+.mnav h2 { text-align: center; min-width: 0; }
+/* mesiac ako mriežka oddelená tenkými linkami */
+.cal-grid, .mgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; }
+.mgrid { gap: 1px; padding: 1px; font-size: 1.1rem; }
+.mgrid > * { box-shadow: 0 0 0 1px rgba(230,220,184,.22); }
+.mgrid a { background: #0a0f1c; }
+.cal-grid .wd, .mgrid .wd { padding: 3px 0; color: var(--gold); font-size: .85rem; }
+.cal-grid a, .mgrid a { padding: 7px 0; text-decoration: none; }
+.cal-grid a:hover, .cal-grid a:focus-visible, .mgrid a:hover { background: rgba(230,220,184,.2); color: inherit; outline: none; }
+.cal-grid a.cur { box-shadow: inset 0 0 0 1px var(--gold); }
+.cal-grid a.today, .mgrid a.today { background: var(--gold); color: var(--night); font-weight: 500; }
+/* Celý kalendár sa zmestí na obrazovku (vidno jeho spodok aj navigáciu) a roluje sa až jeho vnútro – prepínač
+   mesiaca zostáva navrchu. Na nízkych displejoch (na šírku) by vnútorné okno bolo prislabé, tam sa roluje stránka. */
+@media (min-height: 480px) {
+  .calendar { height: 100vh; height: 100dvh; }
   .calendar .card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
   .calendar .month { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .calendar .mbody { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-  .calendar .mnav { position: static; } /* netreba lepiť, z rolovania karty nikdy nezmizne */
-  .calendar .mbody ol { padding-bottom: 4px; }
-  .calendar .card > p { display: none; } /* úvodná veta ustúpi zoznamu; zostáva v popise stránky pre SEO */
-  .calendar h1 { margin-bottom: 4px; }
 }
-@media (min-width: 760px) {
-  .calendar .mbody { display: grid; grid-template-columns: 240px 1fr; column-gap: 32px; align-items: start; }
-  .calendar .mgrid { max-width: 260px; }
-  .calendar .mgrid a { padding: 6px 0; }
-  .mnav { position: static; background: none; margin-inline: 0; padding-inline: 0; box-shadow: none; }
+@media (max-height: 479px) { .calendar .top, .prose .top { min-height: 0; } }
+@media (min-width: 1024px) and (min-aspect-ratio: 1/1) {
+  .calendar .top, .prose .top { min-height: 0; }
+  .card > p:has(+ .mtabs) { display: block; }
 }
 
-/* „O stránke“: text sa číta, stránka sa roluje; karta je vyššia ako obrazovka → jednofarebné pozadie */
-.prose { min-height: 0; text-align: left; animation: none; }
-.prose .card { display: block; margin: 16px 0; background: #fffbf3; backdrop-filter: none; -webkit-backdrop-filter: none; }
-.prose .card { max-width: 72ch; margin-inline: auto; width: 100%; }
-.prose .seal { text-align: center; font-size: 2rem; line-height: 1; color: var(--gold); margin-bottom: 4px; }
-.prose h1 { text-align: center; margin-bottom: 12px; }
-.prose h2 { font-family: "Cormorant Garamond", serif; color: var(--gold); font-size: 1.4rem; margin: 18px 0 6px; }
-.prose p, .prose li { line-height: 1.55; font-size: .95rem; }
+/* „O stránke“: text sa číta, stránka sa roluje; panel je vyšší ako obrazovka → jednofarebné pozadie, žiadny backdrop-filter */
+.prose .card { flex: 1; }
+.prose .seal { font-size: 2rem; line-height: 1; color: var(--gold); margin-bottom: 4px; }
+.prose h2 { font-size: 1.25rem; margin: 20px 0 6px; line-height: 1.2; }
+.prose p, .prose li { font-size: 1.15rem; line-height: 1.42; text-wrap: pretty; }
 .prose p + p { margin-top: 8px; }
-.prose .lead { font-size: 1.05rem; text-align: center; }
-.prose ul { margin-top: 8px; padding-left: 1.2em; }
+.prose .lead { font-size: 1.4rem; font-style: italic; line-height: 1.3; }
+.prose .lead b { font-weight: 400; color: var(--gold); }
+.prose ul { margin-top: 6px; padding-left: 1.2em; }
 .prose li a { display: inline-block; padding: 4px 0; color: var(--gold); }
-.prose nav { margin-bottom: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scene *, .scene *::before, .scene *::after, .fade { animation: none !important; }
+}
+
+/* kalendár po kliknutí na dátum (natívny <dialog>, mimo rozloženia – stránka sa neposúva) */
+#cal { margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: #0a0f1c; color: var(--ink);
+  width: min(340px, calc(100vw - 32px)); box-shadow: 0 30px 80px rgba(0,0,0,.6); animation: fadeUp .3s ease-out;
+  max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; }
+#cal::backdrop { background: rgba(6,10,20,.6); }
+.cal-box { position: relative; padding: 18px 16px 14px; text-align: center; }
+.cal-x { position: absolute; top: 6px; right: 10px; border: 0; background: none; font-size: 1.5rem; color: var(--muted); cursor: pointer; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 26px 10px 0; }
+.cal-head b { font-family: Cinzel, Georgia, serif; font-size: 1rem; font-weight: 400; text-transform: capitalize; }
+.cal-head button { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 2px; background: none; color: var(--gold); font-size: 1.1rem; cursor: pointer; }
+.cal-grid { gap: 2px; font-size: 1.02rem; }
+.cal-tip { min-height: 1.3em; margin: 8px 0 4px; color: var(--gold); font-size: 1.1rem; font-style: italic; line-height: 1.2; }
+.cal-all { font-size: 1rem; color: var(--gold); }
