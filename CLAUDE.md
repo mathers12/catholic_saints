@@ -2,7 +2,7 @@
 
 Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do `_site/`:
 - dáta: `saints.js` (slovensky) a preklady `i18n/en.js`, `i18n/de.js` (feast -> [name, title, years, quote, source, story]);
-- vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`;
+- vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`. Prepínanie dní (`show()` v `app.js`) načíta statickú stránku susedného dňa a vymení len kartu, hornú lištu a metaúdaje, pozadie sa nedotkne. Bez JS a pri chybe fungujú obyčajné odkazy, takže každý deň musí ostať plnohodnotná statická stránka;
 - výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, „O stránke“, sitemap.xml, robots.txt (SEO).
 - Pozadie je fotka kríža v oblakoch s pomalým svitaním (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
   cez `clip-path`, takže modrá noc ani tieň ho neprekryjú. Na mobile stojí na kopci (`.stage::after`), ktorý prejde do karty, lebo fotka končí uprostred stĺpa. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
