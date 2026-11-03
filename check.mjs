@@ -17,6 +17,7 @@ const SITE = "https://mathers12.github.io/catholic_saints/"; // musí sedieť s 
 const ROOT = "_site";
 const MIN_TAP = 24;          // px – najmenší rozmer klikateľného prvku
 const FIT_W = 320, FIT_H = 568; // od tejto veľkosti sa denná stránka musí zmestiť bez posúvania
+const CROSS_H = 640;         // px – od tejto výšky musia byť na mobile ramená kríža nad kartou
 const BIG_FONT = 20;         // px – používateľ so zväčšeným písmom (predvolené je 16)
 const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [768, 1024], [1366, 768], [1920, 1080]];
 const LANGS = ["sk", "en", "de"];
@@ -44,7 +45,7 @@ async function playwright() {
 const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json", ".xml": "application/xml", ".txt": "text/plain" };
 const server = http.createServer((req, res) => {
   let p = path.join(ROOT, decodeURIComponent(req.url.split("?")[0]));
-  if (p.endsWith("/")) p += "index.html";
+  if (req.url.split("?")[0].endsWith("/")) p = path.join(p, "index.html"); // path.join na Windowse končí spätnou lomkou
   fs.readFile(p, (err, data) => {
     if (err) { res.writeHead(404); return res.end("404"); }
     res.writeHead(200, { "content-type": MIME[path.extname(p)] || "application/octet-stream" });
@@ -75,7 +76,7 @@ for (const [w, h] of SIZES) {
   // 404 sa na štýly odkazuje absolútne na ostrý web – pri kontrole ich podstrč z lokálneho buildu
   await ctx.route(SITE + "**", async r => {
     let p = path.join(ROOT, decodeURIComponent(r.request().url().slice(SITE.length).split("?")[0]));
-    if (!p || p.endsWith("/") || p === ROOT) p = path.join(p, "index.html");
+    if (r.request().url().split("?")[0].endsWith("/")) p = path.join(p, "index.html");
     try { await r.fulfill({ body: fs.readFileSync(p), contentType: MIME[path.extname(p)] }); }
     catch { await r.fulfill({ status: 404, body: "404" }); }
   });
@@ -86,7 +87,13 @@ for (const [w, h] of SIZES) {
     await page.waitForTimeout(80);
     const r = await page.evaluate(min => {
       const d = document.documentElement, W = d.clientWidth, out = { over: [], tiny: [], sw: d.scrollWidth, cw: W, sh: d.scrollHeight, ih: innerHeight };
-      out.fonts = document.fonts.check('16px "Cormorant Garamond"');
+      out.fonts = document.fonts.check('16px "EB Garamond"');
+      // kríž musí ostať voľný: na počítači je text vpravo od ramien, na mobile pod nimi
+      const st = document.querySelector(".stage"), card = document.querySelector(".card");
+      if (st && card) { const c = card.getBoundingClientRect();
+        out.armRight = Math.round(st.offsetLeft + st.offsetWidth * .5225); out.armBottom = Math.round(st.offsetHeight * .3023);
+        out.cardLeft = Math.round(c.left); out.cardTop = Math.round(c.top);
+        out.wide = matchMedia("(min-width: 1024px) and (min-aspect-ratio: 1/1)").matches; }
       const name = el => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "");
       for (const el of document.querySelectorAll("main *, dialog *")) {
         if (el.closest(".mtabs")) continue;              // zámerne posuvné do strán
@@ -105,6 +112,8 @@ for (const [w, h] of SIZES) {
     if (r.over.length) problems.push(`${at}: mimo obrazovky → ${[...new Set(r.over)].slice(0, 4).join(", ")}`);
     if (r.tiny.length) problems.push(`${at}: plôška menšia ako ${MIN_TAP} px → ${[...new Set(r.tiny)].slice(0, 4).join(", ")}`);
     if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih + 1) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
+    if (day && r.wide && r.cardLeft < r.armRight) problems.push(`${at}: text zakrýva kríž (${r.cardLeft} < ${r.armRight})`);
+    if (day && !r.wide && h >= CROSS_H && r.cardTop < r.armBottom) problems.push(`${at}: karta zakrýva ramená kríža (${r.cardTop} < ${r.armBottom})`);
   }
 
   // kalendár na mobile: karta sa celá zmestí na obrazovku a roluje sa jej vnútro (.mbody)

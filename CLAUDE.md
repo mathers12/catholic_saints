@@ -4,6 +4,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - dáta: `saints.js` (slovensky) a preklady `i18n/en.js`, `i18n/de.js` (feast -> [name, title, years, quote, source, story]);
 - vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`;
 - výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, „O stránke“, sitemap.xml, robots.txt (SEO).
+- Pozadie je nočná fotka kríža s animáciou svitania (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
+  cez `clip-path`, takže svetlo, hviezdy, hmla ani tieň ho neprekryjú. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
 - Web sa jasne hlási ako rímskokatolícky (odkaz „✝ Rímskokatolícka stránka“ na každej dennej stránke → „O stránke“,
   JSON-LD `about` = Katolícka cirkev). Pri novom pápežovi zmeň konštantu `POPE` v `build.mjs`. Netvrď oficiálne
   schválenie Svätej stolice ani KBS, kým ho web naozaj nemá.
@@ -39,9 +41,9 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
   aspoň 24 px v menšom rozmere (`MIN_TAP` v `check.mjs`).
 - Denné stránky sa musia zmestiť na jednu obrazovku bez posúvania od 320×568 vyššie. Pod túto veľkosť smú
   rolovať, ale nesmú nič orezať ani preliezť do strán.
-- Kalendár sa na mobile (do 759 px a od 480 px výšky) celý zmestí na obrazovku: karta má výšku okna,
+- Kalendár sa (od 480 px výšky) celý zmestí na obrazovku: karta má výšku okna,
   vidno jej spodok aj navigáciu pod ňou a roluje sa až jej vnútro (`.mbody` = mriežka mesiaca + zoznam mien).
-  Hlavička karty a prepínač mesiaca teda z obrazovky nikdy nezmiznú. Na nízkych displejoch (na šírku)
+  Hlavička karty a prepínač mesiaca teda z obrazovky nikdy nezmiznú. Denná karta nesmie od 640 px výšky zakryť ramená kríža a na počítači (od 1024 px) je text vpravo od nich. Na nízkych displejoch (na šírku)
   by bolo vnútorné okno prislabé, tam sa roluje stránka. `check.mjs` toto overuje.
 - Rozmery odvodzuj z `clamp()` a relatívnych jednotiek. Pevnú šírku či výšku (napr. `max-width: 260px`) dávaj
   len do media query pre konkrétne rozloženie, nikdy nie globálne – inak to na mobile vyzerá odseknuté.
