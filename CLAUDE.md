@@ -4,8 +4,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - dáta: `saints.js` (slovensky) a preklady `i18n/en.js`, `i18n/de.js` (feast -> [name, title, years, quote, source, story]);
 - vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`;
 - výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, „O stránke“, sitemap.xml, robots.txt (SEO).
-- Pozadie je nočná fotka kríža s animáciou svitania (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
-  cez `clip-path`, takže svetlo, hviezdy, hmla ani tieň ho neprekryjú. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
+- Pozadie je fotka kríža v oblakoch s pomalým svitaním (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
+  cez `clip-path`, takže modrá noc ani tieň ho neprekryjú. Na mobile stojí na kopci (`.stage::after`), ktorý prejde do karty, lebo fotka končí uprostred stĺpa. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
 - Web sa jasne hlási ako rímskokatolícky (odkaz „✝ Rímskokatolícka stránka“ na každej dennej stránke → „O stránke“,
   JSON-LD `about` = Katolícka cirkev). Pri novom pápežovi zmeň konštantu `POPE` v `build.mjs`. Netvrď oficiálne
   schválenie Svätej stolice ani KBS, kým ho web naozaj nemá.

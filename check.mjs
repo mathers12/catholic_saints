@@ -91,7 +91,9 @@ for (const [w, h] of SIZES) {
       // kríž musí ostať voľný: na počítači je text vpravo od ramien, na mobile pod nimi
       const st = document.querySelector(".stage"), card = document.querySelector(".card");
       if (st && card) { const c = card.getBoundingClientRect();
-        out.armRight = Math.round(st.offsetLeft + st.offsetWidth * .5225); out.armBottom = Math.round(st.offsetTop + st.offsetHeight * .3023); out.footBottom = Math.round(st.offsetTop + st.offsetHeight * .94); // spodok kríža aj s pomalým priblížením 1,04
+        out.armRight = Math.round(st.offsetLeft + st.offsetWidth * .4482); out.armBottom = Math.round(st.offsetTop + st.offsetHeight * .6725); out.footBottom = Math.round(st.offsetTop + st.offsetHeight); // kríž siaha po spodok fotky
+        const sx = [st.offsetLeft + st.offsetWidth * .3065, st.offsetLeft + st.offsetWidth * .3335], top = st.offsetTop + st.offsetHeight * .433; // názov webu ani prepínač nesmú ísť cez kríž
+        out.barHit = [...document.querySelectorAll('.top a, .top select')].filter(e => { const b = e.getBoundingClientRect(); return b.width && b.left < sx[1] && b.right > sx[0] && b.bottom > top; }).map(e => e.textContent.trim().slice(0, 20));
         out.cardLeft = Math.round(c.left); out.cardTop = Math.round(c.top);
         out.wide = matchMedia("(min-width: 1024px) and (min-aspect-ratio: 1/1)").matches; }
       const name = el => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "");
@@ -113,7 +115,8 @@ for (const [w, h] of SIZES) {
     if (r.tiny.length) problems.push(`${at}: plôška menšia ako ${MIN_TAP} px → ${[...new Set(r.tiny)].slice(0, 4).join(", ")}`);
     if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih + 1) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
     if (day && r.wide && r.cardLeft < r.armRight) problems.push(`${at}: text zakrýva kríž (${r.cardLeft} < ${r.armRight})`);
-    if (day && !r.wide && h >= CROSS_H && r.cardTop < r.footBottom) problems.push(`${at}: karta zakrýva kríž (${r.cardTop} < ${r.footBottom})`);
+    if (day && !r.wide && h >= CROSS_H && r.cardTop < r.footBottom - 1) problems.push(`${at}: karta zakrýva kríž (${r.cardTop} < ${r.footBottom})`);
+    if (day && h >= CROSS_H && r.barHit?.length) problems.push(`${at}: horná lišta ide cez kríž: ${r.barHit.join(", ")}`);
   }
 
   // kalendár na mobile: karta sa celá zmestí na obrazovku a roluje sa jej vnútro (.mbody)
