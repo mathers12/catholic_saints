@@ -35,7 +35,7 @@ Návšteva je krátke každodenné zastavenie alebo príchod z vyhľadávača na
 - Názov je Sanctus diei, po slovensky Svätý dňa.
 - Web sa jasne hlási ako rímskokatolícky, v jednote so Svätým Otcom, na každej dennej stránke.
 - Web netvrdí oficiálne schválenie Svätej stolice ani Konferencie biskupov Slovenska. Je to súkromná iniciatíva.
-- Pozadím je nočná fotka kríža s pokojnou animáciou, ktorú si vybral majiteľ webu. Kríž nesmie byť prekrytý ani zafarbený a pravá polovica na počítači nemá čierny tieň.
+- Pozadím je nočná fotka kríža s pokojnou animáciou, ktorú si vybral majiteľ webu. Kríž nesmie byť prekrytý, orezaný ani zafarbený, na mobile ho vidno celý nad kartou, a pravá polovica na počítači nemá čierny tieň.
 
 ## Evidence on Hand
 - Obsah: `saints.js`, preklady `i18n/en.js` a `i18n/de.js`.

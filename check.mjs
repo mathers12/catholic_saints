@@ -17,7 +17,7 @@ const SITE = "https://mathers12.github.io/catholic_saints/"; // musí sedieť s 
 const ROOT = "_site";
 const MIN_TAP = 24;          // px – najmenší rozmer klikateľného prvku
 const FIT_W = 320, FIT_H = 568; // od tejto veľkosti sa denná stránka musí zmestiť bez posúvania
-const CROSS_H = 640;         // px – od tejto výšky musia byť na mobile ramená kríža nad kartou
+const CROSS_H = 640;         // px – od tejto výšky musí byť na mobile celý kríž nad kartou
 const BIG_FONT = 20;         // px – používateľ so zväčšeným písmom (predvolené je 16)
 const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [768, 1024], [1366, 768], [1920, 1080]];
 const LANGS = ["sk", "en", "de"];
@@ -87,11 +87,11 @@ for (const [w, h] of SIZES) {
     await page.waitForTimeout(80);
     const r = await page.evaluate(min => {
       const d = document.documentElement, W = d.clientWidth, out = { over: [], tiny: [], sw: d.scrollWidth, cw: W, sh: d.scrollHeight, ih: innerHeight };
-      out.fonts = document.fonts.check('16px "EB Garamond"');
+      out.fonts = document.fonts.check('16px Spectral');
       // kríž musí ostať voľný: na počítači je text vpravo od ramien, na mobile pod nimi
       const st = document.querySelector(".stage"), card = document.querySelector(".card");
       if (st && card) { const c = card.getBoundingClientRect();
-        out.armRight = Math.round(st.offsetLeft + st.offsetWidth * .5225); out.armBottom = Math.round(st.offsetHeight * .3023);
+        out.armRight = Math.round(st.offsetLeft + st.offsetWidth * .5225); out.armBottom = Math.round(st.offsetTop + st.offsetHeight * .3023); out.footBottom = Math.round(st.offsetTop + st.offsetHeight * .94); // spodok kríža aj s pomalým priblížením 1,04
         out.cardLeft = Math.round(c.left); out.cardTop = Math.round(c.top);
         out.wide = matchMedia("(min-width: 1024px) and (min-aspect-ratio: 1/1)").matches; }
       const name = el => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "");
@@ -113,7 +113,7 @@ for (const [w, h] of SIZES) {
     if (r.tiny.length) problems.push(`${at}: plôška menšia ako ${MIN_TAP} px → ${[...new Set(r.tiny)].slice(0, 4).join(", ")}`);
     if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih + 1) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
     if (day && r.wide && r.cardLeft < r.armRight) problems.push(`${at}: text zakrýva kríž (${r.cardLeft} < ${r.armRight})`);
-    if (day && !r.wide && h >= CROSS_H && r.cardTop < r.armBottom) problems.push(`${at}: karta zakrýva ramená kríža (${r.cardTop} < ${r.armBottom})`);
+    if (day && !r.wide && h >= CROSS_H && r.cardTop < r.footBottom) problems.push(`${at}: karta zakrýva kríž (${r.cardTop} < ${r.footBottom})`);
   }
 
   // kalendár na mobile: karta sa celá zmestí na obrazovku a roluje sa jej vnútro (.mbody)
