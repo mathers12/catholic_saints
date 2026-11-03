@@ -91,7 +91,9 @@ ${altLinks}
 <link rel="stylesheet" href="${rel}${CSS}">
 <link rel="preload" as="image" href="${PHOTO}1920" media="(min-width: 760px)">
 <link rel="preload" as="image" href="${PHOTO}1280" media="(max-width: 759px)">
-<script>try{if(sessionStorage.seen)document.documentElement.classList.add("seen");sessionStorage.seen=1}catch(e){}</script>
+<script>try{if(sessionStorage.seen)document.documentElement.classList.add("seen");sessionStorage.seen=1}catch(e){}
+(function(n,s){s.setProperty("--dawn",-(n%72)+"s");s.setProperty("--breath",-(n%108)+"s")})(Date.now()/1e3,document.documentElement.style)</script>
+<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/*"},"eagerness":"moderate"}]}</script>
 ${jsonld ? `<script type="application/ld+json">${ld(jsonld)}</script>` : ""}
 </head>
 <body ${bodyAttrs}>

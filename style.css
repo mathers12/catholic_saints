@@ -25,16 +25,25 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid
    Nepoužívaj color-dodge: tmavý kríž by zafarbil. Filtre a blend-mode sa pri animácii prekresľujú, preto len opacity a transform. */
 .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--night); container-type: size; }
 .stage { position: absolute; bottom: 0; left: 0; width: var(--w); height: calc(var(--w) / 1.3315); }
-.move { position: absolute; inset: 0; transform-origin: 32% 63.5%; animation: breath 54s ease-in-out infinite alternate; }
+.move { position: absolute; inset: 0; transform-origin: 32% 63.5%; animation: breath 54s ease-in-out var(--breath, 0s) infinite alternate; }
 .photo, .dark { position: absolute; inset: 0; }
 .photo { background: var(--photo) center / 100% 100% no-repeat; }
-.dark { background: #0b2467; opacity: .4; animation: dawn 36s ease-in-out infinite alternate; } /* noc pomaly bledne k prvému svetlu */
+.dark { background: #0b2467; opacity: .4; animation: dawn 36s ease-in-out var(--dawn, 0s) infinite alternate; } /* noc pomaly bledne k prvému svetlu; fáza podľa hodín, aby na ďalšej stránke pokračovala */
 .cross { clip-path: polygon(30.8% 44%, 31.25% 43.4%, 33% 43.3%, 33.35% 43.8%, 33.33% 62.3%, 44.82% 64.45%, 44.82% 66.8%, 43.75% 67.25%, 33.25% 65.35%, 33.25% 100%, 30.65% 100%, 30.78% 65.05%, 18.68% 62.67%, 18.68% 60.15%, 19.82% 59.68%, 30.78% 61.8%); }
 /* tieň pod textom je pod vrstvou kríža, aby kríž nestmavol ani neprekryl; drží sa vrchu scény, nie javiska */
 .shade { position: absolute; inset: auto 0 0 0; height: 100cqh; background: linear-gradient(180deg, rgba(7,20,50,.68), rgba(7,20,50,.44) 50%, rgba(7,20,50,0)) top / 100% 150px no-repeat; }
 @keyframes breath { to { transform: scale(1.04); } }
 @keyframes dawn { from { opacity: .62; } to { opacity: .16; } }
 @keyframes dawnwide { from { opacity: .68; } to { opacity: .52; } }
+
+/* prechod medzi stránkami (kalendár, O stránke): pozadie ostane, obsah sa len prelína. Prehliadač bez podpory prejde obyčajne. */
+@view-transition { navigation: auto; }
+.scene { view-transition-name: scene; }
+::view-transition-old(scene) { animation: none; opacity: 1; }
+::view-transition-new(scene) { animation: sceneIn .45s linear; } /* nové pozadie čaká, kým sa fotka dekóduje, dovtedy svieti staré; predvolená animácia by svetlo sčítala */
+@keyframes sceneIn { 0%, 70% { opacity: 0; } }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .15s; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
 /* všetko na jednu obrazovku: kríž hore, karta pri spodnom okraji */
 /* mobil a tablet na výšku: scéna vypĺňa miesto nad kartou a fotka sa zmenší tak, aby bolo vidno celý kríž.
@@ -95,9 +104,9 @@ body.day { touch-action: pan-y pinch-zoom; } /* vodorovné ťahanie prstom patr�
 @keyframes fadeUp { from { opacity: 0; transform: translateY(-8px); } }
 
 nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
-.btn { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: clamp(30px, 6vh, 44px); font-size: clamp(.94rem, 2.29vh, 1.08rem); text-underline-offset: 3px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: clamp(30px, 6vh, 44px); font-size: clamp(.94rem, 2.29vh, 1.08rem); text-decoration: none; }
 #today { font-weight: 500; }
-.btn.on { color: var(--accent); font-weight: 500; text-decoration: none; }
+.btn.on { color: var(--accent); font-weight: 500; }
 /* znak rímskokatolíckej stránky – vedie na „O stránke“ */
 .faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.8rem, 1.81vh, .96rem); font-style: italic; color: var(--muted); text-decoration: none; }
 .cross-sign { color: var(--accent); font-style: normal; }

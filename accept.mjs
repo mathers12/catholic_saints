@@ -74,7 +74,7 @@ await T("Kontrast: text na fotke vrátane najsvetlejšej fázy svitania (bez či
       const box = await q.evaluate(s => { const b = document.querySelector(s).getBoundingClientRect(); return { x: b.left, y: b.top, width: b.width, height: b.height }; }, sel);
       await q.addStyleTag({ content: "#m1{}" });
       const st = await q.evaluateHandle(() => { const s = document.createElement("style"); document.head.append(s); return s; });
-      await st.evaluate(s => { s.textContent = "main *{color:transparent!important;text-decoration-color:transparent!important}.frame{visibility:hidden}"; document.querySelector(".dark").getAnimations().forEach(a => { a.pause(); a.currentTime = 36000; });  });
+      await st.evaluate(s => { s.textContent = "main *{color:transparent!important;text-decoration-color:transparent!important}.frame{visibility:hidden}"; document.querySelector(".dark").getAnimations().forEach(a => { a.effect.updateTiming({ delay: 0 }); a.pause(); a.currentTime = 36000; });  });
       await q.waitForTimeout(60);
       const bg = await q.screenshot({ clip: box });
       await st.evaluate(s => { s.textContent = ".scene{display:none}body{background:#fff!important}main,main *{background:none!important;color:#000!important;text-shadow:none!important}"; });
@@ -155,6 +155,26 @@ await T("Dotyk: prvé ťuknutie po rýchlom ťahu zaberie", async () => {
   const q = await touch(); let hit = 0; const N = 6;
   for (let i = 0; i < N; i++) { await go(q, "/sk/11-04/"); await q.waitForTimeout(400); await q.swipe(300, 600, 80, 600); const k = await q.locator("#date").boundingBox(); await q.tapAt(k.x + k.width / 2, k.y + k.height / 2); hit += await q.evaluate(() => document.getElementById("cal").open); }
   eq(hit, N, "ťuknutia"); await q.context().close();
+});
+// prechod na kalendár a iné stránky: obloha nesmie počas načítania stmavnúť ani zosvetlieť (snímky obrazovky cez CDP)
+const skyDuringNav = async (start, sel, v) => {
+  const q = await mk({ viewport: v }); await go(q, start); await q.waitForTimeout(2000);
+  const s = await q.context().newCDPSession(q), fr = [];
+  s.on("Page.screencastFrame", e => { fr.push(e.data); s.send("Page.screencastFrameAck", { sessionId: e.sessionId }).catch(() => {}); });
+  await s.send("Page.startScreencast", { format: "jpeg", quality: 60 }); await q.waitForTimeout(400);
+  const from = fr.length; await q.click(sel); await q.waitForLoadState("load"); await q.waitForTimeout(1200); await s.send("Page.stopScreencast").catch(() => {});
+  const vals = await q.evaluate(async fs => { const out = []; for (const f of fs) { const i = new Image(); i.src = "data:image/jpeg;base64," + f; await i.decode(); const c = document.createElement("canvas"); c.width = i.width; c.height = i.height; const x = c.getContext("2d"); x.drawImage(i, 0, 0); const d = x.getImageData(i.width * .03, i.height * .12, i.width * .3, i.height * .15).data; let n = 0; for (let k = 0; k < d.length; k += 16) n += .2126 * d[k] + .7152 * d[k + 1] + .0722 * d[k + 2]; out.push(n / (d.length / 16)); } return out; }, fr.slice(Math.max(0, from - 1)));
+  await q.context().close(); return vals;
+};
+await T("Prechod: obloha pri odchode na kalendár a O stránke nepreblikne", async () => {
+  for (const [start, sel, v] of [["/sk/11-04/", ".cal-link", { width: 1366, height: 768 }], ["/sk/11-04/", ".about-link", { width: 1366, height: 768 }], ["/sk/kalendar/", ".brand", { width: 1366, height: 768 }], ["/sk/11-04/", ".faith", { width: 375, height: 812 }]]) {
+    const vals = await skyDuringNav(start, sel, v), lo = Math.min(vals[0], vals.at(-1)), hi = Math.max(vals[0], vals.at(-1));
+    ok(vals.length > 5, "málo snímok"); ok(Math.min(...vals) > lo - 6, `${start} → ${sel}: stmavnutie ${(lo - Math.min(...vals)).toFixed(0)}`); ok(Math.max(...vals) < hi + 6, `${start} → ${sel}: zosvetlenie ${(Math.max(...vals) - hi).toFixed(0)}`);
+  }
+});
+await T("Tlačidlá: Včera, Dnes, Zajtra a spodná lišta nie sú podčiarknuté", async () => {
+  await go(p, "/sk/11-04/"); for (const s of ["#prev", "#today", "#next"]) eq(await p.locator(s).evaluate(e => getComputedStyle(e).textDecorationLine), "none", s);
+  await go(p, "/sk/kalendar/"); eq(await p.locator(".calendar > nav .btn").first().evaluate(e => getComputedStyle(e).textDecorationLine), "none", "kalendár");
 });
 await b.close();
 server.close();
