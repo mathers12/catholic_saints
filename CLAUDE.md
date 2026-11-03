@@ -14,6 +14,7 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - `style.css` a `app.js` sa odkazujú s `?v=<hash obsahu>`, aby prehliadač po nasadení nedržal starú verziu
   z cache. Nové statické súbory pridávaj cez `asset()` v `build.mjs`, nie natvrdo.
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
+- akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám a písmam). Pri zmene správania test doplň alebo uprav.
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).
 
@@ -60,7 +61,7 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
   `position: sticky`. Presah ale rieš tým, že ho odstrániš, nie tým, že ho orežeš.
 
 ## Ako pracovať s týmto projektom (šetrenie tokenov a času)
-- Rob len to, o čo používateľ požiada; vylepšenia navrhni a spýtaj sa. Hotovú zmenu (po `check.mjs` bez nálezov)
+- Rob len to, o čo používateľ požiada; vylepšenia navrhni a spýtaj sa. Hotovú zmenu (po `check.mjs` bez nálezov a `accept.mjs` bez chýb)
   rovno pushni, vytvor pull request a zlúč ho do `main` – netreba sa pýtať.
 - `saints.js` a `i18n/*.js` sú veľké (150–180 kB). Nečítaj ich celé; vyber si, čo potrebuješ:
   `node -e "global.window={};require('./saints.js');console.log(window.SAINTS.find(s=>s.feast==='09-19'))"`.
