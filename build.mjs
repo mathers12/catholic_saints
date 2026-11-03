@@ -16,7 +16,7 @@ const POPE = { sk: "Levom XIV.", en: "Pope Leo XIV", de: "Papst Leo XIV." };
 // nedrží starú verziu z cache. Bez toho návštevník vidí staré štýly, kým mu nevyprší cache.
 const asset = f => `${f}?v=${crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8)}`;
 const CSS = asset("style.css"), JS = asset("app.js");
-const PHOTO = "https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width="; // rovnaké adresy ako --photo v style.css
+const PHOTO = "https://commons.wikimedia.org/wiki/Special:FilePath/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg?width="; // rovnaké adresy ako --photo v style.css
 
 const load = f => { const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync(f, "utf8"), ctx); return ctx.window; };
 const SAINTS = load("saints.js").SAINTS;
@@ -95,7 +95,7 @@ ${altLinks}
 ${jsonld ? `<script type="application/ld+json">${ld(jsonld)}</script>` : ""}
 </head>
 <body ${bodyAttrs}>
-<div class="scene" aria-hidden="true"><div class="stage"><div class="move"><div class="photo"></div><div class="dark"></div><div class="stars"><i></i></div><div class="halo"></div><div class="fog"></div><div class="shade"></div><div class="photo cross"></div></div></div></div>
+<div class="scene" aria-hidden="true"><div class="stage"><div class="move"><div class="photo"></div><div class="dark"></div><div class="shade"></div><div class="photo cross"></div></div></div></div>
 ${body(rel)}
 ${scripts ? `<script src="${rel}${JS}" defer></script>` : ""}
 </body>

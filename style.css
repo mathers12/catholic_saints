@@ -3,10 +3,10 @@
   --ink: #f4f6fb; --muted: #dbe1f0; --accent: #cfdcff; --night: #071432; --line: rgba(207,220,255,.4);
   --t0: .15s; /* úvodné objavenie textu; pri ďalších stránkach v tej istej návšteve sa preskočí */
   --pad: clamp(16px, 4vw, 56px); /* vnútorný okraj karty */
-  --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=1920");
-  --w: max(100vw, 150vh); /* šírka javiska: fotka má pomer 3:2 a vždy pokryje obrazovku */
+  --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg?width=1920");
+  --w: max(100vw, 133.15vh); /* šírka javiska: fotka má pomer 1,3315 a vždy pokryje obrazovku */
 }
-@media (max-width: 759px) { :root { --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/Cross_Through_The_Clouds_(Unsplash).jpg?width=1280"); } }
+@media (max-width: 759px) { :root { --photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg?width=1280"); } }
 .seen { --t0: 0s; }
 .seen .fade { animation: none; }
 * { box-sizing: border-box; margin: 0; }
@@ -19,50 +19,22 @@ a { color: inherit; }
 a:hover { color: var(--accent); }
 a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* scéna: fotka je zrkadlovo otočená (kríž vľavo, text vpravo). Súradnice vnútri .stage sú v pôvodnej fotke:
-   priesečník kríža 62,2 % × 26,6 %, ramená 47,75–76,85 % šírky, spodok ramien 30,2 % výšky.
-   Kríž je vrchná vrstva tej istej fotky orezaná na jeho tvar, takže svetlo, hmla ani hviezdy cez neho neprejdú.
+/* scéna: fotka kríža v oblakoch, kríž vľavo, text vpravo. Javisko je zarovnané k spodku scény, lebo kríž siaha až po spodok fotky.
+   Súradnice vnútri .stage: priesečník 32 % × 63,5 %, ramená 18,7–44,8 % šírky, vrch kríža 43,3 % a spodok ramien 67,3 % výšky.
+   Kríž je vrchná vrstva tej istej fotky orezaná na jeho tvar, takže modrá noc ani tieň ho nezafarbia.
    Nepoužívaj color-dodge: tmavý kríž by zafarbil. Filtre a blend-mode sa pri animácii prekresľujú, preto len opacity a transform. */
-.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--night); }
-.stage { position: absolute; top: 0; left: min(0px, calc(50vw - var(--w) * .378)); width: var(--w); height: calc(var(--w) / 1.5); transform: scaleX(-1); }
-.move { position: absolute; inset: 0; transform-origin: 62.2% 26.6%; animation: breath 54s ease-in-out infinite alternate; }
-.photo, .dark, .stars, .stars::before, .stars::after { position: absolute; inset: 0; }
+.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--night); container-type: size; }
+.stage { position: absolute; bottom: 0; left: 0; width: var(--w); height: calc(var(--w) / 1.3315); }
+.move { position: absolute; inset: 0; transform-origin: 32% 63.5%; animation: breath 54s ease-in-out infinite alternate; }
+.photo, .dark { position: absolute; inset: 0; }
 .photo { background: var(--photo) center / 100% 100% no-repeat; }
 .dark { background: #0b2467; opacity: .4; animation: dawn 36s ease-in-out infinite alternate; } /* noc pomaly bledne k prvému svetlu */
-.stars { animation: starsfade 36s ease-in-out infinite alternate; }
-.stars::before, .stars::after, .stars i { content: ""; animation: blink 5s ease-in-out infinite; }
-.stars i { position: absolute; inset: 0; animation-duration: 7s; animation-delay: -2s;
-  background:
-    radial-gradient(circle 1.6px at 22% 9%, #fff 55%, transparent), radial-gradient(circle 1.3px at 31% 17%, #fff 55%, transparent),
-    radial-gradient(circle 1.6px at 41% 7%, #fff 55%, transparent), radial-gradient(circle 1.3px at 53% 14%, #fff 55%, transparent),
-    radial-gradient(circle 1.6px at 68% 19%, #fff 55%, transparent), radial-gradient(circle 1.3px at 73% 11%, #fff 55%, transparent),
-    radial-gradient(circle 1.3px at 26% 21%, #fff 55%, transparent), radial-gradient(circle 1.6px at 46% 20%, #fff 55%, transparent); }
-.stars::before {
-  background:
-    radial-gradient(circle 1.3px at 19% 14%, #fff 55%, transparent), radial-gradient(circle 1.9px at 28% 6%, #fff 55%, transparent),
-    radial-gradient(circle 1.3px at 36% 12%, #fff 55%, transparent), radial-gradient(circle 1.6px at 44% 16%, #fff 55%, transparent),
-    radial-gradient(circle 1.3px at 57% 8%, #fff 55%, transparent), radial-gradient(circle 1.9px at 70% 15%, #fff 55%, transparent),
-    radial-gradient(circle 1.3px at 34% 22%, #fff 55%, transparent), radial-gradient(circle 1.3px at 75% 21%, #fff 55%, transparent); }
-.stars::after { animation-duration: 9s; animation-delay: -5s;
-  background:
-    radial-gradient(circle 1.6px at 24% 18%, #fff 55%, transparent), radial-gradient(circle 1.3px at 33% 8%, #fff 55%, transparent),
-    radial-gradient(circle 1.9px at 39% 19%, #fff 55%, transparent), radial-gradient(circle 1.3px at 49% 10%, #fff 55%, transparent),
-    radial-gradient(circle 1.6px at 55% 19%, #fff 55%, transparent), radial-gradient(circle 1.3px at 66% 7%, #fff 55%, transparent),
-    radial-gradient(circle 1.3px at 21% 6%, #fff 55%, transparent), radial-gradient(circle 1.6px at 76% 8%, #fff 55%, transparent); }
-.halo { position: absolute; left: 62.2%; top: 26.6%; width: 56%; aspect-ratio: 1; transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(223,233,255,.7), rgba(223,233,255,.26) 28%, rgba(223,233,255,0) 64%); animation: pulse 11s ease-in-out infinite; }
-.fog { position: absolute; left: -30%; width: 160%; top: 42%; height: 30%; animation: drift 50s ease-in-out infinite alternate;
-  background: radial-gradient(ellipse at 30% 50%, rgba(189,210,250,.2), rgba(189,210,250,0) 55%), radial-gradient(ellipse at 72% 60%, rgba(189,210,250,.15), rgba(189,210,250,0) 50%); }
-.cross { clip-path: polygon(60.25% 6.25%, 61.15% 5.05%, 63.55% 5.05%, 64.45% 6.25%, 64.4% 23.3%, 76.15% 23.3%, 76.72% 24.25%, 76.72% 28.45%, 75.95% 30.05%, 64.4% 30.05%, 64.25% 91%, 59.95% 91%, 60.1% 30.05%, 48.85% 30.05%, 47.88% 28.8%, 47.88% 24.85%, 48.85% 23.3%, 60.2% 23.3%); }
-/* tieň pod textom je pod vrstvou kríža, aby kríž nestmavol ani neprekryl */
-.shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,20,50,.68), rgba(7,20,50,.44) 50%, rgba(7,20,50,0)) top / 100% 150px no-repeat; }
+.cross { clip-path: polygon(30.8% 44%, 31.25% 43.4%, 33% 43.3%, 33.35% 43.8%, 33.33% 62.3%, 44.82% 64.45%, 44.82% 66.8%, 43.75% 67.25%, 33.25% 65.35%, 33.25% 100%, 30.65% 100%, 30.78% 65.05%, 18.68% 62.67%, 18.68% 60.15%, 19.82% 59.68%, 30.78% 61.8%); }
+/* tieň pod textom je pod vrstvou kríža, aby kríž nestmavol ani neprekryl; drží sa vrchu scény, nie javiska */
+.shade { position: absolute; inset: auto 0 0 0; height: 100cqh; background: linear-gradient(180deg, rgba(7,20,50,.68), rgba(7,20,50,.44) 50%, rgba(7,20,50,0)) top / 100% 150px no-repeat; }
 @keyframes breath { to { transform: scale(1.04); } }
 @keyframes dawn { from { opacity: .62; } to { opacity: .16; } }
 @keyframes dawnwide { from { opacity: .68; } to { opacity: .52; } }
-@keyframes starsfade { from { opacity: 1; } to { opacity: .15; } }
-@keyframes blink { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
-@keyframes pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
-@keyframes drift { from { transform: translateX(-7%); } to { transform: translateX(7%); } }
 
 /* všetko na jednu obrazovku: kríž hore, karta pri spodnom okraji */
 /* mobil a tablet na výšku: scéna vypĺňa miesto nad kartou a fotka sa zmenší tak, aby bolo vidno celý kríž.
@@ -72,7 +44,7 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid
     body.day { display: grid; grid-template: minmax(120px, 1fr) auto / minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
     body.day main { display: contents; }
     body.day .scene { position: relative; inset: auto; grid-area: 1 / 1; container-type: size; }
-    body.day .stage { --w: max(100vw, 150cqh); top: max(calc(var(--w) / -40), min(0px, calc(100cqh - var(--w) / 1.5))); } /* v tesnom priestore radšej menej neba než spodku kríža */
+    body.day .stage { --w: max(100vw, 133.15cqh); }
     body.day .top { position: relative; z-index: 1; grid-area: 1 / 1; align-self: start; }
     body.day .card { position: relative; z-index: 1; grid-area: 2 / 1; margin-top: 0; }
   }
@@ -128,7 +100,6 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 
 /* počítač: kríž vľavo voľne, text vpravo priamo na fotke */
 @media (min-width: 1024px) and (min-aspect-ratio: 1/1) {
-  .stage { left: min(0px, calc(38vw - var(--w) * .378)); }
   .about-link { display: inline-flex !important; }
   /* text stojí priamo na fotke bez tmavého pásu: čitateľnosť drží tieň písmen a noc, ktorá sa tu rozvidnieva menej */
   .dark { animation-name: dawnwide; }
@@ -157,9 +128,12 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .calendar .top, .prose .top { min-height: 33vh; align-items: flex-start; } /* na mobile necháva voľné ramená kríža */
 /* mobil: horný priestor je taký vysoký, aby sa do neho zmestil celý kríž */
 @media (min-height: 480px) and (max-width: 1023px), (min-height: 480px) and (max-aspect-ratio: 1/1) {
-  :root { --sky: min(max(33vh, 63vw), 50vh); }
-  body:not(.day) .stage { --w: max(100vw, calc(var(--sky) * 1.5)); }
+  :root { --sky: min(max(33vh, 46vw), 50vh); }
+  body:not(.day) .stage { --w: max(100vw, calc(var(--sky) * 1.3315)); top: calc(var(--sky) - var(--w) / 1.3315); bottom: auto; }
   .calendar .top, .prose .top { min-height: var(--sky); }
+  /* fotka končí uprostred stĺpa, preto kríž stojí na kopci, ktorý plynulo prejde do karty a nevyzerá odseknutý */
+  .stage::after { content: ""; position: absolute; left: -48%; width: 160%; bottom: -1px; height: 11%; background: var(--night); border-radius: 50% 50% 0 0 / 100% 100% 0 0; box-shadow: 0 -1px 0 var(--line); }
+  body.day .card, .calendar .card, .prose .card { border-top: 0; }
 }
 .calendar .card, .prose .card { margin-top: 0; padding-bottom: 8px; }
 .calendar > nav, .prose > nav { padding: 2px var(--pad) 4px; background: var(--night); border-top: 1px solid var(--line); gap: 0 12px; }
