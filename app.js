@@ -72,6 +72,11 @@ addEventListener("keydown", e => { if (e.altKey || e.ctrlKey || e.metaKey || e.t
 let t0 = null;
 addEventListener("touchstart", e => t0 = e.touches.length === 1 ? e.touches[0] : null, { passive: true });
 addEventListener("touchcancel", () => t0 = null);
+addEventListener("touchmove", e => { // vodorovný ťah si vezmeme my; inak prehliadač dobieha gesto a prvé ďalšie ťuknutie sa stratí
+  if (!t0 || !e.cancelable) return;
+  const dx = Math.abs(e.touches[0].clientX - t0.clientX), dy = Math.abs(e.touches[0].clientY - t0.clientY);
+  if (dx > 8 && dx > 1.5 * dy) e.preventDefault();
+}, { passive: false });
 addEventListener("touchend", e => {
   if (!t0) return;
   const t = e.changedTouches[0], dx = t.clientX - t0.clientX, dy = t.clientY - t0.clientY;
