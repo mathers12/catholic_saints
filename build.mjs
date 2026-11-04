@@ -4,6 +4,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 
 const SITE = "https://mathers12.github.io/catholic_saints/"; // pri vlastnej doméne stačí zmeniť tu
 const BRAND = "Sanctus diei";
@@ -16,7 +17,16 @@ const POPE = { sk: "Levom XIV.", en: "Pope Leo XIV", de: "Papst Leo XIV." };
 // nedrží starú verziu z cache. Bez toho návštevník vidí staré štýly, kým mu nevyprší cache.
 const asset = f => `${f}?v=${crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8)}`;
 const CSS = asset("style.css"), JS = asset("app.js");
-const PHOTO = "https://commons.wikimedia.org/wiki/Special:FilePath/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg?width="; // rovnaké adresy ako --photo v style.css
+// Fotka pozadia je najväčší prvok stránky (LCP), preto na ňu odkazujeme priamo na thumbnail,
+// nie cez Special:FilePath – to vracia dve presmerovania a zdržuje vykreslenie. Cesta k thumbnailu
+// je md5 názvu súboru (prvý znak / prvé dva znaky). Rovnaké adresy musia byť v --photo v style.css.
+const commonsThumb = (file, w) => {
+  const n = file.replace(/ /g, "_"), h = crypto.createHash("md5").update(n).digest("hex"), e = encodeURIComponent(n);
+  return `https://upload.wikimedia.org/wikipedia/commons/thumb/${h[0]}/${h.slice(0, 2)}/${e}/${w}px-${e}`;
+};
+// ponytail: priamy thumbnail len na túto fotku. Obrázky svätých sú rôzne veľké a Commons pri
+// požiadavke väčšej, než je originál, vráti 400; Special:FilePath v tom prípade vráti originál.
+const PHOTO = w => commonsThumb("A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg", w);
 
 const load = f => { const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync(f, "utf8"), ctx); return ctx.window; };
 const SAINTS = load("saints.js").SAINTS;
@@ -61,6 +71,16 @@ const patPath = lang => `${lang}/${EXTRA[lang].patSlug}/`;
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const imgUrl = (f, w) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=${w}`;
 const clip = (t, n = 158) => t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n - 1)) + "…";
+// Google v SERP odreže titulok nad ~65 znakmi. Berieme prvú variantu, ktorá sa zmestí: pri dlhom
+// mene svätého najprv vypadne známka webu, potom slovné spojenie „svätý dňa“ – meno a dátum ostanú,
+// lebo práve podľa nich ľudia hľadá. Posledná varianta ide aj tak, kratsie už nie je čo urobiť.
+const fitTitle = (...variants) => {
+  for (const v of variants) {
+    if (v.length + 3 + BRAND.length <= 65) return `${v} | ${BRAND}`;
+    if (v.length <= 65) return v;
+  }
+  return variants[variants.length - 1];
+};
 const q = (lang, t) => lang === "en" ? `“${t}”` : `„${t}“`;
 const ld = o => JSON.stringify(o).replace(/</g, "\\u003c");
 
@@ -85,17 +105,37 @@ const readingsUrl = (lang, feast) => {
   return `https://schott.erzabtei-beuron.de/?d=${YEAR}-${m}-${d}`;
 };
 const patronLabels = (lang, feast) => ((FACTS[feast] || {}).patron || []).map(k => PATRON_NAMES[k][LANG_I[lang]]);
+const wikiUrl = (l, t) => `https://${l}.wikipedia.org/wiki/${encodeURIComponent(t.replace(/ /g, "_"))}`;
+
+// Entita pre JSON-LD: sameAs na Wikipediu vo vsetkych jazykoch je najsilnejsi signal, ze ide
+// o skutocnu osobu, ktoru Google pozna. Roky a miesta pridavame len ked sa daju spolahlivo precitat.
+function entityLd(lang, s, feast) {
+  const f = FACTS[feast] || {}, wiki = f.wiki || {}, langs = Object.keys(wiki);
+  const o = { "@type": s.years ? "Person" : "Thing", name: s.name, image: imgUrl(s.img, 1200) };
+  if (s.title) o.description = s.title;
+  if (langs.length) o.sameAs = langs.map(l => wikiUrl(l, wiki[l]));
+  if (!s.years) return o;
+  const life = /^(\d{3,4})\s*[–-]\s*(\d{3,4})$/.exec(s.years), died = /^†\s*(\d{3,4})$/.exec(s.years);
+  if (life) { o.birthDate = life[1]; o.deathDate = life[2]; } else if (died) o.deathDate = died[1];
+  if ((f.born || {})[lang]) o.birthPlace = { "@type": "Place", name: f.born[lang] };
+  if ((f.died || {})[lang]) o.deathPlace = { "@type": "Place", name: f.died[lang] };
+  return o;
+}
+
+// Navigacna cesta pre SERP: Google ju ukazuje namiesto holej URL
+const crumbs = items => ({ "@type": "BreadcrumbList", itemListElement: items.map((x, i) =>
+  ({ "@type": "ListItem", position: i + 1, name: x[0], item: SITE + x[1] })) });
 function moreBlock(lang, feast, shareText) {
   const x = EXTRA[lang], f = FACTS[feast] || {}, wiki = f.wiki || {}, wl = wiki[lang] ? lang : wiki.en ? "en" : null, pat = patronLabels(lang, feast), rd = readingsUrl(lang, feast);
   const rows = [[x.patron, pat.join(", ")], [x.born, (f.born || {})[lang]], [x.died, (f.died || {})[lang]]].filter(r => r[1]).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
-  const links = [wl && `<a href="https://${wl}.wikipedia.org/wiki/${encodeURIComponent(wiki[wl].replace(/ /g, "_"))}" rel="noopener">${x.bio}${wl !== lang ? " (EN)" : ""} ↗</a>`, rd && `<a href="${rd}" rel="noopener">${x.readings} ↗</a>`].filter(Boolean).join("");
+  const links = [wl && `<a href="${wikiUrl(wl, wiki[wl])}" rel="noopener">${x.bio}${wl !== lang ? " (EN)" : ""} ↗</a>`, rd && `<a href="${rd}" rel="noopener">${x.readings} ↗</a>`].filter(Boolean).join("");
   return `<div class="extra"><details class="more"><summary>${x.more}</summary>${rows ? `<dl>${rows}</dl>` : ""}<p class="more-links">${links}</p>${rows || wl ? `<p class="more-src">${x.src}</p>` : ""}</details><button type="button" class="share" id="share" hidden data-text="${esc(shareText)}" data-done="${x.copied}">${x.share}</button></div>`;
 }
 
 // krížik ako kresba: znak ✝ niektoré prehliadače ukazujú ako farebné emoji
 const CROSS = '<svg class="cross-sign" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 0v14M1 4.5h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 
-function page({ lang, path, title, desc, alts, image, jsonld, bodyAttrs = "", body, scripts = true, noindex = false,
+function page({ lang, path, title, desc, alts, image, imageAlt, jsonld, bodyAttrs = "", body, scripts = true, noindex = false,
                rel = "../".repeat(path.split("/").length - 1) }) { // počet priečinkov v ceste (súbor sa nepočíta)
   const altLinks = alts ? Object.entries(alts).map(([l, p]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${p}">`).join("\n") : "";
   return `<!doctype html>
@@ -104,25 +144,29 @@ function page({ lang, path, title, desc, alts, image, jsonld, bodyAttrs = "", bo
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
-<meta name="description" content="${esc(desc)}">
-${noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${SITE}${path}">`}
+<meta name="description" content="${esc(clip(desc))}">
+${noindex ? '<meta name="robots" content="noindex">' : `<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<link rel="canonical" href="${SITE}${path}">`}
 ${altLinks}
 <meta property="og:site_name" content="${BRAND}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(title)}">
-<meta property="og:description" content="${esc(desc)}">
+<meta property="og:description" content="${esc(clip(desc))}">
 <meta property="og:url" content="${SITE}${path}">
 <meta property="og:image" content="${esc(image)}">
+<meta property="og:image:alt" content="${esc(imageAlt || title)}">
 <meta property="og:locale" content="${UI[lang].locale}">
+${LANGS.filter(l => l !== lang).map(l => `<meta property="og:locale:alternate" content="${UI[l].locale}">`).join("\n")}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#071432">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>">
+<link rel="preconnect" href="https://commons.wikimedia.org"> <!-- obrázok svätého ide cez Special:FilePath -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${rel}${CSS}">
-<link rel="preload" as="image" href="${PHOTO}1920" media="(min-width: 760px)">
-<link rel="preload" as="image" href="${PHOTO}1280" media="(max-width: 759px)">
+<link rel="preload" as="image" href="${PHOTO(1920)}" media="(min-width: 760px)">
+<link rel="preload" as="image" href="${PHOTO(1280)}" media="(max-width: 759px)">
 <script>try{if(sessionStorage.seen)document.documentElement.classList.add("seen");sessionStorage.seen=1}catch(e){}
 (function(n,s){s.setProperty("--dawn",-(n%72)+"s");s.setProperty("--breath",-(n%108)+"s")})(Date.now()/1e3,document.documentElement.style)</script>
 ${jsonld ? `<script type="application/ld+json">${ld(jsonld)}</script>` : ""}
@@ -161,23 +205,21 @@ function dayView(lang, feast, home) {
   const u = UI[lang];
   const path = home ? homePath(lang) : dayPath(lang, feast);
   const alts = Object.fromEntries(LANGS.map(l => [l, home ? homePath(l) : dayPath(l, feast)]));
-  alts["x-default"] = home ? "" : dayPath("en", feast);
-  const title = home ? `${u.site} – ${u.every} | ${BRAND}` : `${u.dayTitle(s.name, dayText(lang, feast))} | ${BRAND}`;
+  alts["x-default"] = home ? homePath("en") : dayPath("en", feast);
+  const dt = dayText(lang, feast);
+  const title = home ? fitTitle(`${u.site} – ${u.every}`, u.site) : fitTitle(u.dayTitle(s.name, dt), `${s.name} – ${dt}`, s.name);
   const desc = clip(home ? `${u.site} – ${u.every}. ${u.badgeToday}: ${s.name}. ${q(lang, s.quote)}` : `${q(lang, s.quote)} ${s.story}`);
-  const person = s.years ? { "@type": "Person", name: s.name, image: imgUrl(s.img, 1200) } : { "@type": "Thing", name: s.name, image: imgUrl(s.img, 1200) };
+  const person = entityLd(lang, s, feast);
   const jsonld = home
     ? { "@context": "https://schema.org", "@type": "WebSite", name: BRAND, alternateName: u.site, url: SITE, inLanguage: lang, description: desc, about: CHURCH }
     : { "@context": "https://schema.org", "@graph": [
         { "@type": "WebPage", name: title, url: SITE + path, inLanguage: lang, description: desc, about: person,
           isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
-        { "@type": "BreadcrumbList", itemListElement: [
-          { "@type": "ListItem", position: 1, name: u.site, item: SITE + homePath(lang) },
-          { "@type": "ListItem", position: 2, name: u.cal, item: SITE + calPath(lang) },
-          { "@type": "ListItem", position: 3, name: s.name, item: SITE + path } ] } ] };
+        crumbs([[u.site, homePath(lang)], [u.cal, calPath(lang)], [s.name, path]]) ] };
   const bodyAttrs = `class="day" data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
-  const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), jsonld, bodyAttrs, body: rel => `<main>
+  const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), imageAlt: s.name, jsonld, bodyAttrs, body: rel => `<main>
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
-${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
+${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dt}</a>
 ${lang === "sk" && MENINY[feast] ? `<p class="nameday">${EXTRA.sk.nameday}: ${esc(MENINY[feast])}</p>` : ""}
 <p class="badge">${home ? u.badgeToday : u.badgeDay}</p>`, `<nav>
 <a class="btn" id="prev" rel="prev" href="${rel}${dayPath(lang, neighbour(feast, -1))}" aria-label="${u.prevL}">${u.prev}</a>
@@ -203,14 +245,17 @@ function calendar(lang) {
   alts["x-default"] = calPath("en");
   const months = Array.from({ length: 12 }, (_, i) => SAINTS.filter(s => md(s.feast)[0] === i + 1));
   const monthName = i => lang === "sk" ? MONTHS_NOM_SK[i] : MONTHS[lang][i];
-  const title = `${u.cal} | ${BRAND}`;
+  const title = fitTitle(u.cal);
   const year = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
   const wd = Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(lang, { weekday: "short", timeZone: "UTC" }));
   // ponytail: 29. 2. v neprestupnom roku sa ukáže za 28., v zozname je správne
   const grid = (i, list, rel) => `<div class="mgrid">${wd.map(w => `<span class="wd">${w}</span>`).join("")}${"<span></span>".repeat((new Date(year, i, 1).getDay() + 6) % 7)}${
     list.map(s => `<a href="${rel}${dayPath(lang, s.feast)}"${s.feast === todayKey ? ' class="today"' : ""} title="${esc(saint(lang, s).name)}">${md(s.feast)[1]}</a>`).join("")}</div>`;
   out(path, page({ lang, path, title, desc: u.calIntro, alts, image: imgUrl(SAINTS[0].img, 1200),
-    jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: u.calIntro },
+    jsonld: { "@context": "https://schema.org", "@graph": [
+      { "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: u.calIntro,
+        isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
+      crumbs([[u.site, homePath(lang)], [u.cal, path]]) ] },
     body: rel => `<main class="calendar">
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
@@ -265,10 +310,12 @@ function aboutPage(lang) {
   const u = UI[lang], a = ABOUT[lang], path = aboutPath(lang);
   const alts = Object.fromEntries(LANGS.map(l => [l, aboutPath(l)]));
   alts["x-default"] = aboutPath("en");
-  const title = `${u.about} – ${u.faith} | ${BRAND}`;
+  const title = fitTitle(`${u.about} – ${u.faith}`, u.about);
   out(path, page({ lang, path, title, desc: a.desc, alts, image: imgUrl(SAINTS[0].img, 1200),
-    jsonld: { "@context": "https://schema.org", "@type": "AboutPage", name: title, url: SITE + path, inLanguage: lang, description: a.desc, about: CHURCH,
-              isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
+    jsonld: { "@context": "https://schema.org", "@graph": [
+      { "@type": "AboutPage", name: title, url: SITE + path, inLanguage: lang, description: a.desc, about: CHURCH,
+        isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
+      crumbs([[u.site, homePath(lang)], [u.about, path]]) ] },
     body: rel => `<main class="prose">
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
@@ -286,11 +333,14 @@ ${a.parts.map(([h, ps]) => `<h2>${h}</h2>\n${ps.map(p => `<p>${esc(p)}</p>`).joi
 
 // stránka patrónov: kategórie a svätí s odkazom na ich deň
 function patronsPage(lang) {
-  const u = UI[lang], x = EXTRA[lang], path = patPath(lang), title = `${x.patrons} | ${BRAND}`;
+  const u = UI[lang], x = EXTRA[lang], path = patPath(lang), title = fitTitle(x.patrons);
   const alts = Object.fromEntries(LANGS.map(l => [l, patPath(l)])); alts["x-default"] = patPath("en");
   const groups = Object.keys(PATRON_NAMES).map(k => [PATRON_NAMES[k][LANG_I[lang]], FEASTS.filter(f => FACTS[f] && FACTS[f].patron.includes(k))]).filter(g => g[1].length).sort((a, b) => a[0].localeCompare(b[0], lang));
   out(path, page({ lang, path, title, desc: x.patIntro, alts, image: imgUrl(SAINTS[0].img, 1200),
-    jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: x.patIntro },
+    jsonld: { "@context": "https://schema.org", "@graph": [
+      { "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: x.patIntro,
+        isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
+      crumbs([[u.site, homePath(lang)], [x.patrons, path]]) ] },
     body: rel => `<main class="prose">
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
@@ -326,10 +376,17 @@ fs.writeFileSync(`${OUT}/404.html`, page({ lang: "sk", path: "404.html", rel: SI
   `<a class="btn" hreflang="${l}" href="${SITE}${homePath(l)}">${UI[l].back}</a>`).join("")}</nav></article></main>` }));
 
 const today = new Date().toISOString().slice(0, 10);
+// lastmod musi byt pravda: dnesny datum na vsetkych 1110 strankach by Google prestal brat vazne.
+// Domovska stranka sa naozaj meni kazdy den, ostatne vtedy, ked sa zmenili data alebo sablona.
+const dataDate = (() => {
+  try { return execFileSync("git", ["log", "-1", "--format=%cs", "--", "saints.js", "i18n", "facts.js", "meniny.js", "build.mjs", "style.css", "app.js"], { encoding: "utf8" }).trim(); }
+  catch (e) { return ""; }
+})();
+const lastmod = x => { const d = x.changefreq === "daily" ? today : dataDate; return d ? `<lastmod>${d}</lastmod>` : ""; };
 fs.writeFileSync(`${OUT}/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${urls.map(x => `<url><loc>${SITE}${x.path}</loc>${x.changefreq === "daily" ? `<lastmod>${today}</lastmod>` : ""}<changefreq>${x.changefreq}</changefreq>${
-  LANGS.map(l => `<xhtml:link rel="alternate" hreflang="${l}" href="${SITE}${x.alt(l)}"/>`).join("")}</url>`).join("\n")}
+${urls.map(x => `<url><loc>${SITE}${x.path}</loc>${lastmod(x)}<changefreq>${x.changefreq}</changefreq>${
+  LANGS.map(l => `<xhtml:link rel="alternate" hreflang="${l}" href="${SITE}${x.alt(l)}"/>`).join("")}<xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${x.alt("en")}"/></url>`).join("\n")}
 </urlset>
 `);
 fs.writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\nSitemap: ${SITE}sitemap.xml\n`);
