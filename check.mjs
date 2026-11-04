@@ -115,7 +115,7 @@ for (const [w, h] of SIZES) {
     if (r.sw > r.cw + 1) problems.push(`${at}: vodorovné posúvanie (${r.sw} > ${r.cw})`);
     if (r.over.length) problems.push(`${at}: mimo obrazovky → ${[...new Set(r.over)].slice(0, 4).join(", ")}`);
     if (r.tiny.length) problems.push(`${at}: plôška menšia ako ${MIN_TAP} px → ${[...new Set(r.tiny)].slice(0, 4).join(", ")}`);
-    if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih + 1) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
+    if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
     if (day && r.wide && r.cardLeft < r.armRight) problems.push(`${at}: text zakrýva kríž (${r.cardLeft} < ${r.armRight})`);
     if (day && !r.wide && h >= CROSS_H && r.cardTop < r.footBottom - 1) problems.push(`${at}: karta zakrýva kríž (${r.cardTop} < ${r.footBottom})`);
     if (day && h >= CROSS_H && r.barHit?.length) problems.push(`${at}: horná lišta ide cez kríž: ${r.barHit.join(", ")}`);
@@ -133,7 +133,7 @@ for (const [w, h] of SIZES) {
         if (!body) return { missing: true };
         body.scrollTop = body.scrollHeight;
         const last = body.querySelector("li:last-child");
-        return { pageScrolls: d.scrollHeight > innerHeight + 1,
+        return { pageScrolls: d.scrollHeight > innerHeight,
           cardBottom: Math.round(card.getBoundingClientRect().bottom), navBottom: Math.round(nav.getBoundingClientRect().bottom),
           vh: innerHeight, scrollable: body.scrollHeight > body.clientHeight + 1,
           endReached: !last || last.getBoundingClientRect().bottom <= body.getBoundingClientRect().bottom + 1 };

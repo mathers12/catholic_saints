@@ -243,6 +243,29 @@ await T("Patróni: stránka v troch jazykoch, kategórie a funkčné odkazy, je 
 await T("Meniny: po slovensky na dennej stránke, v iných jazykoch nie", async () => {
   const q = await mk(); await go(q, "/sk/11-04/"); ok(/Meniny: Karol/.test(await q.locator(".nameday").innerText()), "meniny"); await go(q, "/en/11-04/"); eq(await q.locator(".nameday").count(), 0, "EN"); await go(q, "/de/11-04/"); eq(await q.locator(".nameday").count(), 0, "DE"); await q.context().close();
 });
+await T("Zatvorenie: krížik a Esc vrátia na pôvodný deň aj po zmene mesiaca a prechode na ďalšiu stránku", async () => {
+  const q = await mk(); await go(q, "/sk/11-05/"); await q.waitForTimeout(400); await mark(q);
+  await q.click(".cal-link"); await q.waitForURL("**/sk/kalendar/"); await q.waitForSelector("#close"); await q.click("#close"); await q.waitForURL("**/sk/11-05/"); ok(await same(q), "krížik načítal stránku"); eq(await q.evaluate(() => document.body.dataset.feast), "11-05", "deň");
+  await q.click(".about-link"); await q.waitForURL("**/sk/o-stranke/"); await q.waitForSelector(".prose"); await q.keyboard.press("Escape"); await q.waitForURL("**/sk/11-05/"); ok(await same(q), "Esc načítalo stránku");
+  await q.click(".cal-link"); await q.waitForURL("**/sk/kalendar/"); await q.waitForSelector(".mtabs"); await q.keyboard.press("ArrowRight"); await q.waitForTimeout(100); await q.locator(".mtabs a").nth(2).click(); await q.waitForTimeout(100);
+  await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click(); await q.waitForURL("**/sk/patroni/"); await q.waitForSelector(".prose"); await q.click("#close"); await q.waitForURL("**/sk/11-05/"); ok(await same(q), "z patrónov"); await q.context().close();
+  const d = await mk(); await go(d, "/sk/o-stranke/"); await d.waitForTimeout(300); await d.click("#close"); await d.waitForFunction(() => document.body.dataset.home === "1"); await d.context().close();
+  const r = await mk(); await go(r, "/sk/11-05/"); await r.waitForTimeout(200); await r.goto(BASE + "/sk/kalendar/", { referer: BASE + "/sk/11-05/" }); await r.waitForTimeout(200); ok(/\/sk\/11-05\/$/.test(await r.getAttribute("#close", "href")), "návrat po obyčajnom načítaní"); await r.context().close();
+  const n = await mk({ javaScriptEnabled: false }); await go(n, "/sk/kalendar/"); await n.click("#close"); await n.waitForLoadState("load"); ok(await n.locator("#date").count(), "bez JS domovská"); await n.context().close();
+});
+await T("Zatvorenie: v dialógu kalendára Esc zatvorí len dialóg a krížik je dosť veľký", async () => {
+  const q = await mk(); await go(q, "/sk/11-05/"); await q.waitForTimeout(300); await q.click("#date"); await q.waitForSelector("#cal[open]"); await q.keyboard.press("Escape"); await q.waitForFunction(() => !document.getElementById("cal").open); eq(new URL(q.url()).pathname, "/sk/11-05/", "adresa");
+  for (const v of [{ width: 280, height: 600 }, { width: 375, height: 812 }, { width: 1366, height: 768 }]) { await q.setViewportSize(v); await go(q, "/sk/kalendar/"); await q.waitForTimeout(100); const b = await q.locator("#close").boundingBox(); ok(b.width >= 40 && b.height >= 40 && b.x + b.width <= v.width + 1, "krížik " + JSON.stringify(b)); }
+  await q.context().close();
+});
+await T("Posuvník: stránka, ktorá sa zmestí, nie je vyššia než okno ani o pixel", async () => {
+  for (const v of [{ width: 1366, height: 768 }, { width: 1920, height: 1080 }, { width: 375, height: 812 }]) {
+    const q = await mk({ viewport: v }); const P = [...(v.width === 1920 ? ["/sk/o-stranke/"] : []), "/sk/11-04/", "/sk/kalendar/", "/"];
+    for (const u of P) { await go(q, u); await q.waitForTimeout(200); const r = await q.evaluate(() => document.documentElement.scrollHeight - innerHeight); eq(r, 0, `${v.width}×${v.height} ${u}`); }
+    await go(q, "/sk/11-04/"); await q.waitForTimeout(500); await q.click("#next"); await q.waitForURL("**/sk/11-05/"); await q.waitForTimeout(200); eq(await q.evaluate(() => document.documentElement.scrollHeight - innerHeight), 0, "po prepnutí");
+    await q.context().close();
+  }
+});
 await T("Krížik: je kresba, nie znak, ktorý sa môže ukázať ako farebné emoji", async () => {
   await go(p, "/sk/11-04/"); eq(await p.locator(".faith svg.cross-sign").count(), 1, "denná stránka"); ok(!(await p.locator(".faith").innerText()).includes("✝"), "znak v odkaze");
   await go(p, "/sk/o-stranke/"); eq(await p.locator(".seal svg.cross-sign").count(), 1, "O stránke");

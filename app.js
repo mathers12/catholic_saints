@@ -71,11 +71,16 @@ function wireSearch() {
   };
 }
 
+// kam sa vrátiť z kalendára a podobných stránok: prvý deň, z ktorého si ich otvoril
+const DAY_URL = /\/\d\d-\d\d\/$/;
+let returnTo = document.referrer && new URL(document.referrer).origin === location.origin && DAY_URL.test(new URL(document.referrer).pathname) ? document.referrer : null;
+
 // oživenie stránky: pri načítaní a po každom prepnutí na inú stránku
 function wire() {
   const tabs = document.querySelector(".mtabs"), tab = tabs && tabs.querySelector(".now");
   if (tab) tabs.scrollLeft = tab.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - tab.offsetWidth) / 2;
   wireSearch();
+  if ($("close") && returnTo) $("close").href = returnTo; // krížik vráti tam, odkiaľ si prišiel; inak vedie na domovskú stránku
   if (!$("date")) return;
 
   // plný dátum s dňom v týždni (v HTML je len deň a mesiac)
@@ -135,6 +140,7 @@ document.addEventListener("change", e => {
 });
 addEventListener("keydown", e => {
   if (e.altKey || e.ctrlKey || e.metaKey || /^(SELECT|INPUT)$/.test(e.target.tagName)) return;
+  if (e.key === "Escape" && $("close") && !dialogOpen()) $("close").click();
   if (e.key === "ArrowLeft") go(-1);
   if (e.key === "ArrowRight") go(1);
 });
@@ -191,6 +197,7 @@ async function show(url, push) {
     if (me !== turn) return; // medzitým prišiel ďalší klik
     const b = doc.body.dataset;
     if (b.home && b.feast !== todayKey) return location.assign(url); // nepregenerovaná domovská stránka má vlastnú poistku
+    if (document.body.classList.contains("day")) returnTo = !b.home && !doc.getElementById("date") ? location.href : returnTo; // odchod z dňa alebo domovskej na kalendár a pod.
     if (push) history.pushState(null, "", bare(url)); // ešte pred výmenou, relatívne odkazy novej stránky sa rátajú od novej adresy
     shown = target.pathname;
     const focused = document.activeElement && document.activeElement.id, fresh = doc.querySelector("main").cloneNode(true), card = fresh.querySelector(".card"), dlg = doc.getElementById("cal");

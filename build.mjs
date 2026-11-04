@@ -212,7 +212,7 @@ function calendar(lang) {
   out(path, page({ lang, path, title, desc: u.calIntro, alts, image: imgUrl(SAINTS[0].img, 1200),
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: u.calIntro },
     body: rel => `<main class="calendar">
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
 <h1>${u.cal}</h1>
 <p>${u.calIntro}</p>
@@ -270,7 +270,7 @@ function aboutPage(lang) {
     jsonld: { "@context": "https://schema.org", "@type": "AboutPage", name: title, url: SITE + path, inLanguage: lang, description: a.desc, about: CHURCH,
               isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
     body: rel => `<main class="prose">
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
 <p class="seal">${CROSS}</p>
 <h1>${u.about}</h1>
@@ -292,7 +292,7 @@ function patronsPage(lang) {
   out(path, page({ lang, path, title, desc: x.patIntro, alts, image: imgUrl(SAINTS[0].img, 1200),
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: x.patIntro },
     body: rel => `<main class="prose">
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
 <h1>${x.patrons}</h1>
 <p class="lead">${x.patIntro}</p>
