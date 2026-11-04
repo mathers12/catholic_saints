@@ -18,15 +18,9 @@ const POPE = { sk: "Levom XIV.", en: "Pope Leo XIV", de: "Papst Leo XIV." };
 const asset = f => `${f}?v=${crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8)}`;
 const CSS = asset("style.css"), JS = asset("app.js");
 // Fotka pozadia je najväčší prvok stránky (LCP), preto na ňu odkazujeme priamo na thumbnail,
-// nie cez Special:FilePath – to vracia dve presmerovania a zdržuje vykreslenie. Cesta k thumbnailu
-// je md5 názvu súboru (prvý znak / prvé dva znaky). Rovnaké adresy musia byť v --photo v style.css.
-const commonsThumb = (file, w) => {
-  const n = file.replace(/ /g, "_"), h = crypto.createHash("md5").update(n).digest("hex"), e = encodeURIComponent(n);
-  return `https://upload.wikimedia.org/wikipedia/commons/thumb/${h[0]}/${h.slice(0, 2)}/${e}/${w}px-${e}`;
-};
-// ponytail: priamy thumbnail len na túto fotku. Obrázky svätých sú rôzne veľké a Commons pri
-// požiadavke väčšej, než je originál, vráti 400; Special:FilePath v tom prípade vráti originál.
-const PHOTO = w => commonsThumb("A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg", w);
+// nie cez Special:FilePath – to vracia dve presmerovania a zdržuje vykreslenie. Tá istá adresa
+// musí byť v --photo v style.css (`seo.mjs` to kontroluje), ináč sa fotka stiahne dvakrát.
+const PHOTO = w => `https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_%28Unsplash%29.jpg/${w}px-A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_%28Unsplash%29.jpg`;
 
 const load = f => { const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync(f, "utf8"), ctx); return ctx.window; };
 const SAINTS = load("saints.js").SAINTS;
@@ -69,7 +63,20 @@ const aboutPath = lang => `${lang}/${UI[lang].aboutSlug}/`;
 const patPath = lang => `${lang}/${EXTRA[lang].patSlug}/`;
 
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const imgUrl = (f, w) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=${w}`;
+// Priamo sa dá odkazať len na tieto šírky thumbnailov, iné Commons odmietne so 400:
+// https://www.mediawiki.org/wiki/Common_thumbnail_sizes
+const STEPS = [20, 40, 60, 120, 250, 330, 500, 960, 1280, 1920, 3840];
+// Berieme najmenšiu povolenú šírku, ktorá pokryje požiadavku a zmestí sa do originálu (väčšia než
+// originál tiež vracia 400); keď sa žiadna nezmestí, berieme originál. SVG sa vykreslí do PNG
+// v akejkoľvek veľkosti, tam originál netreba. Samotné adresy prišli z Commons API (tools/imgs.mjs),
+// nerekonštruujeme ich – presmerované súbory a dlhé názvy majú vlastné pravidlá. Pri neznámom
+// obrázku (nespustené `node tools/imgs.mjs`) ostane Special:FilePath – pomalšie, ale funguje.
+const imgUrl = (f, w) => {
+  const i = IMG[f];
+  if (!i) return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=${w}`;
+  const step = STEPS.find(x => x >= w && (/\.svg$/i.test(f) || x < i.w));
+  return step ? i.t.replace("{w}", step) : i.o;
+};
 const clip = (t, n = 158) => t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n - 1)) + "…";
 // Google v SERP odreže titulok nad ~65 znakmi. Berieme prvú variantu, ktorá sa zmestí: pri dlhom
 // mene svätého najprv vypadne známka webu, potom slovné spojenie „svätý dňa“ – meno a dátum ostanú,
@@ -84,8 +91,8 @@ const fitTitle = (...variants) => {
 const q = (lang, t) => lang === "en" ? `“${t}”` : `„${t}“`;
 const ld = o => JSON.stringify(o).replace(/</g, "\\u003c");
 
-// údaje navyše (generujú tools/facts.mjs a tools/meniny.mjs)
-const { FACTS, PATRON_NAMES } = load("facts.js"), MENINY = load("meniny.js").MENINY;
+// údaje navyše (generujú tools/facts.mjs, tools/meniny.mjs a tools/imgs.mjs)
+const { FACTS, PATRON_NAMES } = load("facts.js"), MENINY = load("meniny.js").MENINY, IMG = load("imgs.js").IMG;
 const LANG_I = { sk: 0, en: 1, de: 2 };
 const YEAR = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
 const EXTRA = {
@@ -135,7 +142,7 @@ function moreBlock(lang, feast, shareText) {
 // krížik ako kresba: znak ✝ niektoré prehliadače ukazujú ako farebné emoji
 const CROSS = '<svg class="cross-sign" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 0v14M1 4.5h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 
-function page({ lang, path, title, desc, alts, image, imageAlt, jsonld, bodyAttrs = "", body, scripts = true, noindex = false,
+function page({ lang, path, title, desc, alts, image, imageAlt, imgHost, jsonld, bodyAttrs = "", body, scripts = true, noindex = false,
                rel = "../".repeat(path.split("/").length - 1) }) { // počet priečinkov v ceste (súbor sa nepočíta)
   const altLinks = alts ? Object.entries(alts).map(([l, p]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${p}">`).join("\n") : "";
   return `<!doctype html>
@@ -160,8 +167,8 @@ ${LANGS.filter(l => l !== lang).map(l => `<meta property="og:locale:alternate" c
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#071432">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>">
-<link rel="preconnect" href="https://commons.wikimedia.org"> <!-- obrázok svätého ide cez Special:FilePath -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
+${imgHost && imgHost !== "https://thumb.wikimedia.org" ? `<link rel="preconnect" href="${imgHost}">
+` : ""}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${rel}${CSS}">
@@ -217,7 +224,10 @@ function dayView(lang, feast, home) {
           isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
         crumbs([[u.site, homePath(lang)], [u.cal, calPath(lang)], [s.name, path]]) ] };
   const bodyAttrs = `class="day" data-lang="${lang}" data-feast="${feast}" data-root="${"../".repeat(path.split("/").length - 1)}"` + (home ? ` data-home="1" data-days="${lang === "sk" ? "sk/" : ""}"` : "");
-  const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), imageAlt: s.name, jsonld, bodyAttrs, body: rel => `<main>
+  // fotka pozadia sa prednačítava z thumb.wikimedia.org, takže to spojenie už stojí; portrét menší
+  // než 500 px ale chodí ako originál z upload.wikimedia.org, a to je ďalší hostiteľ
+  const imgHost = new URL(imgUrl(s.img, 500)).origin;
+  const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), imageAlt: s.name, imgHost, jsonld, bodyAttrs, body: rel => `<main>
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
 ${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dt}</a>
 ${lang === "sk" && MENINY[feast] ? `<p class="nameday">${EXTRA.sk.nameday}: ${esc(MENINY[feast])}</p>` : ""}
