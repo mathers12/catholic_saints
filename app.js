@@ -1,8 +1,9 @@
 // Obsah je už v HTML (generuje build.mjs); tu je len oživenie stránky.
+// Zámerne bez novšej syntaxe (?. ||=), aby skript bežal aj v starších prehliadačoch. Bez JS fungujú obyčajné odkazy.
 const $ = id => document.getElementById(id);
-const page = document.body.dataset; // lang, feast, home ("1" na domovskej stránke), days (cesta k denným stránkam jazyka)
-const store = { get: () => { try { return localStorage.getItem("lang"); } catch { return null; } },
-                set: v => { try { localStorage.setItem("lang", v); } catch {} } };
+const page = document.body.dataset; // lang, feast, root, home ("1" na domovskej stránke), days (cesta k denným stránkam jazyka); na kalendári a „O stránke“ prázdne
+const store = { get: () => { try { return localStorage.getItem("lang"); } catch (e) { return null; } },
+                set: v => { try { localStorage.setItem("lang", v); } catch (e) {} } };
 const isBot = /bot|crawl|spider|slurp|facebookexternalhit|preview/i.test(navigator.userAgent);
 const pad = n => String(n).padStart(2, "0");
 const now = new Date();
@@ -19,31 +20,10 @@ if (page.home && !isBot) {
   else if (page.feast !== todayKey) location.replace(`${page.days}${todayKey}/`);
 }
 
-// oživenie karty: pri načítaní stránky a po každej výmene karty za iný deň
-let date;
-function wire() {
-  // plný dátum s dňom v týždni (v HTML je len deň a mesiac)
-  const [m, d] = page.feast.split("-").map(Number);
-  date = page.home ? now : new Date(now.getFullYear(), m - 1, d);
-  if (date.getMonth() === m - 1) $("date").textContent = date.toLocaleDateString(page.lang, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-
-  const img = document.querySelector(".frame img");
-  if (img) {
-    const loaded = () => img.classList.add("loaded");
-    const failed = () => { const sym = img.nextElementSibling; img.replaceWith(sym.textContent); sym.remove(); };
-    img.onload = loaded; img.onerror = failed;
-    if (img.complete) (img.naturalWidth ? loaded : failed)(); // obrázok mohol doraziť (alebo zlyhať) skôr, než sa spustil tento skript
-  }
-
-  // kalendár: klik na dátum otvorí mesiac (bez JS odkaz vedie na celý kalendár)
-  $("date").onclick = e => { e.preventDefault(); view = new Date(date.getFullYear(), date.getMonth(), 1); renderCal(); dlg.showModal(); };
-}
-wire();
-
-// kalendár: klik na dátum otvorí mesiac, deň vedie na stránku svätého (bez JS odkaz vedie na celý kalendár)
-const dlg = $("cal");
-let view = new Date(date.getFullYear(), date.getMonth(), 1), names;
-const loadNames = () => names ||= fetch(`${page.root}${page.lang}/names.json`).then(r => r.json()).catch(() => ({}));
+// kalendár po kliknutí na dátum: klik na dátum otvorí mesiac, deň vedie na stránku svätého (bez JS odkaz vedie na celý kalendár)
+let date, view;
+const names = {};
+const loadNames = () => names[page.lang] = names[page.lang] || fetch(`${page.root}${page.lang}/names.json`).then(r => r.json()).catch(() => ({}));
 function renderCal() {
   const y = view.getFullYear(), mo = view.getMonth(), len = new Date(y, mo + 1, 0).getDate();
   $("calTitle").textContent = view.toLocaleDateString(page.lang, { month: "long", year: "numeric" });
@@ -57,20 +37,70 @@ function renderCal() {
   $("calGrid").innerHTML = h;
   $("calTip").textContent = "";
   $("calAll").hash = `m${mo + 1}`;
-  loadNames().then(n => $("calGrid").querySelectorAll("a").forEach(a => a.title = n[a.dataset.k] || ""));
+  loadNames().then(n => { if ($("calGrid")) $("calGrid").querySelectorAll("a").forEach(a => a.title = n[a.dataset.k] || ""); });
 }
 const shiftMonth = n => { view.setMonth(view.getMonth() + n); renderCal(); };
-$("calPrev").onclick = () => shiftMonth(-1);
-$("calNext").onclick = () => shiftMonth(1);
-dlg.onclick = e => { if (e.target === dlg) dlg.close(); }; // klik mimo okna
-const tip = e => { if (e.target.dataset.k) $("calTip").textContent = e.target.title; };
-$("calGrid").onmouseover = tip; $("calGrid").onfocusin = tip;
 
-document.addEventListener("change", e => { if (e.target.id === "lang") { store.set(e.target.value); location.href = e.target.selectedOptions[0].dataset.href; } });
-const go = id => dlg.open ? shiftMonth(id === "prev" ? -1 : 1) : $(id) && $(id).click();
-addEventListener("keydown", e => { if (e.altKey || e.ctrlKey || e.metaKey || e.target.tagName === "SELECT") return; if (e.key === "ArrowLeft") go("prev"); if (e.key === "ArrowRight") go("next"); });
+// oživenie stránky: pri načítaní a po každom prepnutí na inú stránku
+function wire() {
+  const tabs = document.querySelector(".mtabs"), tab = tabs && tabs.querySelector(".now");
+  if (tab) tabs.scrollLeft = tab.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - tab.offsetWidth) / 2;
+  if (!$("date")) return;
+
+  // plný dátum s dňom v týždni (v HTML je len deň a mesiac)
+  const [m, d] = page.feast.split("-").map(Number);
+  date = page.home ? now : new Date(now.getFullYear(), m - 1, d);
+  if (date.getMonth() === m - 1) $("date").textContent = date.toLocaleDateString(page.lang, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const img = document.querySelector(".frame img");
+  if (img) {
+    const loaded = () => img.classList.add("loaded");
+    const failed = () => { const sym = img.nextElementSibling; img.replaceWith(sym.textContent); sym.remove(); };
+    img.onload = loaded; img.onerror = failed;
+    if (img.complete) (img.naturalWidth ? loaded : failed)(); // obrázok mohol doraziť (alebo zlyhať) skôr, než sa spustil tento skript
+  }
+
+  const dlg = $("cal");
+  if (!dlg.showModal) return; // starý prehliadač bez <dialog>: dátum ostane odkazom na celý kalendár
+  $("date").onclick = e => { e.preventDefault(); view = new Date(date.getFullYear(), date.getMonth(), 1); renderCal(); dlg.showModal(); };
+  $("calPrev").onclick = () => shiftMonth(-1);
+  $("calNext").onclick = () => shiftMonth(1);
+  dlg.onclick = e => { if (e.target === dlg) dlg.close(); }; // klik mimo okna
+  const tip = e => { if (e.target.dataset.k) $("calTip").textContent = e.target.title; };
+  $("calGrid").onmouseover = tip; $("calGrid").onfocusin = tip;
+}
+wire();
+
+const dialogOpen = () => $("cal") && $("cal").open;
+const isCalendar = () => !!document.querySelector(".mtabs");
+const curMonth = () => +(/^#m(\d+)$/.exec(location.hash) || [])[1] || +document.querySelector(".month.now").id.slice(1);
+const goMonth = n => location.replace("#m" + ((curMonth() - 1 + n + 12) % 12 + 1)); // kalendár: bez JS fungujú odkazy #mN
+const go = n => { // -1 späť, 1 dopredu: mesiac v kalendári, inak deň
+  if (dialogOpen()) return shiftMonth(n);
+  if (isCalendar()) return goMonth(n);
+  const a = $(n < 0 ? "prev" : "next");
+  if (a) a.click();
+};
+document.addEventListener("change", e => {
+  if (e.target.id !== "lang") return;
+  store.set(e.target.value);
+  const url = new URL(e.target.selectedOptions[0].dataset.href, location.href).href;
+  if (canSwap) show(url, true); else location.href = url;
+});
+addEventListener("keydown", e => {
+  if (e.altKey || e.ctrlKey || e.metaKey || e.target.tagName === "SELECT") return;
+  if (e.key === "ArrowLeft") go(-1);
+  if (e.key === "ArrowRight") go(1);
+});
+
+// potiahnutie prstom doľava/doprava: deň, v kalendári mesiac
 let t0 = null;
-addEventListener("touchstart", e => t0 = e.touches.length === 1 ? e.touches[0] : null, { passive: true });
+addEventListener("touchstart", e => {
+  const inside = e.target.closest ? e.target : e.target.parentElement;
+  t0 = e.touches.length === 1 && !inside.closest(".mtabs") && (!isCalendar() || inside.closest(".card")) ? e.touches[0] : null;
+  const a = inside.closest("a");
+  if (a) prefetch(a);
+}, { passive: true });
 addEventListener("touchcancel", () => t0 = null);
 addEventListener("touchmove", e => { // vodorovný ťah si vezmeme my; inak prehliadač dobieha gesto a prvé ďalšie ťuknutie sa stratí
   if (!t0 || !e.cancelable) return;
@@ -81,61 +111,76 @@ addEventListener("touchend", e => {
   if (!t0) return;
   const t = e.changedTouches[0], dx = t.clientX - t0.clientX, dy = t.clientY - t0.clientY;
   t0 = null;
-  if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) go(dx > 0 ? "prev" : "next"); // zvislé rolovanie deň neprepne
+  if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) go(dx > 0 ? -1 : 1); // zvislé rolovanie nič neprepne
 });
 
-// prepínanie dní bez načítania celej stránky: pozadie a jeho animácia bežia ďalej, vymení sa len obsah.
-// Každý deň je stále hotová statická stránka; bez JS a pri chybe fungujú obyčajné odkazy.
+// prepínanie stránok bez načítania: pozadie a jeho animácia bežia ďalej, vymení sa len obsah.
+// Každá stránka je stále hotová statická stránka; prehliadač bez týchto funkcií a pri chybe použije obyčajné odkazy.
+const canSwap = !!(window.fetch && window.DOMParser && window.URL && window.Promise && history.pushState);
 const pages = new Map();
+const bare = url => url.split("#")[0];
 const load = url => {
-  if (!pages.has(url)) pages.set(url, fetch(url).then(r => { if (!r.ok) throw r.status; return r.text(); }).then(t => new DOMParser().parseFromString(t, "text/html")));
-  return pages.get(url);
+  const key = bare(url);
+  if (!pages.has(key)) pages.set(key, fetch(key).then(r => { if (!r.ok) throw r.status; return r.text(); }).then(t => new DOMParser().parseFromString(t, "text/html")));
+  return pages.get(key);
 };
-const ahead = () => { // susedné dni aj ich portréty dopredu, aby bol ďalší klik okamžitý
-  if (isBot || navigator.connection?.saveData) return;
-  for (const id of ["prev", "next"]) {
-    const url = $(id)?.href;
-    if (url) load(url).then(doc => { new Image().src = doc.querySelector(".frame img").getAttribute("src"); }).catch(() => pages.delete(url));
-  }
-};
+const portraitOf = doc => { const i = doc.querySelector(".frame img"); return i && i.getAttribute("src"); };
+const ahead = url => load(url).then(doc => { const src = portraitOf(doc); if (src) new Image().src = src; }).catch(() => pages.delete(bare(url)));
+const savesData = () => isBot || (navigator.connection && navigator.connection.saveData);
+const swappable = a => a.origin === location.origin && !a.target && !a.hasAttribute("download") && /\/$/.test(a.pathname) && a.pathname !== location.pathname;
+const prefetch = a => { if (canSwap && !savesData() && a.href && swappable(a)) ahead(a.href); };
+const neighbours = () => { if (savesData()) return; for (const id of ["prev", "next"]) { const a = $(id); if (a) ahead(a.href); } };
 const live = document.body.appendChild(Object.assign(document.createElement("p"), { className: "sr" }));
-live.setAttribute("aria-live", "polite"); // čítačka obrazovky oznámi nový deň
-let turn = 0;
+live.setAttribute("aria-live", "polite"); // čítačka obrazovky oznámi novú stránku
+const META = 'link[rel="canonical"], link[rel="alternate"], meta[name="description"], meta[property^="og:"], meta[name^="twitter:"], script[type="application/ld+json"]';
+let turn = 0, shown = location.pathname;
 async function show(url, push) {
-  const me = ++turn;
+  const me = ++turn, target = new URL(url);
   try {
-    const doc = await load(url), portrait = new Image();
-    portrait.src = doc.querySelector(".frame img").getAttribute("src");
-    await Promise.race([portrait.decode().catch(() => {}), new Promise(r => setTimeout(r, 300))]);
+    const doc = await load(url), src = portraitOf(doc), portrait = new Image();
+    if (src) {
+      portrait.src = src;
+      await Promise.race([portrait.decode ? portrait.decode().catch(() => {}) : Promise.resolve(), new Promise(r => setTimeout(r, 300))]);
+    }
     if (me !== turn) return; // medzitým prišiel ďalší klik
     const b = doc.body.dataset;
     if (b.home && b.feast !== todayKey) return location.assign(url); // nepregenerovaná domovská stránka má vlastnú poistku
-    if (push) history.pushState(null, "", url); // ešte pred výmenou, relatívne odkazy novej karty sa rátajú od novej adresy
-    const focused = document.activeElement?.id, card = doc.querySelector(".card").cloneNode(true);
-    if (portrait.complete && portrait.naturalWidth) card.querySelector(".frame img").classList.add("loaded"); // bez prelínania z nuly
-    card.classList.add("swap");
+    if (push) history.pushState(null, "", bare(url)); // ešte pred výmenou, relatívne odkazy novej stránky sa rátajú od novej adresy
+    shown = target.pathname;
+    const focused = document.activeElement && document.activeElement.id, fresh = doc.querySelector("main").cloneNode(true), card = fresh.querySelector(".card"), dlg = doc.getElementById("cal");
+    const img = fresh.querySelector(".frame img");
+    if (img && portrait.complete && portrait.naturalWidth) img.classList.add("loaded"); // bez prelínania z nuly
+    if (card) card.classList.add("swap");
     document.documentElement.classList.add("seen");
-    document.querySelector(".card").replaceWith(card);
-    document.querySelector(".top").replaceWith(doc.querySelector(".top").cloneNode(true));
-    const META = 'link[rel="canonical"], link[rel="alternate"], meta[name="description"], meta[property^="og:"], meta[name^="twitter:"], script[type="application/ld+json"]';
+    document.documentElement.lang = doc.documentElement.lang;
+    document.body.className = doc.body.className;
+    Object.keys(page).forEach(k => delete page[k]);
+    Object.keys(b).forEach(k => page[k] = b[k]);
+    document.querySelector("main").replaceWith(fresh);
+    if ($("cal")) $("cal").remove();
+    if (dlg) fresh.after(dlg.cloneNode(true));
     document.head.querySelectorAll(META).forEach(e => e.remove());
     doc.head.querySelectorAll(META).forEach(e => document.head.append(e.cloneNode(true)));
     document.title = doc.title;
-    for (const k of ["feast", "root", "home", "days"]) if (b[k] === undefined) delete page[k]; else page[k] = b[k];
-    $("calAll").setAttribute("href", doc.getElementById("calAll").getAttribute("href"));
     wire();
     live.textContent = doc.querySelector("h1").textContent;
-    if (focused) $(focused)?.focus({ preventScroll: true });
+    if (focused && $(focused)) $(focused).focus({ preventScroll: true });
     scrollTo(0, 0);
-    ahead();
-  } catch { location.assign(url); }
+    if (target.hash) location.replace(target.hash); // :target sa po pushState sám neobnoví
+    neighbours();
+  } catch (e) { location.assign(url); }
 }
-document.addEventListener("click", e => {
-  const a = e.target.closest("#prev, #next, #today, .brand, #calGrid a");
-  if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  e.preventDefault();
-  if (dlg.open) dlg.close();
-  if (a.href !== location.href) show(a.href, true);
-});
-addEventListener("popstate", () => show(location.href, false));
-setTimeout(ahead, 500);
+if (canSwap) {
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest("a");
+    if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.origin === location.origin && a.pathname === location.pathname && !a.hash) return e.preventDefault(); // odkaz na tú istú stránku nič nenačítava
+    if (!swappable(a)) return;
+    e.preventDefault();
+    if (dialogOpen()) $("cal").close();
+    show(a.href, true);
+  });
+  document.addEventListener("mouseover", e => { const a = e.target.closest && e.target.closest("a"); if (a) prefetch(a); });
+  addEventListener("popstate", () => { if (location.pathname !== shown) show(location.href, false); }); // zmena mesiaca (#mN) stránku nemení
+  setTimeout(neighbours, 500);
+}

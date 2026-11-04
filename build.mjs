@@ -63,6 +63,9 @@ const clip = (t, n = 158) => t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n
 const q = (lang, t) => lang === "en" ? `“${t}”` : `„${t}“`;
 const ld = o => JSON.stringify(o).replace(/</g, "\\u003c");
 
+// krížik ako kresba: znak ✝ niektoré prehliadače ukazujú ako farebné emoji
+const CROSS = '<svg class="cross-sign" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 0v14M1 4.5h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+
 function page({ lang, path, title, desc, alts, image, jsonld, bodyAttrs = "", body, scripts = true, noindex = false,
                rel = "../".repeat(path.split("/").length - 1) }) { // počet priečinkov v ceste (súbor sa nepočíta)
   const altLinks = alts ? Object.entries(alts).map(([l, p]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${p}">`).join("\n") : "";
@@ -93,7 +96,6 @@ ${altLinks}
 <link rel="preload" as="image" href="${PHOTO}1280" media="(max-width: 759px)">
 <script>try{if(sessionStorage.seen)document.documentElement.classList.add("seen");sessionStorage.seen=1}catch(e){}
 (function(n,s){s.setProperty("--dawn",-(n%72)+"s");s.setProperty("--breath",-(n%108)+"s")})(Date.now()/1e3,document.documentElement.style)</script>
-<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/*"},"eagerness":"moderate"}]}</script>
 ${jsonld ? `<script type="application/ld+json">${ld(jsonld)}</script>` : ""}
 </head>
 <body ${bodyAttrs}>
@@ -150,7 +152,7 @@ ${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPat
 <a class="btn" id="prev" rel="prev" href="${rel}${dayPath(lang, neighbour(feast, -1))}" aria-label="${u.prevL}">${u.prev}</a>
 ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.today}</a>`}
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
-<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}"><span class="cross-sign" aria-hidden="true">✝</span>${u.faith}</a>
+<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}">${CROSS}${u.faith}</a>
 </nav>`)}
 </main>
 <dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
@@ -164,24 +166,6 @@ ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.toda
   return path;
 }
 
-// kalendár: potiahnutie prstom doľava/doprava (a šípky) prepne mesiac; bez JS fungujú odkazy #mN
-const CAL_JS = `(() => {
-  const tabs = document.querySelector('.mtabs'), now = tabs.querySelector('.now');
-  if (now) tabs.scrollLeft = now.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - now.offsetWidth) / 2;
-  const cur = () => +(/^#m(\\d+)$/.exec(location.hash) || [])[1] || +document.querySelector(".month.now").id.slice(1);
-  const go = n => location.replace("#m" + ((cur() - 1 + n + 12) % 12 + 1));
-  addEventListener("keydown", e => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); });
-  let p = null;
-  const card = document.querySelector(".calendar .card");
-  card.addEventListener("touchstart", e => p = e.touches.length === 1 && !e.target.closest(".mtabs") ? e.touches[0] : null, { passive: true });
-  card.addEventListener("touchend", e => {
-    if (!p) return;
-    const t = e.changedTouches[0], dx = t.clientX - p.clientX, dy = t.clientY - p.clientY;
-    p = null;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) go(dx > 0 ? -1 : 1);
-  });
-})();`;
-
 function calendar(lang) {
   const u = UI[lang], path = calPath(lang);
   const alts = Object.fromEntries(LANGS.map(l => [l, calPath(l)]));
@@ -194,7 +178,7 @@ function calendar(lang) {
   // ponytail: 29. 2. v neprestupnom roku sa ukáže za 28., v zozname je správne
   const grid = (i, list, rel) => `<div class="mgrid">${wd.map(w => `<span class="wd">${w}</span>`).join("")}${"<span></span>".repeat((new Date(year, i, 1).getDay() + 6) % 7)}${
     list.map(s => `<a href="${rel}${dayPath(lang, s.feast)}"${s.feast === todayKey ? ' class="today"' : ""} title="${esc(saint(lang, s).name)}">${md(s.feast)[1]}</a>`).join("")}</div>`;
-  out(path, page({ lang, path, title, desc: u.calIntro, alts, image: imgUrl(SAINTS[0].img, 1200), scripts: false,
+  out(path, page({ lang, path, title, desc: u.calIntro, alts, image: imgUrl(SAINTS[0].img, 1200),
     jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: u.calIntro },
     body: rel => `<main class="calendar">
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
@@ -209,8 +193,7 @@ ${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " 
 </article>
 <nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
   : `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}" title="${UI[l].cal}">${l.toUpperCase()}</a>`).join("")}</nav>
-</main>
-<script>${CAL_JS}</script>` }));
+</main>` }));
   return path;
 }
 
@@ -250,13 +233,13 @@ function aboutPage(lang) {
   const alts = Object.fromEntries(LANGS.map(l => [l, aboutPath(l)]));
   alts["x-default"] = aboutPath("en");
   const title = `${u.about} – ${u.faith} | ${BRAND}`;
-  out(path, page({ lang, path, title, desc: a.desc, alts, image: imgUrl(SAINTS[0].img, 1200), scripts: false,
+  out(path, page({ lang, path, title, desc: a.desc, alts, image: imgUrl(SAINTS[0].img, 1200),
     jsonld: { "@context": "https://schema.org", "@type": "AboutPage", name: title, url: SITE + path, inLanguage: lang, description: a.desc, about: CHURCH,
               isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
     body: rel => `<main class="prose">
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
 <article class="card">
-<p class="seal" aria-hidden="true">✝</p>
+<p class="seal">${CROSS}</p>
 <h1>${u.about}</h1>
 <p class="lead">${a.lead}</p>
 ${a.parts.map(([h, ps]) => `<h2>${h}</h2>\n${ps.map(p => `<p>${esc(p)}</p>`).join("\n")}`).join("\n")}
