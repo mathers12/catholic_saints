@@ -17,6 +17,12 @@ const POPE = { sk: "Levom XIV.", en: "Pope Leo XIV", de: "Papst Leo XIV." };
 // nedrží starú verziu z cache. Bez toho návštevník vidí staré štýly, kým mu nevyprší cache.
 const asset = f => `${f}?v=${crypto.createHash("sha1").update(fs.readFileSync(f)).digest("hex").slice(0, 8)}`;
 const CSS = asset("style.css"), JS = asset("app.js");
+// Fonty si hostujeme sami (fonts/), takže pred prvým textom netreba cudzí blokujúci stylesheet.
+// Prednačítame tie tri rezy, ktoré sú na dennej stránke hneď vidieť (text, citát, nadpis);
+// Spectral 500 je len na zvýraznenom dni v kalendári, ten počká. `as="font"` potrebuje
+// `crossorigin`, ináč prehliadač stiahne súbor druhýkrát. Adresy musia sedieť s url() v style.css.
+const FONTS = ["spectral-400.woff2", "spectral-400i.woff2", "marcellus-400.woff2"];
+const PRELOAD_FONTS = rel => FONTS.map(f => `<link rel="preload" as="font" type="font/woff2" href="${rel}fonts/${f}" crossorigin>`).join("\n");
 // Fotka pozadia je najväčší prvok stránky (LCP), preto na ňu odkazujeme priamo na thumbnail,
 // nie cez Special:FilePath – to vracia dve presmerovania a zdržuje vykreslenie. Tá istá adresa
 // musí byť v --photo v style.css (`seo.mjs` to kontroluje), ináč sa fotka stiahne dvakrát.
@@ -168,9 +174,7 @@ ${LANGS.filter(l => l !== lang).map(l => `<meta property="og:locale:alternate" c
 <meta name="theme-color" content="#071432">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✝️</text></svg>">
 ${imgHost && imgHost !== "https://thumb.wikimedia.org" ? `<link rel="preconnect" href="${imgHost}">
-` : ""}<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+` : ""}${PRELOAD_FONTS(rel)}
 <link rel="stylesheet" href="${rel}${CSS}">
 <link rel="preload" as="image" href="${PHOTO(1920)}" media="(min-width: 760px)">
 <link rel="preload" as="image" href="${PHOTO(1280)}" media="(max-width: 759px)">
@@ -368,6 +372,8 @@ ${groups.map(([name, fs_]) => `<h2>${esc(name)}</h2>\n<ul class="pat">${fs_.map(
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT);
 for (const f of ["style.css", "app.js"]) fs.copyFileSync(f, `${OUT}/${f}`);
+fs.mkdirSync(`${OUT}/fonts`);
+for (const f of fs.readdirSync("fonts")) if (f !== "README.md") fs.copyFileSync(`fonts/${f}`, `${OUT}/fonts/${f}`); // aj OFL licencie, font sa šíri s ňou
 const urls = [];
 for (const lang of LANGS) {
   urls.push({ path: dayView(lang, todayKey, true), alt: l => homePath(l), changefreq: "daily" });

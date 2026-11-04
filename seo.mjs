@@ -25,6 +25,11 @@ const one = (h, re) => (h.match(re) || [])[1] || "";
 const urlOf = f => site + f.replace(`${OUT}/`, "").replace(/index\.html$/, "");
 const exists = p => fs.existsSync(p) || fs.existsSync(`${p}/index.html`) || fs.existsSync(p.replace(/\/$/, "/index.html"));
 
+const css = fs.readFileSync(`${OUT}/style.css`, "utf8");
+// Fonty hostujeme sami: v CSS sú v @font-face, v hlavičke stránky v preload, a musia sedieť,
+// ináč prehliadač stiahne ten istý font dvakrát.
+const cssFonts = new Set([...css.matchAll(/url\("(fonts\/[^"]+)"\)/g)].map(m => m[1]));
+
 const sitemap = fs.readFileSync(`${OUT}/sitemap.xml`, "utf8");
 const locs = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1]);
 const inSitemap = new Set(locs);
@@ -54,6 +59,12 @@ for (const f of html) {
   // Special:FilePath vracia dve presmerovania; znamená to, že obrázok nemá šírku v imgs.js
   if (/Special:FilePath/.test(h)) fail("obrázok ide cez presmerovanie, spusti node tools/imgs.mjs", rel);
   for (const w of thumbWidths(h)) if (!STEPS.has(w)) fail(`nepovolená šírka thumbnailu ${w}px, Commons vráti 400`, rel);
+  if (/fonts\.(googleapis|gstatic)\.com/.test(h)) fail("font z cudzej domény blokuje vykreslenie", rel);
+  for (const m of h.matchAll(/<link rel="preload" as="font"[^>]*>/g)) {
+    const href = (m[0].match(/href="([^"]+)"/) || [])[1] || "";
+    if (!/crossorigin/.test(m[0])) fail(`preload fontu ${href} bez crossorigin, stiahne sa dvakrát`, rel);
+    if (!cssFonts.has(href.replace(/^(\.\.\/)+/, ""))) fail(`preload ${href} nesedí so @font-face, font sa stiahne dvakrát`, rel);
+  }
 
   // hreflang: každá jazyková verzia a x-default, a každá musí ukazovať na existujúcu stránku
   const alts = [...h.matchAll(/rel="alternate" hreflang="(.*?)" href="(.*?)"/g)].map(m => [m[1], m[2]]);
@@ -73,11 +84,12 @@ for (const f of html) {
 
 // sitemap: každá adresa existuje a nič neprebýva
 for (const l of locs) if (!exists(`${OUT}/${l.slice(site.length)}`)) fail("sitemap ukazuje na neexistujúcu stránku", l);
+if (!cssFonts.size) fail("žiadny @font-face v CSS, fonty by išli z cudzej domény", "style.css");
+for (const f of cssFonts) if (!fs.existsSync(`${OUT}/${f}`)) fail("font z @font-face sa do _site nedostal", f);
 if (!/hreflang="x-default"/.test(sitemap)) fail("sitemap bez x-default", "sitemap.xml");
 if (!/<lastmod>/.test(sitemap)) fail("sitemap bez lastmod", "sitemap.xml");
 
 // fotka pozadia: preload v HTML a --photo v CSS musia byť znak po znaku rovnaké
-const css = fs.readFileSync(`${OUT}/style.css`, "utf8");
 const cssPhotos = [...css.matchAll(/--photo: url\("([^"]+)"\)/g)].map(m => m[1]);
 const page = fs.readFileSync(`${OUT}/sk/01-01/index.html`, "utf8");
 const preloads = [...page.matchAll(/rel="preload" as="image" href="([^"]+)"/g)].map(m => m[1]);
