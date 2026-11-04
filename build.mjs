@@ -56,12 +56,41 @@ const homePath = lang => lang === "sk" ? "" : `${lang}/`;
 const dayPath = (lang, feast) => `${lang}/${feast}/`;
 const calPath = lang => `${lang}/${UI[lang].calSlug}/`;
 const aboutPath = lang => `${lang}/${UI[lang].aboutSlug}/`;
+const patPath = lang => `${lang}/${EXTRA[lang].patSlug}/`;
 
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const imgUrl = (f, w) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=${w}`;
 const clip = (t, n = 158) => t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n - 1)) + "…";
 const q = (lang, t) => lang === "en" ? `“${t}”` : `„${t}“`;
 const ld = o => JSON.stringify(o).replace(/</g, "\\u003c");
+
+// údaje navyše (generujú tools/facts.mjs a tools/meniny.mjs)
+const { FACTS, PATRON_NAMES } = load("facts.js"), MENINY = load("meniny.js").MENINY;
+const LANG_I = { sk: 0, en: 1, de: 2 };
+const YEAR = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
+const EXTRA = {
+  sk: { more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
+    patrons: "Patróni", patSlug: "patroni", patIntro: "Svätí podľa toho, koho majú pod ochranou. Vychádza z údajov anglickej Wikipédie, zoznam nie je úplný.", search: "Hľadať meno alebo patróna", none: "Nič sa nenašlo." },
+  en: { more: "More", share: "Share", copied: "Link copied", patron: "Patron of", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
+    patrons: "Patron saints", patSlug: "patrons", patIntro: "Saints by those they watch over. Based on English Wikipedia data; the list is not complete.", search: "Search a name or patronage", none: "Nothing found." },
+  de: { more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
+    patrons: "Schutzpatrone", patSlug: "schutzpatrone", patIntro: "Heilige danach, wen sie beschützen. Grundlage sind Daten der englischen Wikipedia; die Liste ist nicht vollständig.", search: "Name oder Patronat suchen", none: "Nichts gefunden." },
+};
+// čítania daného dňa v aktuálnom roku; 29. 2. v neprestupnom roku neexistuje
+const readingsUrl = (lang, feast) => {
+  const [m, d] = feast.split("-");
+  if (feast === "02-29" && new Date(YEAR, 1, 29).getMonth() !== 1) return null;
+  if (lang === "sk") return `https://lc.kbs.sk/?den=${YEAR}${m}${d}`;
+  if (lang === "en") return `https://bible.usccb.org/bible/readings/${m}${d}${String(YEAR).slice(2)}.cfm`;
+  return `https://schott.erzabtei-beuron.de/?d=${YEAR}-${m}-${d}`;
+};
+const patronLabels = (lang, feast) => ((FACTS[feast] || {}).patron || []).map(k => PATRON_NAMES[k][LANG_I[lang]]);
+function moreBlock(lang, feast, shareText) {
+  const x = EXTRA[lang], f = FACTS[feast] || {}, wiki = f.wiki || {}, wl = wiki[lang] ? lang : wiki.en ? "en" : null, pat = patronLabels(lang, feast), rd = readingsUrl(lang, feast);
+  const rows = [[x.patron, pat.join(", ")], [x.born, (f.born || {})[lang]], [x.died, (f.died || {})[lang]]].filter(r => r[1]).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+  const links = [wl && `<a href="https://${wl}.wikipedia.org/wiki/${encodeURIComponent(wiki[wl].replace(/ /g, "_"))}" rel="noopener">${x.bio}${wl !== lang ? " (EN)" : ""} ↗</a>`, rd && `<a href="${rd}" rel="noopener">${x.readings} ↗</a>`].filter(Boolean).join("");
+  return `<div class="extra"><details class="more"><summary>${x.more}</summary>${rows ? `<dl>${rows}</dl>` : ""}<p class="more-links">${links}</p>${rows || wl ? `<p class="more-src">${x.src}</p>` : ""}</details><button type="button" class="share" id="share" hidden data-text="${esc(shareText)}" data-done="${x.copied}">${x.share}</button></div>`;
+}
 
 // krížik ako kresba: znak ✝ niektoré prehliadače ukazujú ako farebné emoji
 const CROSS = '<svg class="cross-sign" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 0v14M1 4.5h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
@@ -107,7 +136,7 @@ ${scripts ? `<script src="${rel}${JS}" defer></script>` : ""}
 `;
 }
 
-function card(s, when, foot) {
+function card(s, when, foot, extra) {
   const D = x => `style="animation-delay:calc(var(--t0) + ${x.toFixed(2)}s)"`;
   return `<article class="card">
 <div class="head fade"><div class="frame"><img src="${imgUrl(s.img, 500)}" alt="${esc(s.name)}"><span class="sym" aria-hidden="true">${s.symbol}</span></div><div class="who"><div class="when">${when}</div>
@@ -116,6 +145,7 @@ function card(s, when, foot) {
 <blockquote class="fade" ${D(.35)}>${esc(s.quote)}</blockquote>
 <div class="source fade" ${D(.45)}>${esc(s.source)}</div>
 <p class="story fade" ${D(.55)}>${esc(s.story)}</p>
+<div class="fade" ${D(.62)}>${extra}</div>
 <div class="fade" ${D(.7)}>${foot}</div>
 </article>`;
 }
@@ -148,12 +178,13 @@ function dayView(lang, feast, home) {
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), jsonld, bodyAttrs, body: rel => `<main>
 <div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
 ${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dayText(lang, feast)}</a>
+${lang === "sk" && MENINY[feast] ? `<p class="nameday">${EXTRA.sk.nameday}: ${esc(MENINY[feast])}</p>` : ""}
 <p class="badge">${home ? u.badgeToday : u.badgeDay}</p>`, `<nav>
 <a class="btn" id="prev" rel="prev" href="${rel}${dayPath(lang, neighbour(feast, -1))}" aria-label="${u.prevL}">${u.prev}</a>
 ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.today}</a>`}
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
 <a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}">${CROSS}${u.faith}</a>
-</nav>`)}
+</nav>`, moreBlock(lang, feast, `${q(lang, s.quote)} – ${s.name}`))}
 </main>
 <dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
 <form method="dialog"><button class="cal-x" aria-label="${u.close}">×</button></form>
@@ -185,13 +216,15 @@ function calendar(lang) {
 <article class="card">
 <h1>${u.cal}</h1>
 <p>${u.calIntro}</p>
+<input type="search" class="q" id="q" hidden placeholder="${EXTRA[lang].search}" aria-label="${EXTRA[lang].search}" data-src="${rel}${lang}/search.json" data-base="${rel}${lang}/" data-none="${EXTRA[lang].none}">
+<ol class="qres" id="qres" hidden></ol>
 <div class="mtabs">${months.map((_, i) => `<a href="#m${i + 1}"${i + 1 === md(todayKey)[0] ? ' class="now"' : ""}>${monthName(i).slice(0, 3)}</a>`).join("")}</div>
 ${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " now" : ""}" id="m${i + 1}">
 <div class="mnav"><a href="#m${(i + 11) % 12 + 1}">‹ ${monthName((i + 11) % 12)}</a><h2>${monthName(i)}</h2><a href="#m${(i + 1) % 12 + 1}">${monthName((i + 1) % 12)} ›</a></div>
 <div class="mbody">${grid(i, list, rel)}
 <ol>${list.map(s => `<li${s.feast === todayKey ? ' class="today"' : ""}><a href="${rel}${dayPath(lang, s.feast)}"><span class="d">${md(s.feast)[1]}.</span> ${esc(saint(lang, s).name)}</a></li>`).join("")}</ol></div></section>`).join("\n")}
 </article>
-<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
   : `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}" title="${UI[l].cal}">${l.toUpperCase()}</a>`).join("")}</nav>
 </main>` }));
   return path;
@@ -245,8 +278,28 @@ function aboutPage(lang) {
 ${a.parts.map(([h, ps]) => `<h2>${h}</h2>\n${ps.map(p => `<p>${esc(p)}</p>`).join("\n")}`).join("\n")}
 <ul>${LINKS.map(([href, t]) => `<li><a href="${href}" rel="noopener">${t}</a></li>`).join("")}</ul>
 </article>
-<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
   : `<a class="btn" hreflang="${l}" href="${rel}${aboutPath(l)}" title="${UI[l].about}">${l.toUpperCase()}</a>`).join("")}</nav>
+</main>` }));
+  return path;
+}
+
+// stránka patrónov: kategórie a svätí s odkazom na ich deň
+function patronsPage(lang) {
+  const u = UI[lang], x = EXTRA[lang], path = patPath(lang), title = `${x.patrons} | ${BRAND}`;
+  const alts = Object.fromEntries(LANGS.map(l => [l, patPath(l)])); alts["x-default"] = patPath("en");
+  const groups = Object.keys(PATRON_NAMES).map(k => [PATRON_NAMES[k][LANG_I[lang]], FEASTS.filter(f => FACTS[f] && FACTS[f].patron.includes(k))]).filter(g => g[1].length).sort((a, b) => a[0].localeCompare(b[0], lang));
+  out(path, page({ lang, path, title, desc: x.patIntro, alts, image: imgUrl(SAINTS[0].img, 1200),
+    jsonld: { "@context": "https://schema.org", "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: x.patIntro },
+    body: rel => `<main class="prose">
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a></div>
+<article class="card">
+<h1>${x.patrons}</h1>
+<p class="lead">${x.patIntro}</p>
+${groups.map(([name, fs_]) => `<h2>${esc(name)}</h2>\n<ul class="pat">${fs_.map(f => `<li><a href="${rel}${dayPath(lang, f)}">${esc(saint(lang, byFeast[f]).name)}</a></li>`).join("")}</ul>`).join("\n")}
+</article>
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
+  : `<a class="btn" hreflang="${l}" href="${rel}${patPath(l)}" title="${EXTRA[l].patrons}">${l.toUpperCase()}</a>`).join("")}</nav>
 </main>` }));
   return path;
 }
@@ -260,7 +313,9 @@ for (const lang of LANGS) {
   urls.push({ path: dayView(lang, todayKey, true), alt: l => homePath(l), changefreq: "daily" });
   for (const f of FEASTS) urls.push({ path: dayView(lang, f, false), alt: l => dayPath(l, f), changefreq: "yearly" });
   fs.writeFileSync(`${OUT}/${lang}/names.json`, JSON.stringify(Object.fromEntries(SAINTS.map(s => [s.feast, saint(lang, s).name]))));
+  fs.writeFileSync(`${OUT}/${lang}/search.json`, JSON.stringify(SAINTS.map(s => { const t = saint(lang, s), [m, d] = s.feast.split("-").map(Number); return { f: s.feast, d: `${d}. ${m}.`, n: t.name, t: t.title, p: patronLabels(lang, s.feast) }; })));
   urls.push({ path: calendar(lang), alt: l => calPath(l), changefreq: "monthly" });
+  urls.push({ path: patronsPage(lang), alt: l => patPath(l), changefreq: "yearly" });
   urls.push({ path: aboutPage(lang), alt: l => aboutPath(l), changefreq: "yearly" });
 }
 // /sk/ nie je samostatná stránka – slovenská domovská je koreň

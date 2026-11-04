@@ -25,7 +25,8 @@ Spája tri veci naraz: vernosť liturgickému kalendáru platnému na Slovensku 
 Návšteva je krátke každodenné zastavenie alebo príchod z vyhľadávača na konkrétny deň. Obsah sa riadi slávením podľa Rímskeho misála 2021 a direktória Konferencie biskupov Slovenska; v dni bez povinného slávenia ide o svätého z Rímskeho martyrológia.
 
 ## Capabilities and Constraints
-- 366 denných stránok v každom jazyku, domovská stránka s dnešným svätým, kalendár, stránka „O stránke“.
+- 366 denných stránok v každom jazyku, domovská stránka s dnešným svätým, kalendár s hľadaním, stránka patrónov, stránka „O stránke“.
+- Na dennej stránke je zdieľanie, rozbaľovacie „Viac“ (patrón, miesta, životopis, čítania dňa) a po slovensky meniny. Údaje sú len z overených zdrojov, čo sa overiť nedá, sa neukazuje.
 - Citát je skutočný výrok svätého alebo verš z Písma s presným odkazom. Citáty, dátumy ani slávenia sa nevymýšľajú a neposúvajú.
 - Denná stránka sa od 320×568 zmestí na jednu obrazovku bez posúvania.
 - Statický web generovaný skriptom, obrázky sú voľne použiteľné súbory z Wikimedia Commons.

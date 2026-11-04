@@ -41,10 +41,41 @@ function renderCal() {
 }
 const shiftMonth = n => { view.setMonth(view.getMonth() + n); renderCal(); };
 
+// hľadanie v kalendári: meno, titul aj patronát, bez ohľadu na diakritiku; údaje sa stiahnu až pri prvom použití
+const plain = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function wireSearch() {
+  const q = $("q");
+  if (!q) return;
+  const res = $("qres"), main = document.querySelector("main");
+  let data = null;
+  q.hidden = false;
+  const fill = () => {
+    const words = plain(q.value).split(/\s+/).filter(Boolean);
+    main.classList.toggle("searching", words.length > 0);
+    res.hidden = !words.length;
+    res.textContent = "";
+    if (!words.length || !data) return;
+    const hits = data.filter(x => words.every(w => x.hay.includes(w))).slice(0, 50);
+    if (!hits.length) { const li = document.createElement("li"); li.textContent = q.dataset.none; res.append(li); return; }
+    for (const x of hits) {
+      const li = document.createElement("li"), a = document.createElement("a"), d = document.createElement("span"), wrap = document.createElement("span"), sm = document.createElement("small");
+      a.href = `${q.dataset.base}${x.f}/`; d.className = "d"; d.textContent = x.d;
+      wrap.textContent = x.n; sm.textContent = [x.t, ...x.p].filter(Boolean).join(", "); wrap.append(sm);
+      a.append(d, wrap); li.append(a); res.append(li);
+    }
+  };
+  q.oninput = () => {
+    if (data) return fill();
+    fill();
+    fetch(q.dataset.src).then(r => r.json()).then(j => { data = j.map(x => ({ ...x, hay: plain([x.n, x.t, ...x.p].join(" ")) })); fill(); }).catch(() => {});
+  };
+}
+
 // oživenie stránky: pri načítaní a po každom prepnutí na inú stránku
 function wire() {
   const tabs = document.querySelector(".mtabs"), tab = tabs && tabs.querySelector(".now");
   if (tab) tabs.scrollLeft = tab.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - tab.offsetWidth) / 2;
+  wireSearch();
   if (!$("date")) return;
 
   // plný dátum s dňom v týždni (v HTML je len deň a mesiac)
@@ -58,6 +89,21 @@ function wire() {
     const failed = () => { const sym = img.nextElementSibling; img.replaceWith(sym.textContent); sym.remove(); };
     img.onload = loaded; img.onerror = failed;
     if (img.complete) (img.naturalWidth ? loaded : failed)(); // obrázok mohol doraziť (alebo zlyhať) skôr, než sa spustil tento skript
+  }
+
+  const sh = $("share"); // bez JS by tlačidlo nič nerobilo, preto je v HTML skryté
+  if (sh && (navigator.share || navigator.clipboard)) {
+    const label = sh.textContent;
+    sh.hidden = false;
+    sh.onclick = async () => {
+      const data = { title: document.title, text: sh.dataset.text, url: location.href };
+      try {
+        if (navigator.share) return await navigator.share(data);
+        await navigator.clipboard.writeText(`${data.text} ${data.url}`);
+        sh.textContent = sh.dataset.done;
+        setTimeout(() => sh.textContent = label, 2000);
+      } catch (e) {} // zrušené zdieľanie nie je chyba
+    };
   }
 
   const dlg = $("cal");
@@ -88,7 +134,7 @@ document.addEventListener("change", e => {
   if (canSwap) show(url, true); else location.href = url;
 });
 addEventListener("keydown", e => {
-  if (e.altKey || e.ctrlKey || e.metaKey || e.target.tagName === "SELECT") return;
+  if (e.altKey || e.ctrlKey || e.metaKey || /^(SELECT|INPUT)$/.test(e.target.tagName)) return;
   if (e.key === "ArrowLeft") go(-1);
   if (e.key === "ArrowRight") go(1);
 });

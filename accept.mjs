@@ -208,6 +208,41 @@ await T("Starý prehliadač bez cqh a :has: stránka je použiteľná a kríž n
   ok(r.sw <= r.iw, "vodorovné posúvanie"); ok(r.armBottom <= r.card, `ramená kríža pod kartou ${Math.round(r.armBottom)} > ${Math.round(r.card)}`); ok(r.sh <= r.ih + 1, "denná stránka sa nezmestí");
   await go(q, "/sk/kalendar/"); await q.waitForTimeout(300); ok(await q.locator(".month").nth(5).isVisible(), "všetky mesiace viditeľné"); ok((await q.evaluate(() => document.documentElement.scrollWidth)) <= 375, "kalendár do šírky"); await q.context().close();
 });
+await T("Viac: rozbalí patróna, miesto, životopis a čítania, predvolene zatvorené", async () => {
+  const q = await mk(); await go(q, "/sk/10-04/"); await q.waitForTimeout(300);
+  ok(!(await q.locator(".more").getAttribute("open")), "má byť zatvorené"); ok(!(await q.locator(".more dl").isVisible()), "obsah viditeľný");
+  await q.locator(".more summary").click(); ok(await q.locator(".more dl").isVisible(), "obsah sa neukázal");
+  ok(/chudobn/i.test(await q.locator(".more dl").innerText()), "patrón"); const links = await q.locator(".more-links a").evaluateAll(a => a.map(x => x.href));
+  ok(links.some(h => h.includes("sk.wikipedia.org")), "Wikipédia"); ok(links.some(h => /lc\.kbs\.sk\/\?den=\d{4}1004/.test(h)), "čítania " + links.join());
+  await go(q, "/en/10-04/"); ok((await q.locator(".more-links a").evaluateAll(a => a.map(x => x.href))).some(h => /bible\.usccb\.org\/bible\/readings\/1004\d\d\.cfm/.test(h)), "čítania EN");
+  await go(q, "/de/10-04/"); ok((await q.locator(".more-links a").evaluateAll(a => a.map(x => x.href))).some(h => /schott\.erzabtei-beuron\.de\/\?d=\d{4}-10-04/.test(h)), "čítania DE");
+  await go(q, "/sk/10-04/"); await q.waitForTimeout(300); await q.locator(".more summary").click(); await q.click("#next"); await q.waitForURL("**/sk/10-05/"); ok(!(await q.locator(".more").getAttribute("open")), "po prepnutí zatvorené"); await q.context().close();
+});
+await T("Zdieľať: otvorí zdieľanie s citátom, inak skopíruje odkaz, bez JS je skryté", async () => {
+  const q = await mk(); await q.addInitScript(() => { navigator.share = d => { window.__shared = d; return Promise.resolve(); }; });
+  await go(q, "/sk/11-04/"); await q.waitForTimeout(300); await q.click("#share"); const d = await q.evaluate(() => window.__shared);
+  ok(d && /Boromejský/.test(d.text) && /„/.test(d.text), "text " + JSON.stringify(d)); ok(/\/sk\/11-04\/$/.test(d.url), "adresa");
+  await q.click("#next"); await q.waitForURL("**/sk/11-05/"); await q.waitForTimeout(150); await q.click("#share"); ok(/\/sk\/11-05\/$/.test((await q.evaluate(() => window.__shared)).url), "adresa po prepnutí"); await q.context().close();
+  const c = await mk(); await c.addInitScript(() => { Object.defineProperty(navigator, "share", { value: undefined }); Object.defineProperty(navigator, "clipboard", { value: { writeText: t => { window.__copied = t; return Promise.resolve(); } } }); });
+  await go(c, "/sk/11-04/"); await c.waitForTimeout(300); await c.click("#share"); await c.waitForTimeout(100); ok(/\/sk\/11-04\/$/.test(await c.evaluate(() => window.__copied)), "skopírované"); ok(/skopírovan/i.test(await c.locator("#share").innerText()), "potvrdenie"); await c.context().close();
+  const n = await mk({ javaScriptEnabled: false }); await go(n, "/sk/11-04/"); ok(!(await n.locator("#share").isVisible()), "bez JS viditeľné"); ok(await n.locator(".more summary").isVisible(), "Viac bez JS"); await n.context().close();
+});
+await T("Hľadanie: meno bez diakritiky aj patrón, výsledok vedie na deň bez načítania", async () => {
+  const q = await mk(); await go(q, "/sk/kalendar/"); await q.waitForTimeout(300); await mark(q); await q.fill("#q", "boromejsky"); await q.waitForSelector("#qres a");
+  ok(/Boromejský/.test(await q.locator("#qres").innerText()), "meno"); ok(!(await q.locator(".mtabs").isVisible()), "záložky ostali"); await q.fill("#q", "ucitel"); await q.waitForTimeout(100); ok((await q.locator("#qres a").count()) > 1, "patrón");
+  await q.fill("#q", "xyzq"); await q.waitForTimeout(100); ok(/Nič/.test(await q.locator("#qres").innerText()), "žiadny výsledok"); await q.keyboard.press("ArrowLeft"); ok(!/#m/.test(q.url()), "šípka v poli nemení mesiac");
+  await q.fill("#q", ""); await q.waitForTimeout(100); ok(await q.locator(".mtabs").isVisible(), "záložky sa nevrátili"); await q.fill("#q", "boromejsky"); await q.waitForSelector("#qres a"); await q.locator("#qres a").first().click(); await q.waitForURL("**/sk/11-04/"); ok(await same(q), "načítanie"); await q.context().close();
+  const n = await mk({ javaScriptEnabled: false }); await go(n, "/sk/kalendar/"); ok(!(await n.locator("#q").isVisible()), "bez JS pole"); await n.context().close();
+});
+await T("Patróni: stránka v troch jazykoch, kategórie a funkčné odkazy, je v sitemape", async () => {
+  const q = await mk();
+  for (const u of ["/sk/patroni/", "/en/patrons/", "/de/schutzpatrone/"]) { await go(q, u); ok((await q.locator(".prose h2").count()) >= 10, "kategórie " + u); eq(await q.locator("h1").count(), 1, "h1"); eq(await deadLinks(q), 0, "mŕtve odkazy " + u); }
+  const sm = await (await q.request.get(BASE + "/sitemap.xml")).text(); ok(/patroni\//.test(sm) && /schutzpatrone\//.test(sm), "sitemap");
+  await go(q, "/sk/kalendar/"); await q.waitForTimeout(300); await mark(q); await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click(); await q.waitForURL("**/sk/patroni/"); ok(await same(q), "načítanie"); await q.context().close();
+});
+await T("Meniny: po slovensky na dennej stránke, v iných jazykoch nie", async () => {
+  const q = await mk(); await go(q, "/sk/11-04/"); ok(/Meniny: Karol/.test(await q.locator(".nameday").innerText()), "meniny"); await go(q, "/en/11-04/"); eq(await q.locator(".nameday").count(), 0, "EN"); await go(q, "/de/11-04/"); eq(await q.locator(".nameday").count(), 0, "DE"); await q.context().close();
+});
 await T("Krížik: je kresba, nie znak, ktorý sa môže ukázať ako farebné emoji", async () => {
   await go(p, "/sk/11-04/"); eq(await p.locator(".faith svg.cross-sign").count(), 1, "denná stránka"); ok(!(await p.locator(".faith").innerText()).includes("✝"), "znak v odkaze");
   await go(p, "/sk/o-stranke/"); eq(await p.locator(".seal svg.cross-sign").count(), 1, "O stránke");

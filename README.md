@@ -6,6 +6,7 @@ z jeho života. Dni bez povinného slávenia dopĺňajú svätí z Rímskeho mar
 Stránka je po slovensky, anglicky a nemecky; jazyk sa predvyberie podľa prehliadača a dá sa prepnúť vpravo hore.
 
 Stránky generuje `node build.mjs` do `_site/` (každý deň má vlastnú stránku v každom jazyku, kvôli vyhľadávačom).
+Údaje o svätých (`facts.js`) a meniny (`meniny.js`) sa generujú ručne: `node tools/facts.mjs`, `node tools/meniny.mjs`.
 Lokálne: `node build.mjs && python -m http.server -d _site`. Šípky ←/→ alebo potiahnutie prstom prechádzajú dni.
 
 ## AI automatizácia
