@@ -3,10 +3,10 @@
   --ink: #f4f6fb; --muted: #dbe1f0; --accent: #cfdcff; --night: #071432; --line: rgba(207,220,255,.4);
   --t0: .15s; /* úvodné objavenie textu; pri ďalších stránkach v tej istej návšteve sa preskočí */
   --pad: clamp(16px, 4vw, 56px); /* vnútorný okraj karty */
-  --photo: url("https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg/1920px-A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg");
+  --photo: url("https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_%28Unsplash%29.jpg/1920px-A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_%28Unsplash%29.jpg");
   --w: max(100vw, 133.15vh); /* šírka javiska: fotka má pomer 1,3315 a vždy pokryje obrazovku */
 }
-@media (max-width: 759px) { :root { --photo: url("https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg/1280px-A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_(Unsplash).jpg"); } }
+@media (max-width: 759px) { :root { --photo: url("https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_%28Unsplash%29.jpg/1280px-A_silhouette_of_a_cross_at_sunrise_by_Aaron_Burden_%28Unsplash%29.jpg"); } }
 .seen { --t0: 0s; }
 .seen .fade { animation: none; }
 * { box-sizing: border-box; margin: 0; }

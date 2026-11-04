@@ -4,7 +4,7 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - dáta: `saints.js` (slovensky) a preklady `i18n/en.js`, `i18n/de.js` (feast -> [name, title, years, quote, source, story]);
 - vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`. Prepínanie stránok (`show()` v `app.js`) načíta cieľovú statickú stránku a vymení `main`, dialóg a metaúdaje, pozadie sa nedotkne. Bez JS, v starom prehliadači a pri chybe fungujú obyčajné odkazy, takže každá stránka musí ostať plnohodnotná statická stránka. Nový skript pre stránku patrí do `wire()` v `app.js`, nie inline do šablóny, inak sa po prepnutí nespustí. `app.js` píš bez `?.` a `||=`;
 - výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, patróni, „O stránke“, sitemap.xml, robots.txt (SEO).
-- `facts.js` (patróni, miesta, odkazy na Wikipédiu) generuje `node tools/facts.mjs`, `meniny.js` generuje `node tools/meniny.mjs`; ručne ich neupravuj. Nové kategórie patrónov dopĺňaj do `PATRONS` v `tools/facts.mjs` so všetkými tromi názvami.
+- `facts.js` (patróni, miesta, odkazy na Wikipédiu) generuje `node tools/facts.mjs`, `meniny.js` generuje `node tools/meniny.mjs`, `imgs.js` (priame adresy obrázkov) generuje `node tools/imgs.mjs`; ručne ich neupravuj. Nové kategórie patrónov dopĺňaj do `PATRONS` v `tools/facts.mjs` so všetkými tromi názvami.
 - Pozadie je fotka kríža v oblakoch s pomalým svitaním (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
   cez `clip-path`, takže modrá noc ani tieň ho neprekryjú. Na mobile stojí na kopci (`.stage::after`), ktorý prejde do karty, lebo fotka končí uprostred stĺpa. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
 - Web sa jasne hlási ako rímskokatolícky (odkaz „✝ Rímskokatolícka stránka“ na každej dennej stránke → „O stránke“,
@@ -37,7 +37,8 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
 - `symbol` = jedno emoji.
 - `img` = názov súboru na Wikimedia Commons (bez `File:`), len voľne použiteľný obrázok; na stránke sa naň
   odkazuje cez URL, nič sa nesťahuje. Nájdeš ho cez `page_image_free` z Wikipedia API (`prop=pageprops`)
-  alebo Wikidata vlastnosť P18. Súbor musí existovať priamo na Commons.
+  alebo Wikidata vlastnosť P18. Súbor musí existovať priamo na Commons. Po zmene `img` spusti
+  `node tools/imgs.mjs`, ináč odkaz na obrázok ide cez dve presmerovania (a `seo.mjs` to nahlási).
 
 ## Responzivita (povinné pri každej zmene vzhľadu)
 - Všetko sa robí responzívne od 280 px do 1920 px šírky. Zmena vzhľadu nie je hotová, kým `node check.mjs`
@@ -77,5 +78,9 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
   (`--all` prejde všetkých 366 dní × jazyk, inak vzorka 12 dní). Snímky len na finálnu vizuálnu kontrolu.
 - Nové dáta pridávaj do samostatných súborov (napr. `themes.js`), needituj kvôli tomu `saints.js`.
 - Obrázky sa nesťahujú, odkazuje sa na Wikimedia Commons cez URL. Pred použitím over, že súbor na Commons
-  existuje a je voľný (`page_image_free` alebo Wikidata P18).
+  existuje a je voľný (`page_image_free` alebo Wikidata P18). Odkazuje sa priamo na thumbnail
+  (`imgUrl()` v `build.mjs`), nie cez `Special:FilePath`, ktorý vracia dve presmerovania. Adresy
+  nerekonštruuj ručne – sú v `imgs.js` z Commons API, lebo Commons povoľuje len štandardné šírky
+  (`STEPS`), nie väčšie než originál, dlhé názvy skracuje na `<šírka>px-thumbnail.jpg` a niektoré
+  súbory sú presmerované na iný názov.
 - Wikipedia/Commons API volaj dávkovo (až 50 titulov v jednej požiadavke), nie po jednom; inak príde HTTP 429.

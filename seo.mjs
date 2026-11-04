@@ -8,6 +8,9 @@ const OUT = "_site";
 // adresu webu vezmeme z robots.txt, nech je na jednom mieste
 const site = (fs.readFileSync(`${OUT}/robots.txt`, "utf8").match(/Sitemap: (\S+)sitemap\.xml/) || [])[1];
 const MAX_TITLE = 65, MAX_DESC = 160; // nad to Google titulok aj popis vo výsledkoch odreže
+// priamo sa dá odkazať len na tieto šírky thumbnailov, iné Commons odmietne so 400
+const STEPS = new Set([20, 40, 60, 120, 250, 330, 500, 960, 1280, 1920, 3840]);
+const thumbWidths = t => [...t.matchAll(/(?:thumb|upload)\.wikimedia\.org\/[^"'\s]*?\/(\d+)px-/g)].map(m => +m[1]);
 const SKIP = new Set(["sk/index.html"]); // presmerovanie na slovenskú domovskú, nie je to stránka
 
 const html = [];
@@ -48,6 +51,9 @@ for (const f of html) {
   if (canonical !== urlOf(f)) fail(`canonical ${canonical || "chýba"} namiesto ${urlOf(f)}`, rel);
   if (!inSitemap.has(urlOf(f))) fail("nie je v sitemape", rel);
   if (!/max-image-preview:large/.test(h)) fail("bez max-image-preview", rel);
+  // Special:FilePath vracia dve presmerovania; znamená to, že obrázok nemá šírku v imgs.js
+  if (/Special:FilePath/.test(h)) fail("obrázok ide cez presmerovanie, spusti node tools/imgs.mjs", rel);
+  for (const w of thumbWidths(h)) if (!STEPS.has(w)) fail(`nepovolená šírka thumbnailu ${w}px, Commons vráti 400`, rel);
 
   // hreflang: každá jazyková verzia a x-default, a každá musí ukazovať na existujúcu stránku
   const alts = [...h.matchAll(/rel="alternate" hreflang="(.*?)" href="(.*?)"/g)].map(m => [m[1], m[2]]);
@@ -78,6 +84,7 @@ const preloads = [...page.matchAll(/rel="preload" as="image" href="([^"]+)"/g)].
 if (!cssPhotos.length || !preloads.length) fail("fotka pozadia sa nenašla", "style.css / denná stránka");
 for (const p of preloads) if (!cssPhotos.includes(p)) fail("preload nesedí s --photo v CSS, fotka sa stiahne dvakrát", p);
 for (const p of cssPhotos) if (/Special:FilePath/.test(p)) fail("fotka ide cez presmerovanie, nie priamo na thumbnail", p);
+for (const w of thumbWidths(css)) if (!STEPS.has(w)) fail(`nepovolená šírka fotky ${w}px, Commons vráti 400`, "style.css");
 
 console.log(`${html.length} stránok, ${locs.length} adries v sitemape, nálezov: ${bad.length}`);
 for (const b of bad.slice(0, 40)) console.log(`  ${b}`);
