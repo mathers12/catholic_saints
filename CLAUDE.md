@@ -15,6 +15,9 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - `style.css` a `app.js` sa odkazujú s `?v=<hash obsahu>`, aby prehliadač po nasadení nedržal starú verziu
   z cache. Nové statické súbory pridávaj cez `asset()` v `build.mjs`, nie natvrdo.
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
+- SEO: `node seo.mjs` (nad `_site/`, bez závislostí: titulok do 65 znakov, popis do 160, canonical, hreflang
+  vrátane `x-default`, jeden `h1`, platné JSON-LD, sitemap, rozbité odkazy a že `preload` fotky sedí s `--photo`
+  v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
 - akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám a písmam). `--browser=firefox` alebo `--browser=webkit` ich pustí v inom prehliadači, dotyk a snímky obrazovky sú len v Chromiu. Pri zmene správania test doplň alebo uprav.
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).
