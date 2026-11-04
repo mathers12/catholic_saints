@@ -19,7 +19,7 @@ const asset = f => `${f}?v=${crypto.createHash("sha1").update(fs.readFileSync(f)
 const CSS = asset("style.css"), JS = asset("app.js");
 // Fonty si hostujeme sami (fonts/), takže pred prvým textom netreba cudzí blokujúci stylesheet.
 // Prednačítame tie tri rezy, ktoré sú na dennej stránke hneď vidieť (text, citát, nadpis);
-// Spectral 500 je len na zvýraznenom dni v kalendári, ten počká. `as="font"` potrebuje
+// Spectral 500 je len na tlačidle Dnes a zvýraznenom dni v kalendári, ten počká. `as="font"` potrebuje
 // `crossorigin`, ináč prehliadač stiahne súbor druhýkrát. Adresy musia sedieť s url() v style.css.
 const FONTS = ["spectral-400.woff2", "spectral-400i.woff2", "marcellus-400.woff2"];
 const PRELOAD_FONTS = rel => FONTS.map(f => `<link rel="preload" as="font" type="font/woff2" href="${rel}fonts/${f}" crossorigin>`).join("\n");
