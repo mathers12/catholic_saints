@@ -23,6 +23,7 @@ const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [
 const LANGS = ["sk", "en", "de"];
 const CAL = { sk: "sk/kalendar", en: "en/calendar", de: "de/kalender" };
 const ABOUT = { sk: "sk/o-stranke", en: "en/about", de: "de/ueber-uns" };
+const PATRONS = { sk: "sk/patroni", en: "en/patrons", de: "de/schutzpatrone" };
 
 const arg = n => process.argv.find(a => a.startsWith(`--${n}=`))?.split("=")[1];
 const all = process.argv.includes("--all");
@@ -63,6 +64,7 @@ for (const l of LANGS) {
   for (const f of days) pages.push({ url: `/${l}/${f}/`, day: true });
   pages.push({ url: `/${CAL[l]}/`, day: false });
   pages.push({ url: `/${ABOUT[l]}/`, day: false });
+  pages.push({ url: `/${PATRONS[l]}/`, day: false });
 }
 pages.push({ url: "/404.html", day: false });
 
@@ -145,6 +147,39 @@ for (const [w, h] of SIZES) {
       if (r.scrollable && !r.endReached) problems.push(`${at}: vnútro sa nedá dorolovať na koniec`);
     }
     await cp.close();
+  }
+
+  // rozbalené „Viac“ a výsledky hľadania: smú predĺžiť stránku, ale nič nesmie ísť do strán a odkazy musia byť klikateľné
+  {
+    const sp = await ctx.newPage(), LONG = ["01-28", "10-04", "11-30"];
+    const scan = min => {
+      const d = document.documentElement, W = d.clientWidth, over = [], tiny = [];
+      for (const el of document.querySelectorAll(".more *, .share, .q, .qres *")) {
+        const b = el.getBoundingClientRect();
+        if (!b.width && !b.height) continue;
+        if (b.right > W + 1 || b.left < -1) over.push(el.tagName + " " + Math.round(b.right));
+        if (el.matches("a, button, summary, input") && Math.min(b.width, b.height) < min) tiny.push(el.tagName + " " + Math.round(b.width) + "×" + Math.round(b.height));
+      }
+      return { over, tiny, sw: d.scrollWidth, cw: W };
+    };
+    const judge = (at, r) => {
+      checks++;
+      if (r.sw > r.cw + 1) problems.push(`${at}: vodorovné posúvanie (${r.sw} > ${r.cw})`);
+      if (r.over.length) problems.push(`${at}: mimo obrazovky: ${r.over.slice(0, 3).join(", ")}`);
+      if (r.tiny.length) problems.push(`${at}: malé plôšky: ${r.tiny.slice(0, 3).join(", ")}`);
+    };
+    for (const l of LANGS) {
+      for (const f of LONG) {
+        await sp.goto(`${BASE}/${l}/${f}/`, { waitUntil: "domcontentloaded" });
+        await sp.evaluate(() => document.querySelector(".more").open = true);
+        await sp.waitForTimeout(60);
+        judge(`${w}×${h} /${l}/${f}/ Viac`, await sp.evaluate(scan, MIN_TAP));
+      }
+      await sp.goto(`${BASE}/${CAL[l]}/`, { waitUntil: "domcontentloaded" });
+      await sp.waitForTimeout(60);
+      if (await sp.locator("#q").count()) { await sp.fill("#q", "a"); await sp.waitForSelector("#qres a", { timeout: 4000 }).catch(() => problems.push(`${w}×${h} /${CAL[l]}/: hľadanie bez výsledkov`)); judge(`${w}×${h} /${CAL[l]}/ hľadanie`, await sp.evaluate(scan, MIN_TAP)); }
+    }
+    await sp.close();
   }
 
   // zväčšené písmo na celých stránkach: kontroluje sa len orezanie a presah, nie zmestenie na obrazovku
