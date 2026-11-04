@@ -2,7 +2,7 @@
 
 Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do `_site/`:
 - dáta: `saints.js` (slovensky) a preklady `i18n/en.js`, `i18n/de.js` (feast -> [name, title, years, quote, source, story]);
-- vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`. Prepínanie dní (`show()` v `app.js`) načíta statickú stránku susedného dňa a vymení len kartu, hornú lištu a metaúdaje, pozadie sa nedotkne. Bez JS a pri chybe fungujú obyčajné odkazy, takže každý deň musí ostať plnohodnotná statická stránka;
+- vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`. Prepínanie stránok (`show()` v `app.js`) načíta cieľovú statickú stránku a vymení `main`, dialóg a metaúdaje, pozadie sa nedotkne. Bez JS, v starom prehliadači a pri chybe fungujú obyčajné odkazy, takže každá stránka musí ostať plnohodnotná statická stránka. Nový skript pre stránku patrí do `wire()` v `app.js`, nie inline do šablóny, inak sa po prepnutí nespustí. `app.js` píš bez `?.` a `||=`;
 - výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, „O stránke“, sitemap.xml, robots.txt (SEO).
 - Pozadie je fotka kríža v oblakoch s pomalým svitaním (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
   cez `clip-path`, takže modrá noc ani tieň ho neprekryjú. Na mobile stojí na kopci (`.stage::after`), ktorý prejde do karty, lebo fotka končí uprostred stĺpa. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
@@ -14,7 +14,7 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - `style.css` a `app.js` sa odkazujú s `?v=<hash obsahu>`, aby prehliadač po nasadení nedržal starú verziu
   z cache. Nové statické súbory pridávaj cez `asset()` v `build.mjs`, nie natvrdo.
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
-- akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám a písmam). Pri zmene správania test doplň alebo uprav.
+- akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám a písmam). `--browser=firefox` alebo `--browser=webkit` ich pustí v inom prehliadači, dotyk a snímky obrazovky sú len v Chromiu. Pri zmene správania test doplň alebo uprav.
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).
 

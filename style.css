@@ -23,27 +23,18 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid
    Súradnice vnútri .stage: priesečník 32 % × 63,5 %, ramená 18,7–44,8 % šírky, vrch kríža 43,3 % a spodok ramien 67,3 % výšky.
    Kríž je vrchná vrstva tej istej fotky orezaná na jeho tvar, takže modrá noc ani tieň ho nezafarbia.
    Nepoužívaj color-dodge: tmavý kríž by zafarbil. Filtre a blend-mode sa pri animácii prekresľujú, preto len opacity a transform. */
-.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--night); container-type: size; }
+.scene { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--night); container-type: size; }
 .stage { position: absolute; bottom: 0; left: 0; width: var(--w); height: calc(var(--w) / 1.3315); }
-.move { position: absolute; inset: 0; transform-origin: 32% 63.5%; animation: breath 54s ease-in-out var(--breath, 0s) infinite alternate; }
-.photo, .dark { position: absolute; inset: 0; }
+.move { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform-origin: 32% 63.5%; animation: breath 54s ease-in-out var(--breath, 0s) infinite alternate; }
+.photo, .dark { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 .photo { background: var(--photo) center / 100% 100% no-repeat; }
 .dark { background: #0b2467; opacity: .4; animation: dawn 36s ease-in-out var(--dawn, 0s) infinite alternate; } /* noc pomaly bledne k prvému svetlu; fáza podľa hodín, aby na ďalšej stránke pokračovala */
 .cross { clip-path: polygon(30.8% 44%, 31.25% 43.4%, 33% 43.3%, 33.35% 43.8%, 33.33% 62.3%, 44.82% 64.45%, 44.82% 66.8%, 43.75% 67.25%, 33.25% 65.35%, 33.25% 100%, 30.65% 100%, 30.78% 65.05%, 18.68% 62.67%, 18.68% 60.15%, 19.82% 59.68%, 30.78% 61.8%); }
 /* tieň pod textom je pod vrstvou kríža, aby kríž nestmavol ani neprekryl; drží sa vrchu scény, nie javiska */
-.shade { position: absolute; inset: auto 0 0 0; height: 100cqh; background: linear-gradient(180deg, rgba(7,20,50,.68), rgba(7,20,50,.44) 50%, rgba(7,20,50,0)) top / 100% 150px no-repeat; }
+.shade { position: absolute; right: 0; bottom: 0; left: 0; height: 100cqh; background: linear-gradient(180deg, rgba(7,20,50,.68), rgba(7,20,50,.44) 50%, rgba(7,20,50,0)) top / 100% 150px no-repeat; }
 @keyframes breath { to { transform: scale(1.04); } }
 @keyframes dawn { from { opacity: .62; } to { opacity: .16; } }
 @keyframes dawnwide { from { opacity: .68; } to { opacity: .52; } }
-
-/* prechod medzi stránkami (kalendár, O stránke): pozadie ostane, obsah sa len prelína. Prehliadač bez podpory prejde obyčajne. */
-@view-transition { navigation: auto; }
-.scene { view-transition-name: scene; }
-::view-transition-old(scene) { animation: none; opacity: 1; }
-::view-transition-new(scene) { animation: sceneIn .45s linear; } /* nové pozadie čaká, kým sa fotka dekóduje, dovtedy svieti staré; predvolená animácia by svetlo sčítala */
-@keyframes sceneIn { 0%, 70% { opacity: 0; } }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: .15s; }
-@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
 /* všetko na jednu obrazovku: kríž hore, karta pri spodnom okraji */
 /* mobil a tablet na výšku: scéna vypĺňa miesto nad kartou a fotka sa zmenší tak, aby bolo vidno celý kríž.
@@ -52,7 +43,7 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid
   @media (min-height: 480px) and (max-width: 1023px), (min-height: 480px) and (max-aspect-ratio: 1/1) {
     body.day { display: grid; grid-template: minmax(120px, 1fr) auto / minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
     body.day main { display: contents; }
-    body.day .scene { position: relative; inset: auto; grid-area: 1 / 1; container-type: size; }
+    body.day .scene { position: relative; top: auto; right: auto; bottom: auto; left: auto; grid-area: 1 / 1; container-type: size; }
     body.day .stage { --w: max(100vw, 133.15cqh); }
     body.day .top { position: relative; z-index: 1; grid-area: 1 / 1; align-self: start; }
     body.day .card { position: relative; z-index: 1; grid-area: 2 / 1; margin-top: 0; }
@@ -65,13 +56,14 @@ main { position: relative; z-index: 1; display: flex; flex-direction: column; mi
 .links a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 .about-link { display: none !important; } /* na mobile vedie na „O stránke“ odkaz pod kartou */
 @media (max-width: 479px) { .cal-link { display: none !important; } } /* kalendár otvorí aj dátum */
-.lang { min-height: 36px; padding: 0 6px; background: rgba(7,20,50,.6); color: var(--ink); border: 1px solid rgba(244,246,251,.4); border-radius: 2px; font: inherit; cursor: pointer; }
+/* vlastný vzhľad: natívny prepínač niektoré prehliadače kreslia biely a svetlý text v ňom nevidno */
+.lang { -webkit-appearance: none; appearance: none; min-height: 36px; padding: 0 24px 0 8px; background: rgba(7,20,50,.6) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23f4f6fb' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 8px center / 10px auto; color: var(--ink); border: 1px solid rgba(244,246,251,.4); border-radius: 2px; font: inherit; cursor: pointer; }
 .lang option { color: var(--ink); background: var(--night); }
 
 .card { margin-top: auto; padding: clamp(8px, 1.6vh, 16px) var(--pad) 2px; background: var(--night); border-top: 1px solid var(--line); }
 .head { display: flex; align-items: center; gap: clamp(10px, 3vw, 16px); }
 .who { flex: 1; min-width: 0; }
-.frame { flex: none; display: grid; place-items: center; height: clamp(84px, 16vh, 150px); aspect-ratio: 3 / 4; overflow: hidden; font-size: 1.6rem;
+.frame { --fh: clamp(84px, 16vh, 150px); flex: none; display: grid; place-items: center; height: var(--fh); width: calc(var(--fh) * .75); overflow: hidden; font-size: 1.6rem;
   border: 1px solid var(--line); border-radius: 999px 999px 3px 3px; background: #12234d; }
 .frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; filter: saturate(.7); opacity: 0; transition: opacity .8s; }
 .frame img.loaded { opacity: 1; }
@@ -109,7 +101,7 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .btn.on { color: var(--accent); font-weight: 500; }
 /* znak rímskokatolíckej stránky – vedie na „O stránke“ */
 .faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.8rem, 1.81vh, .96rem); font-style: italic; color: var(--muted); text-decoration: none; }
-.cross-sign { color: var(--accent); font-style: normal; }
+.cross-sign { flex: none; width: .72em; height: 1em; color: var(--accent); }
 
 /* počítač: kríž vľavo voľne, text vpravo priamo na fotke */
 @media (min-width: 1024px) and (min-aspect-ratio: 1/1) {
@@ -120,7 +112,7 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
     text-shadow: 0 1px 2px rgba(7,20,50,.95), 0 0 10px rgba(7,20,50,.9), 0 0 24px rgba(7,20,50,.7); }
   .calendar .card, .prose .card { text-shadow: none; }
   .head { gap: 20px; }
-  .frame { height: clamp(130px, 28vh, 280px); }
+  .frame { --fh: clamp(130px, 28vh, 280px); }
   .date { font-size: clamp(.86rem, 1.91vh, 1.05rem); }
   .badge { font-size: clamp(.96rem, 2.01vh, 1.1rem); }
   h1 { margin-top: clamp(4px, 1.2vh, 14px); font-size: clamp(1.45rem, 3.8vh, 2.5rem); line-height: 1.1; }
@@ -148,6 +140,15 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   .stage::after { content: ""; position: absolute; left: -48%; width: 160%; bottom: -1px; height: 11%; background: var(--night); border-radius: 50% 50% 0 0 / 100% 100% 0 0; box-shadow: 0 -1px 0 var(--line); }
   body.day .card, .calendar .card, .prose .card { border-top: 0; }
 }
+/* starší prehliadač bez jednotiek cqh: výšku karty nepozná, fotka je v pevnom priestore hore */
+@supports not (container-type: size) {
+  @media (min-height: 480px) and (max-width: 1023px), (min-height: 480px) and (max-aspect-ratio: 1/1) {
+    :root { --sky: min(max(33vh, 46vw), 50vh); }
+    body.day .stage { --w: max(100vw, calc(var(--sky) * 1.3315)); top: calc(var(--sky) - var(--w) / 1.3315); bottom: auto; }
+  }
+  .shade { display: none; }
+  .top { background: rgba(7,20,50,.6); }
+}
 .calendar .card, .prose .card { margin-top: 0; padding-bottom: 8px; }
 .calendar > nav, .prose > nav { padding: 2px var(--pad) 4px; background: var(--night); border-top: 1px solid var(--line); gap: 0 12px; }
 .calendar h1, .prose h1 { margin: 0 0 4px; font-size: clamp(1.2rem, 3.3vh, 2rem); }
@@ -163,6 +164,10 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 /* vždy len jeden mesiac: vybraný cez #mN, inak aktuálny; bez podpory :has sa ukážu všetky */
 .calendar:has(.month:target) .month:not(:target), .calendar:not(:has(.month:target)) .month:not(.now) { display: none; }
 .calendar .month { scroll-margin-top: 100vh; } /* pri prepnutí mesiaca zostane stránka hore */
+/* starší prehliadač bez :has: všetky mesiace pod sebou a roluje sa stránka */
+@supports not selector(:has(a)) {
+  .calendar .month { scroll-margin-top: 0; }
+}
 /* záložky mesiacov: vždy jeden riadok, na mobile sa posúvajú do strán (nezaberú 3 riadky) */
 .mtabs { display: flex; gap: 2px; margin-bottom: 2px; padding-bottom: 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .mtabs::-webkit-scrollbar { display: none; }
@@ -212,6 +217,13 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   .scene *, .scene *::before, .scene *::after, .fade, .swap > * { animation: none !important; }
 }
 
+/* starší prehliadač bez :has ukazuje všetky mesiace naraz, preto bez vnútorného okna */
+@supports not selector(:has(a)) {
+  .calendar { height: auto; }
+  .calendar .card { display: block; overflow: visible; }
+  .calendar .month { display: block; }
+  .calendar .mbody { overflow: visible; }
+}
 /* kalendár po kliknutí na dátum (natívny <dialog>, mimo rozloženia – stránka sa neposúva) */
 #cal { margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: #0b1a3e; color: var(--ink);
   width: min(340px, calc(100vw - 32px)); box-shadow: 0 30px 80px rgba(0,0,0,.6); animation: fadeUp .3s ease-out;
