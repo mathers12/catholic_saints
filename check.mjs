@@ -248,7 +248,7 @@ for (const [w, h] of SIZES) {
 await browser.close();
 server.close();
 
-if (!fontsSeen) console.warn("Pozor: písma z Google Fonts sa nenačítali, rozmery textu sú len približné.\n");
+if (!fontsSeen) console.warn("Pozor: písma z fonts/ sa nenačítali, rozmery textu sú len približné.\n");
 console.log(problems.length ? problems.join("\n") + "\n" : "");
 console.log(`${SIZES.length} veľkostí × ${pages.length} stránok = ${checks} kontrol, nálezov: ${problems.length}`);
 process.exit(problems.length ? 1 : 0);

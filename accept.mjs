@@ -278,6 +278,18 @@ await T("Tlačidlá: Včera, Dnes, Zajtra a spodná lišta nie sú podčiarknut�
   await go(p, "/sk/11-04/"); for (const s of ["#prev", "#today", "#next"]) eq(await p.locator(s).evaluate(e => getComputedStyle(e).textDecorationLine), "none", s);
   await go(p, "/sk/kalendar/"); eq(await p.locator(".calendar > nav .btn").first().evaluate(e => getComputedStyle(e).textDecorationLine), "none", "kalendár");
 });
+await T("Fonty: text má Spectral aj Marcellus bez jedinej cudzej požiadavky", async () => {
+  const q = await mk(); const cudzie = [];
+  q.on("request", r => { if (!r.url().startsWith(BASE) && /font|stylesheet/.test(r.resourceType())) cudzie.push(r.url()); });
+  await q.route(u => !u.href.startsWith(BASE), r => r.abort()); /* bez internetu: fonty musia prísť z našej domény */
+  await go(q, "/sk/11-04/"); await q.evaluate(() => document.fonts.ready);
+  const r = await q.evaluate(() => ({
+    s: document.fonts.check("16px Spectral"), i: document.fonts.check("italic 16px Spectral"),
+    m: document.fonts.check("16px Marcellus"), h: getComputedStyle(document.querySelector("h1")).fontFamily }));
+  ok(r.s, "Spectral"); ok(r.i, "Spectral kurzíva"); ok(r.m, "Marcellus"); ok(/Marcellus/.test(r.h), "h1 " + r.h);
+  eq(cudzie.length, 0, "cudzie požiadavky na fonty: " + cudzie.join(" "));
+  await q.context().close();
+});
 await b.close();
 server.close();
 for (const r of res) console.log(r[0].padEnd(6), r[1], r[2] ? "\n       → " + r[2] : "");

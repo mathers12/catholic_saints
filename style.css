@@ -1,3 +1,11 @@
+/* Fonty hostujeme sami (fonts/, OFL): stylesheet z Google blokoval vykreslenie a fonty šli
+   z druhej cudzej domény. Adresy musia byť rovnaké ako `preload` v build.mjs, ináč sa font
+   stiahne dvakrát (kontroluje `seo.mjs`). Podmnožina latin + latin-ext, viď fonts/README.md. */
+@font-face { font-family: Marcellus; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/marcellus-400.woff2") format("woff2"); }
+@font-face { font-family: Spectral; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/spectral-400.woff2") format("woff2"); }
+@font-face { font-family: Spectral; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/spectral-500.woff2") format("woff2"); }
+@font-face { font-family: Spectral; font-style: italic; font-weight: 400; font-display: swap; src: url("fonts/spectral-400i.woff2") format("woff2"); }
+
 /* „Pred svitaním“: nočná fotka kríža cez celé pozadie, text beží na tmavom podklade */
 :root {
   --ink: #f4f6fb; --muted: #dbe1f0; --accent: #cfdcff; --night: #071432; --line: rgba(207,220,255,.4);
