@@ -16,6 +16,13 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   presmerovania (`redirect()`): vedú na ne existujúce odkazy a Google ich má v indexe, takže ich neruš
   a do sitemapy nedávaj. Adresu dňa nikde nepíš ručne – `app.js`, `check.mjs` aj `accept.mjs` ju berú
   z `names.json` (`deň -> [meno, adresa]`), `search.json` ju má v poli `s`.
+- `patronaty.js` = úradne vyhlásené patronáty, **vedie sa ručne a negeneruje sa**. Súhrnný oficiálny zoznam
+  patrónov neexistuje: patronát vzniká vyhlásením pápeža, potvrdením dikastéria, alebo – a tak väčšina –
+  zvykom, ktorý nemá kto dekretovať. Preto tu smie byť len to, čo Svätá stolica naozaj niekde hovorí: `url`
+  musí byť stránka na vatican.va alebo kbs.sk, ktorá ten patronát obsahuje (over to), a `by` s `year` vyplň
+  len vtedy, keď ich tá istá stránka uvádza. Build spadne, keď deň neexistuje, chýba názov v jednom
+  z jazykov, odkaz nie je zo Svätej stolice alebo pápež nie je v `POPES`. Patronáty z `facts.js` (Wikipédia)
+  sú na webe označené „podľa tradície“ a sú pod úradnými – nemiešaj ich.
 - Hľadanie v kalendári drží dopyt v adrese (`?q=`), takže sa výsledky dajú poslať odkazom a Späť sa na ne
   vráti. `wireSearch()` v `app.js` ho pri načítaní prečíta a pri písaní zapíše (`replaceState` s odkladom,
   prehliadače počet zmien adresy obmedzujú). Tú istú adresu uvádza `SearchAction` v JSON-LD na domovskej
@@ -33,7 +40,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
 - SEO: `node seo.mjs` (nad `_site/`, bez závislostí: titulok do 65 znakov, popis do 160, canonical, hreflang
   vrátane `x-default`, jeden `h1`, platné JSON-LD, sitemap, rozbité odkazy, presmerovania zo starých adries dní,
-  `SearchAction` a že `preload` fotky aj fontov sedí s adresami v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
+  `SearchAction`, úradné patronáty (odkaz na Svätú stolicu,
+  rovnaký počet vo všetkých jazykoch) a že `preload` fotky aj fontov sedí s adresami v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
 - akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám). `--browser=firefox` alebo `--browser=webkit` ich pustí v inom prehliadači, dotyk a snímky obrazovky sú len v Chromiu. Pri zmene správania test doplň alebo uprav.
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).

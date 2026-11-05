@@ -19,8 +19,11 @@ const html = [];
 })(OUT);
 
 const LANGS = ["sk", "en", "de"];
+// úradný patronát sa smie oprieť len o Svätú stolicu (vatican.va) alebo KBS
+const HOLY_SEE = /^https:\/\/(www\.vatican\.va|(www\.)?kbs\.sk)\//;
 const bad = [];
 let stubs = 0, searchActions = 0;
+const offCounts = [];
 const fail = (what, where) => bad.push(`${what}: ${where}`);
 const one = (h, re) => (h.match(re) || [])[1] || "";
 const urlOf = f => site + f.replace(`${OUT}/`, "").replace(/index\.html$/, "");
@@ -92,6 +95,17 @@ for (const f of html) {
     if (!cssFonts.has(href.replace(/^(\.\.\/)+/, ""))) fail(`preload ${href} nesedí so @font-face, font sa stiahne dvakrát`, rel);
   }
 
+  // Úradné patronáty na stránke patrónov: každý odkaz musí viesť na Svätú stolicu a otvárať sa
+  // bezpečne. Cudzí odkaz by znamenal, že sa do dát dostal zdroj, ktorý nič neúraduje.
+  const offList = one(h, /<ul class="pat-off">([\s\S]*?)<\/ul>/);
+  if (offList) {
+    offCounts.push((offList.match(/<li>/g) || []).length);
+    for (const m of offList.matchAll(/<a href="(https?:[^"]+)"([^>]*)>/g)) {
+      if (!HOLY_SEE.test(m[1])) fail(`úradný patronát s odkazom mimo Svätej stolice (${m[1]})`, rel);
+      if (!/rel="noopener"/.test(m[2])) fail(`odkaz na dokument bez rel="noopener" (${m[1]})`, rel);
+    }
+  }
+
   // hreflang: každá jazyková verzia a x-default, a každá musí ukazovať na existujúcu stránku
   const alts = [...h.matchAll(/rel="alternate" hreflang="(.*?)" href="(.*?)"/g)].map(m => [m[1], m[2]]);
   const langs = alts.map(a => a[0]);
@@ -123,6 +137,10 @@ for (const lang of LANGS) {
     if (one(h, /rel="canonical" href="(.*?)"/) !== want) fail(`presmerovanie nevedie na ${want}`, old);
   }
 }
+
+// každý jazyk musí mať tie isté úradné patronáty; rozdielny počet znamená, že jeden o dáta prišiel
+if (offCounts.length !== LANGS.length || new Set(offCounts).size !== 1 || !offCounts[0])
+  fail(`úradné patronáty: na stránkach patrónov ${offCounts.join("/") || "0"} záznamov`, "patróni");
 
 // SearchAction patrí na domovskú stránku každého jazyka; keby chýbala, nikto by sa nedozvedel,
 // že hľadanie berie dopyt z adresy

@@ -239,7 +239,7 @@ await T("Hľadanie: meno bez diakritiky aj patrón, výsledok vedie na deň bez 
 });
 await T("Patróni: stránka v troch jazykoch, kategórie a funkčné odkazy, je v sitemape", async () => {
   const q = await mk();
-  for (const u of ["/sk/patroni/", "/en/patrons/", "/de/schutzpatrone/"]) { await go(q, u); ok((await q.locator(".prose h2").count()) >= 10, "kategórie " + u); eq(await q.locator("h1").count(), 1, "h1"); eq(await deadLinks(q), 0, "mŕtve odkazy " + u); }
+  for (const u of ["/sk/patroni/", "/en/patrons/", "/de/schutzpatrone/"]) { await go(q, u); ok((await q.locator(".prose h3").count()) >= 10, "kategórie " + u); eq(await q.locator("h1").count(), 1, "h1"); eq(await deadLinks(q), 0, "mŕtve odkazy " + u); }
   const sm = await (await q.request.get(BASE + "/sitemap.xml")).text(); ok(/patroni\//.test(sm) && /schutzpatrone\//.test(sm), "sitemap");
   await go(q, "/sk/kalendar/"); await q.waitForTimeout(300); await mark(q); await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click(); await q.waitForURL("**/sk/patroni/"); ok(await same(q), "načítanie"); await q.context().close();
 });
@@ -349,6 +349,34 @@ await T("Hľadanie: SearchAction na domovskej vedie na kalendár s dopytom v adr
     const t = ((j.potentialAction || {}).target || {}).urlTemplate;
     eq(t, `https://mathers12.github.io/catholic_saints${cal}?q={search_term_string}`, l);
   }
+});
+await T("Úradný patronát: na dennej stránke je zdroj zo Svätej stolice a tradícia je oddelená", async () => {
+  await go(p, dayUrl("sk", "10-04"));
+  await p.locator(".more summary").click();
+  const r = await p.evaluate(() => {
+    const dts = [...document.querySelectorAll(".more dt")];
+    const off = dts.find(x => /Úradne/.test(x.textContent));
+    const a = off && off.nextElementSibling.querySelector("a");
+    return { text: off && off.nextElementSibling.textContent, href: a && a.href, rel: a && a.rel,
+      trad: dts.some(x => /tradície/.test(x.textContent)) };
+  });
+  ok(/patrón ekológie/.test(r.text), "patronát: " + r.text);
+  ok(/Ján Pavol II\., 1979/.test(r.text), "pápež a rok: " + r.text);
+  ok(/^https:\/\/www\.vatican\.va\//.test(r.href), "odkaz: " + r.href);
+  eq(r.rel, "noopener", "rel");
+  ok(r.trad, "riadok podľa tradície chýba");
+});
+await T("Úradný patronát: stránka patrónov má úradné pred tradíciou a bez cudzích zdrojov", async () => {
+  await go(p, "/sk/patroni/");
+  const r = await p.evaluate(() => ({
+    pocet: document.querySelectorAll(".pat-off li").length,
+    cudzie: [...document.querySelectorAll(".pat-off a")].filter(a => !a.href.startsWith(location.origin))
+      .map(a => a.href).filter(h => !/\/\/(www\.)?(vatican\.va|kbs\.sk)\//.test(h)),
+    nadpisy: [...document.querySelectorAll("h2")].map(h => h.textContent),
+  }));
+  ok(r.pocet >= 15, "záznamov je len " + r.pocet);
+  eq(r.cudzie.length, 0, "cudzie zdroje: " + r.cudzie.join(" "));
+  ok(/Úradne/.test(r.nadpisy[0]) && /tradície/.test(r.nadpisy[1]), "poradie: " + r.nadpisy.join(" | "));
 });
 await b.close();
 server.close();
