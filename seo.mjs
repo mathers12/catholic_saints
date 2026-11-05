@@ -11,7 +11,6 @@ const MAX_TITLE = 65, MAX_DESC = 160; // nad to Google titulok aj popis vo výsl
 // priamo sa dá odkazať len na tieto šírky thumbnailov, iné Commons odmietne so 400
 const STEPS = new Set([20, 40, 60, 120, 250, 330, 500, 960, 1280, 1920, 3840]);
 const thumbWidths = t => [...t.matchAll(/(?:thumb|upload)\.wikimedia\.org\/[^"'\s]*?\/(\d+)px-/g)].map(m => +m[1]);
-const SKIP = new Set(["sk/index.html"]); // presmerovanie na slovenskú domovskú, nie je to stránka
 
 const html = [];
 (function walk(d) {
@@ -20,6 +19,7 @@ const html = [];
 })(OUT);
 
 const bad = [];
+let stubs = 0;
 const fail = (what, where) => bad.push(`${what}: ${where}`);
 const one = (h, re) => (h.match(re) || [])[1] || "";
 const urlOf = f => site + f.replace(`${OUT}/`, "").replace(/index\.html$/, "");
@@ -36,8 +36,21 @@ const inSitemap = new Set(locs);
 
 for (const f of html) {
   const rel = f.replace(`${OUT}/`, "");
-  if (SKIP.has(rel)) continue;
   const h = fs.readFileSync(f, "utf8");
+  // Presmerovanie zo starej adresy (GitHub Pages nevie 301): má vlastné pravidlá, nie je to
+  // stránka pre čitateľa. Musí viesť na existujúcu stránku, canonical musí byť tá istá adresa
+  // a v sitemape nesmie byť, nech Google neindexuje dve adresy toho istého.
+  const refresh = one(h, /http-equiv="refresh" content="0; url=([^"]+)"/);
+  if (refresh) {
+    stubs++;
+    const t = path.posix.normalize(`${path.posix.dirname(rel)}/${refresh}`);
+    const target = t === "./" ? "" : t; // koreň webu
+    const canonical = one(h, /rel="canonical" href="(.*?)"/);
+    if (!exists(`${OUT}/${target}`)) fail(`presmerovanie vedie nikam (${refresh})`, rel);
+    else if (canonical !== `${site}${target}`) fail(`canonical ${canonical || "chýba"} nesedí s presmerovaním na ${target}`, rel);
+    if (inSitemap.has(urlOf(f))) fail("presmerovanie je v sitemape", rel);
+    continue;
+  }
   const noindex = /name="robots" content="noindex"/.test(h);
   const title = one(h, /<title>(.*?)<\/title>/s), desc = one(h, /name="description" content="(.*?)"/s);
 
@@ -84,6 +97,20 @@ for (const f of html) {
 
 // sitemap: každá adresa existuje a nič neprebýva
 for (const l of locs) if (!exists(`${OUT}/${l.slice(site.length)}`)) fail("sitemap ukazuje na neexistujúcu stránku", l);
+// Stará adresa dňa (/sk/11-04/) musí presmerovať na novú, ináč sa stratia existujúce odkazy
+// aj to, čo má Google v indexe. Slug berieme z names.json, odtiaľ ho berie aj app.js.
+for (const lang of ["sk", "en", "de"]) {
+  const names = JSON.parse(fs.readFileSync(`${OUT}/${lang}/names.json`, "utf8"));
+  for (const feast of Object.keys(names)) {
+    const old = `${lang}/${feast}/`, slug = (names[feast] || [])[1];
+    if (!slug) { fail("names.json bez adresy dňa", old); continue; }
+    if (!fs.existsSync(`${OUT}/${old}index.html`)) { fail("stará adresa dňa nepresmerúva", old); continue; }
+    const h = fs.readFileSync(`${OUT}/${old}index.html`, "utf8");
+    const want = `${site}${lang}/${slug}/`;
+    if (one(h, /rel="canonical" href="(.*?)"/) !== want) fail(`presmerovanie nevedie na ${want}`, old);
+  }
+}
+
 if (!cssFonts.size) fail("žiadny @font-face v CSS, fonty by išli z cudzej domény", "style.css");
 for (const f of cssFonts) if (!fs.existsSync(`${OUT}/${f}`)) fail("font z @font-face sa do _site nedostal", f);
 if (!/hreflang="x-default"/.test(sitemap)) fail("sitemap bez x-default", "sitemap.xml");
@@ -91,14 +118,14 @@ if (!/<lastmod>/.test(sitemap)) fail("sitemap bez lastmod", "sitemap.xml");
 
 // fotka pozadia: preload v HTML a --photo v CSS musia byť znak po znaku rovnaké
 const cssPhotos = [...css.matchAll(/--photo: url\("([^"]+)"\)/g)].map(m => m[1]);
-const page = fs.readFileSync(`${OUT}/sk/01-01/index.html`, "utf8");
+const page = fs.readFileSync(`${OUT}/index.html`, "utf8"); // slovenská domovská je plnohodnotná denná stránka
 const preloads = [...page.matchAll(/rel="preload" as="image" href="([^"]+)"/g)].map(m => m[1]);
 if (!cssPhotos.length || !preloads.length) fail("fotka pozadia sa nenašla", "style.css / denná stránka");
 for (const p of preloads) if (!cssPhotos.includes(p)) fail("preload nesedí s --photo v CSS, fotka sa stiahne dvakrát", p);
 for (const p of cssPhotos) if (/Special:FilePath/.test(p)) fail("fotka ide cez presmerovanie, nie priamo na thumbnail", p);
 for (const w of thumbWidths(css)) if (!STEPS.has(w)) fail(`nepovolená šírka fotky ${w}px, Commons vráti 400`, "style.css");
 
-console.log(`${html.length} stránok, ${locs.length} adries v sitemape, nálezov: ${bad.length}`);
+console.log(`${html.length - stubs} stránok, ${stubs} presmerovaní, ${locs.length} adries v sitemape, nálezov: ${bad.length}`);
 for (const b of bad.slice(0, 40)) console.log(`  ${b}`);
 if (bad.length > 40) console.log(`  … a ďalších ${bad.length - 40}`);
 process.exit(bad.length ? 1 : 0);

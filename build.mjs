@@ -40,6 +40,8 @@ const MONTHS = {
   de: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
 };
 const MONTHS_NOM_SK = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
+// v adrese a v hlavičke mesiaca je 1. pád („November“), vo vete dátumu genitív („4. novembra“)
+const monthNom = (lang, i) => lang === "sk" ? MONTHS_NOM_SK[i] : MONTHS[lang][i];
 const md = feast => feast.split("-").map(Number);
 const dayText = (lang, feast) => { const [m, d] = md(feast); return lang === "en" ? `${MONTHS.en[m - 1]} ${d}` : `${d}. ${MONTHS[lang][m - 1]}`; };
 
@@ -63,7 +65,26 @@ const UI = {
 
 // cesty (relatívne ku koreňu webu)
 const homePath = lang => lang === "sk" ? "" : `${lang}/`;
-const dayPath = (lang, feast) => `${lang}/${feast}/`;
+// Adresa dňa nesie dátum aj meno svätého (/en/november-4-charles-borromeo/), takže v odkaze,
+// v histórii prehliadača aj vo výsledku hľadania je hneď vidieť, o koho ide. Dátum je vpredu
+// v poradí, aké má jazyk. Zo starých adries /sk/11-04/ ostávajú presmerovania (oldDayPath),
+// lebo na ne vedú existujúce odkazy a Google ich má v indexe.
+const TRANSLIT = { "ß": "ss", "æ": "ae", "œ": "oe", "ø": "o", "đ": "d", "ð": "d", "þ": "th", "ł": "l", "ı": "i" };
+const UMLAUT = { "ä": "ae", "ö": "oe", "ü": "ue" }; // po nemecky sa prepisujú takto, ináč by z „Borromäus“ bolo „borromaus“
+// „sv.“, „St.“, „Hl.“ a vysvetlivka v zátvorke („(Edita Steinová)“) do adresy nepatria
+const DROP = /^(sv|bl|st|sts|hl|hll|sel)\.\s*|\s*\([^)]*\)/gi;
+const slugify = (t, lang) => [...t.toLowerCase()].map(c => (lang === "de" && UMLAUT[c]) || TRANSLIT[c] || c).join("")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+// dlhé meno skrátime na celom slove, nech adresa ostane čitateľná
+const cutSlug = (x, n = 50) => x.length <= n ? x : x.slice(0, x.lastIndexOf("-", n)).replace(/-+$/, "") || x.slice(0, n);
+const daySlug = (lang, feast) => {
+  const [m, d] = md(feast);
+  const date = lang === "en" ? `${monthNom("en", m - 1)} ${d}` : `${d} ${monthNom(lang, m - 1)}`;
+  const name = cutSlug(slugify(saint(lang, byFeast[feast]).name.replace(DROP, " "), lang));
+  return `${slugify(date, lang)}${name ? `-${name}` : ""}`;
+};
+const dayPath = (lang, feast) => `${lang}/${daySlug(lang, feast)}/`;
+const oldDayPath = (lang, feast) => `${lang}/${feast}/`;
 const calPath = lang => `${lang}/${UI[lang].calSlug}/`;
 const aboutPath = lang => `${lang}/${UI[lang].aboutSlug}/`;
 const patPath = lang => `${lang}/${EXTRA[lang].patSlug}/`;
@@ -210,6 +231,12 @@ const byFeast = Object.fromEntries(SAINTS.map(s => [s.feast, s]));
 const neighbour = (feast, step) => FEASTS[(FEASTS.indexOf(feast) + step + FEASTS.length) % FEASTS.length];
 const todayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bratislava", month: "2-digit", day: "2-digit" }).format(new Date());
 const out = (p, html) => { fs.mkdirSync(`${OUT}/${p}`, { recursive: true }); fs.writeFileSync(`${OUT}/${p}index.html`, html); };
+// Presmerovanie: GitHub Pages nevie 301, takže je to stránka s okamžitým `refresh` a `canonical`
+// na novú adresu – Google to berie ako trvalé presmerovanie. Do sitemapy nepatrí.
+const redirect = (from, to, title) => out(from, `<!doctype html><html lang="${from.slice(0, 2)}"><meta charset="utf-8">`
+  + `<link rel="canonical" href="${SITE}${to}"><meta http-equiv="refresh" content="0; url=${"../".repeat(from.split("/").length - 1)}${to}">`
+  + `<title>${esc(title)}</title><p><a href="${"../".repeat(from.split("/").length - 1)}${to}">${esc(title)}</a></p></html>`);
+
 
 function dayView(lang, feast, home) {
   const s = saint(lang, byFeast[feast]);
@@ -258,7 +285,7 @@ function calendar(lang) {
   const alts = Object.fromEntries(LANGS.map(l => [l, calPath(l)]));
   alts["x-default"] = calPath("en");
   const months = Array.from({ length: 12 }, (_, i) => SAINTS.filter(s => md(s.feast)[0] === i + 1));
-  const monthName = i => lang === "sk" ? MONTHS_NOM_SK[i] : MONTHS[lang][i];
+  const monthName = i => monthNom(lang, i);
   const title = fitTitle(u.cal);
   const year = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
   const wd = Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(lang, { weekday: "short", timeZone: "UTC" }));
@@ -377,9 +404,19 @@ for (const f of fs.readdirSync("fonts")) if (f !== "README.md") fs.copyFileSync(
 const urls = [];
 for (const lang of LANGS) {
   urls.push({ path: dayView(lang, todayKey, true), alt: l => homePath(l), changefreq: "daily" });
-  for (const f of FEASTS) urls.push({ path: dayView(lang, f, false), alt: l => dayPath(l, f), changefreq: "yearly" });
-  fs.writeFileSync(`${OUT}/${lang}/names.json`, JSON.stringify(Object.fromEntries(SAINTS.map(s => [s.feast, saint(lang, s).name]))));
-  fs.writeFileSync(`${OUT}/${lang}/search.json`, JSON.stringify(SAINTS.map(s => { const t = saint(lang, s), [m, d] = s.feast.split("-").map(Number); return { f: s.feast, d: `${d}. ${m}.`, n: t.name, t: t.title, p: patronLabels(lang, s.feast) }; })));
+  for (const f of FEASTS) {
+    urls.push({ path: dayView(lang, f, false), alt: l => dayPath(l, f), changefreq: "yearly" });
+    redirect(oldDayPath(lang, f), dayPath(lang, f), saint(lang, byFeast[f]).name);
+  }
+  // adresa musí byť jednoznačná: ináč by si dva dni prepísali stránku a jeden by zmizol
+  const slugs = FEASTS.map(f => daySlug(lang, f));
+  const dup = slugs.filter((x, i) => slugs.indexOf(x) !== i);
+  if (dup.length) throw new Error(`rovnaká adresa pre dva dni (${lang}): ${dup.join(", ")}`);
+  for (const x of [UI[lang].calSlug, UI[lang].aboutSlug, EXTRA[lang].patSlug])
+    if (slugs.includes(x)) throw new Error(`adresa dňa sa bije so stránkou /${lang}/${x}/`);
+  // names.json: meno do popisku v kalendári, slug do odkazu (app.js nepozná pravidlá na adresu)
+  fs.writeFileSync(`${OUT}/${lang}/names.json`, JSON.stringify(Object.fromEntries(SAINTS.map(s => [s.feast, [saint(lang, s).name, daySlug(lang, s.feast)]]))));
+  fs.writeFileSync(`${OUT}/${lang}/search.json`, JSON.stringify(SAINTS.map(s => { const t = saint(lang, s), [m, d] = s.feast.split("-").map(Number); return { f: s.feast, s: daySlug(lang, s.feast), d: `${d}. ${m}.`, n: t.name, t: t.title, p: patronLabels(lang, s.feast) }; })));
   urls.push({ path: calendar(lang), alt: l => calPath(l), changefreq: "monthly" });
   urls.push({ path: patronsPage(lang), alt: l => patPath(l), changefreq: "yearly" });
   urls.push({ path: aboutPage(lang), alt: l => aboutPath(l), changefreq: "yearly" });
