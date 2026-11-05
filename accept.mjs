@@ -466,6 +466,20 @@ await T("Menu: lišta je na každej stránke a aktuálna položka nie je odkaz",
   }
   await q.context().close();
 });
+await T("Patronát na dennej stránke vedie na svoju kartičku medzi patrónmi", async () => {
+  const q = await mk({ viewport: { width: 1366, height: 768 } });
+  await go(q, dayUrl("sk", "10-04"));
+  await q.locator(".more summary").click();
+  const odkazy = await q.evaluate(() => [...document.querySelectorAll(".more dd a")]
+    .filter(a => a.hash.startsWith("#pat-")).map(a => [a.textContent, a.hash]));
+  ok(odkazy.length >= 2, "odkazov " + JSON.stringify(odkazy));
+  await q.locator('.more dd a[href*="#pat-"]').first().click();
+  await q.waitForURL("**/sk/patroni/**");
+  const r = await q.evaluate(h => { const c = document.querySelector(h); return c && { je: true, nadpis: c.querySelector("b").textContent }; }, odkazy[0][1]);
+  ok(r && r.je, "kartička " + odkazy[0][1] + " na stránke patrónov nie je");
+  eq(r.nadpis, odkazy[0][0], "kartička má mať ten istý názov");
+  await q.context().close();
+});
 await b.close();
 server.close();
 for (const r of res) console.log(r[0].padEnd(6), r[1], r[2] ? "\n       → " + r[2] : "");

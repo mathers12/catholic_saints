@@ -185,6 +185,11 @@ const officialCards = (lang, rel) => {
       + `<ul class="pat">${rows}</ul></div>`;
   });
 };
+// Patronát na dennej stránke je odkaz na svoju kartičku medzi patrónmi (`id="pat-<kľúč>"`),
+// aby sa z jedného svätého dalo prejsť na ostatných patrónov tej istej veci. Bez neho sa tie
+// dve stránky navzájom nevidia.
+const patronLinks = (lang, rel, feast) => ((FACTS[feast] || {}).patron || []).map(k =>
+  `<a href="${rel}${patPath(lang)}#pat-${k}">${esc(PATRON_NAMES[k][LANG_I[lang]])}</a>`).join(", ");
 const patronLabels = (lang, feast) => ((FACTS[feast] || {}).patron || []).map(k => PATRON_NAMES[k][LANG_I[lang]]);
 const wikiUrl = (l, t) => `https://${l}.wikipedia.org/wiki/${encodeURIComponent(t.replace(/ /g, "_"))}`;
 
@@ -206,10 +211,12 @@ function entityLd(lang, s, feast) {
 // Navigacna cesta pre SERP: Google ju ukazuje namiesto holej URL
 const crumbs = items => ({ "@type": "BreadcrumbList", itemListElement: items.map((x, i) =>
   ({ "@type": "ListItem", position: i + 1, name: x[0], item: SITE + x[1] })) });
-function moreBlock(lang, feast, shareText) {
-  const x = EXTRA[lang], f = FACTS[feast] || {}, wiki = f.wiki || {}, wl = wiki[lang] ? lang : wiki.en ? "en" : null, pat = patronLabels(lang, feast), rd = readingsUrl(lang, feast);
+function moreBlock(lang, rel, feast, shareText) {
+  const x = EXTRA[lang], f = FACTS[feast] || {}, wiki = f.wiki || {}, wl = wiki[lang] ? lang : wiki.en ? "en" : null, rd = readingsUrl(lang, feast);
   const off = officialPatron(lang, feast);
-  const trad = [[x.patron, pat.join(", ")], [x.born, (f.born || {})[lang]], [x.died, (f.died || {})[lang]]].filter(r => r[1]).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+  const pat = patronLinks(lang, rel, feast); // odkazy, preto sa už neescapuje
+  const trad = (pat ? `<dt>${x.patron}</dt><dd>${pat}</dd>` : "")
+    + [[x.born, (f.born || {})[lang]], [x.died, (f.died || {})[lang]]].filter(r => r[1]).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
   const rows = (off.length ? `<dt>${x.official}</dt><dd>${off.join("<br>")}</dd>` : "") + trad;
   const links = [wl && `<a href="${wikiUrl(wl, wiki[wl])}" rel="noopener">${x.bio}${wl !== lang ? " (EN)" : ""} ↗</a>`, rd && `<a href="${rd}" rel="noopener">${x.readings} ↗</a>`].filter(Boolean).join("");
   return `<div class="extra"><details class="more"><summary>${x.more}</summary>${rows ? `<dl>${rows}</dl>` : ""}<p class="more-links">${links}</p>${trad || wl ? `<p class="more-src">${x.src}</p>` : ""}</details><button type="button" class="share" id="share" hidden data-text="${esc(shareText)}" data-done="${x.copied}">${x.share}</button></div>`;
@@ -344,7 +351,7 @@ ${lang === "sk" && MENINY[feast] ? `<p class="nameday">${EXTRA.sk.nameday}: ${es
 ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.today}</a>`}
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
 <a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}">${CROSS}${u.faith}</a>
-</nav>`, moreBlock(lang, feast, `${q(lang, s.quote)} – ${s.name}`))}
+</nav>`, moreBlock(lang, rel, feast, `${q(lang, s.quote)} – ${s.name}`))}
 </main>
 <dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
 <form method="dialog"><button class="cal-x" aria-label="${u.close}">×</button></form>
