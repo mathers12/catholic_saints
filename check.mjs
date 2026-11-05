@@ -154,7 +154,7 @@ for (const [w, h] of SIZES) {
 
   // rozbalené „Viac“ a výsledky hľadania: smú predĺžiť stránku, ale nič nesmie ísť do strán a odkazy musia byť klikateľné
   {
-    const sp = await ctx.newPage(), LONG = ["01-28", "10-04", "11-30"];
+    const sp = await ctx.newPage(), LONG = ["01-28", "10-04", "11-11", "11-30"]; // 11-11 má najdlhší úradný patronát
     const scan = min => {
       const d = document.documentElement, W = d.clientWidth, over = [], tiny = [];
       for (const el of document.querySelectorAll(".more *, .share, .q, .qres *")) {

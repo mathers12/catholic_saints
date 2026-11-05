@@ -20,7 +20,9 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   patrónov neexistuje: patronát vzniká vyhlásením pápeža, potvrdením dikastéria, alebo – a tak väčšina –
   zvykom, ktorý nemá kto dekretovať. Preto tu smie byť len to, čo Svätá stolica naozaj niekde hovorí: `url`
   musí byť stránka na vatican.va alebo kbs.sk, ktorá ten patronát obsahuje (over to), a `by` s `year` vyplň
-  len vtedy, keď ich tá istá stránka uvádza. Build spadne, keď deň neexistuje, chýba názov v jednom
+  len vtedy, keď ich tá istá stránka uvádza. Patrónov slovenských diecéz priamo tak nazýva liturgický
+  kalendár KBS, preto sa pri nich odkazuje na konkrétny deň (`lc.kbs.sk/?den=RRRRMMDD`); patronát patrí
+  k dňu, v ktorý toho svätého ukazuje tento web, nie k dňu, keď ho slávi diecéza. Build spadne, keď deň neexistuje, chýba názov v jednom
   z jazykov, odkaz nie je zo Svätej stolice alebo pápež nie je v `POPES`. Patronáty z `facts.js` (Wikipédia)
   sú na webe označené „podľa tradície“ a sú pod úradnými – nemiešaj ich.
 - Hľadanie v kalendári drží dopyt v adrese (`?q=`), takže sa výsledky dajú poslať odkazom a Späť sa na ne

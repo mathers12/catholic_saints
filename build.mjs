@@ -129,21 +129,21 @@ const { PATRONATY, POPES } = load("patronaty.js");
 const LANG_I = { sk: 0, en: 1, de: 2 };
 const YEAR = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
 const EXTRA = {
-  sk: { more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
+  sk: { kbs: "Liturgický kalendár KBS", more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
     patrons: "Patróni", patSlug: "patroni", patIntro: "Svätí podľa toho, koho majú pod ochranou: najprv patronáty vyhlásené Cirkvou s odkazom na dokument, potom tie z tradície.",
-    official: "Úradne vyhlásený patronát", officialH: "Úradne vyhlásené patronáty", holySee: "Svätá stolica",
+    official: "Úradný patronát", officialH: "Úradne vyhlásené patronáty", holySee: "Svätá stolica",
     officialIntro: "Patronáty, ktoré vyhlásil pápež alebo ich uvádza Svätá stolica. Pri každom je odkaz na dokument. Súhrnný oficiálny zoznam patrónov neexistuje, preto je tento krátky.",
     traditionH: "Patróni podľa tradície", traditionIntro: "Vychádza z údajov anglickej Wikipédie: zoznam nie je úplný a nie sú to úradné vyhlásenia.",
     search: "Hľadať meno alebo patróna", none: "Nič sa nenašlo." },
-  en: { more: "More", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
+  en: { kbs: "Slovak Bishops' Conference", more: "More", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
     patrons: "Patron saints", patSlug: "patrons", patIntro: "Saints by those they watch over: first the patronages declared by the Church, with a link to the document, then those from tradition.",
-    official: "Officially declared patronage", officialH: "Officially declared patronages", holySee: "Holy See",
+    official: "Official patronage", officialH: "Officially declared patronages", holySee: "Holy See",
     officialIntro: "Patronages declared by a Pope or stated by the Holy See. Each one links to the document. No comprehensive official list of patron saints exists, which is why this one is short.",
     traditionH: "Patrons by tradition", traditionIntro: "Based on English Wikipedia data: the list is not complete and these are not official declarations.",
     search: "Search a name or patronage", none: "Nothing found." },
-  de: { more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
+  de: { kbs: "Slowakische Bischofskonferenz", more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
     patrons: "Schutzpatrone", patSlug: "schutzpatrone", patIntro: "Heilige danach, wen sie beschützen: zuerst die von der Kirche erklärten Patronate mit Link zum Dokument, dann die aus der Überlieferung.",
-    official: "Amtlich erklärtes Patronat", officialH: "Amtlich erklärte Patronate", holySee: "Heiliger Stuhl",
+    official: "Amtliches Patronat", officialH: "Amtlich erklärte Patronate", holySee: "Heiliger Stuhl",
     officialIntro: "Patronate, die ein Papst erklärt hat oder die der Heilige Stuhl nennt. Zu jedem gibt es den Link zum Dokument. Eine vollständige amtliche Liste der Schutzpatrone gibt es nicht, darum ist diese kurz.",
     traditionH: "Patrone nach Überlieferung", traditionIntro: "Grundlage sind Daten der englischen Wikipedia: die Liste ist nicht vollständig und es sind keine amtlichen Erklärungen.",
     search: "Name oder Patronat suchen", none: "Nichts gefunden." },
@@ -160,7 +160,8 @@ const readingsUrl = (lang, feast) => {
 // keď ich zdroj nehovorí – radšej menej údajov než vymyslený.
 const officialPatron = (lang, feast) => (PATRONATY[feast] || []).map(o => {
   const who = [o.by ? POPES[o.by][LANG_I[lang]] : null, o.year].filter(Boolean).join(", ");
-  return `${esc(o.what[LANG_I[lang]])}${who ? ` · ${esc(who)}` : ""} <a href="${o.url}" rel="noopener">${esc(o.doc || EXTRA[lang].holySee)} ↗</a>`;
+  const src = o.doc || (/kbs\.sk/.test(o.url) ? EXTRA[lang].kbs : EXTRA[lang].holySee);
+  return `${esc(o.what[LANG_I[lang]])}${who ? ` · ${esc(who)}` : ""} <a href="${o.url}" rel="noopener">${esc(src)} ↗</a>`;
 });
 const patronLabels = (lang, feast) => ((FACTS[feast] || {}).patron || []).map(k => PATRON_NAMES[k][LANG_I[lang]]);
 const wikiUrl = (l, t) => `https://${l}.wikipedia.org/wiki/${encodeURIComponent(t.replace(/ /g, "_"))}`;
@@ -257,7 +258,7 @@ const byFeast = Object.fromEntries(SAINTS.map(s => [s.feast, s]));
 const neighbour = (feast, step) => FEASTS[(FEASTS.indexOf(feast) + step + FEASTS.length) % FEASTS.length];
 // Úradný patronát bez dňa, bez názvu v troch jazykoch alebo bez odkazu na Svätú stolicu je
 // tvrdenie bez zdroja, a práve tomu má patronaty.js brániť – tak to radšej zastavíme hneď tu.
-const HOLY_SEE = /^https:\/\/(www\.vatican\.va|(www\.)?kbs\.sk)\//;
+const HOLY_SEE = /^https:\/\/(www\.vatican\.va|([a-z]+\.)?kbs\.sk)[/?]/;
 for (const [f, list] of Object.entries(PATRONATY)) {
   if (!byFeast[f]) throw new Error(`patronaty.js: deň ${f} v saints.js nie je`);
   for (const o of list) {
