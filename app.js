@@ -75,11 +75,27 @@ function wireSearch() {
       a.append(d, wrap); li.append(a); res.append(li);
     }
   };
-  q.oninput = () => {
+  const run = () => {
     if (data) return fill();
     fill();
     fetch(q.dataset.src).then(r => r.json()).then(j => { data = j.map(x => ({ ...x, hay: plain([x.n, x.t, ...x.p].join(" ")) })); fill(); }).catch(() => {});
   };
+  // Dopyt držíme v adrese (?q=), takže sa výsledky dajú poslať odkazom a Späť sa na ne vráti.
+  // Mesiac v adrese (#mN) necháme, ako je. Adresu prepisujeme s odkladom, lebo prehliadače
+  // počet zmien adresy obmedzujú a pri písaní by to bola zmena na každý znak.
+  let timer = null;
+  const remember = () => {
+    if (!history.replaceState) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const u = new URL(location.href);
+      if (q.value) u.searchParams.set("q", q.value); else u.searchParams.delete("q");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    }, 300);
+  };
+  q.oninput = () => { run(); remember(); };
+  const want = new URL(location.href).searchParams.get("q"); // prišiel odkaz s dopytom
+  if (want) { q.value = want; run(); }
 }
 
 // kam sa vrátiť z kalendára a podobných stránok: prvý deň, z ktorého si ich otvoril

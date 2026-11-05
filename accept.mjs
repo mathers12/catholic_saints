@@ -327,6 +327,29 @@ await T("Kalendár v dialógu aj hľadanie vedú na adresu s menom svätého", a
   await p.waitForSelector("#qres a");
   eq(new URL(await p.locator("#qres a").first().getAttribute("href"), p.url()).pathname, dayUrl("sk", "11-04"));
 });
+await T("Hľadanie: dopyt z adresy ukáže výsledky a písanie ho do adresy zapíše", async () => {
+  const q = await mk();
+  await go(q, "/sk/kalendar/?q=boromejsky");
+  await q.waitForSelector("#qres a");
+  eq(await q.inputValue("#q"), "boromejsky", "predvyplnené");
+  eq(await q.locator("main.searching").count(), 1, "mesiace skryté");
+  eq(new URL(await q.locator("#qres a").first().getAttribute("href"), q.url()).pathname, dayUrl("sk", "11-04"), "odkaz na deň");
+  await q.fill("#q", "lucia");
+  await q.waitForFunction(() => /[?&]q=lucia/.test(location.search));
+  await q.fill("#q", "");
+  await q.waitForFunction(() => !location.search);
+  eq(q.errs.length, 0, "chyby: " + q.errs.join("|"));
+  await q.context().close();
+});
+await T("Hľadanie: SearchAction na domovskej vedie na kalendár s dopytom v adrese", async () => {
+  for (const [l, cal] of [["sk", "/sk/kalendar/"], ["en", "/en/calendar/"], ["de", "/de/kalender/"]]) {
+    // čítame samo HTML, nie DOM: značku berú čítačky bez JS, a v prehliadači by nás jazyková poistka presmerovala
+    const h = await p.request.get(BASE + (l === "sk" ? "/" : `/${l}/`)).then(r => r.text());
+    const j = JSON.parse(/application\/ld\+json">(.*?)<\/script>/s.exec(h)[1]);
+    const t = ((j.potentialAction || {}).target || {}).urlTemplate;
+    eq(t, `https://mathers12.github.io/catholic_saints${cal}?q={search_term_string}`, l);
+  }
+});
 await b.close();
 server.close();
 for (const r of res) console.log(r[0].padEnd(6), r[1], r[2] ? "\n       → " + r[2] : "");
