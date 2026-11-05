@@ -19,11 +19,11 @@ const html = [];
 })(OUT);
 
 const LANGS = ["sk", "en", "de"];
-// úradný patronát sa smie oprieť len o Svätú stolicu (vatican.va) alebo KBS
-const HOLY_SEE = /^https:\/\/(www\.vatican\.va|([a-z]+\.)?kbs\.sk)[/?]/;
+// úradný patronát sa smie oprieť len o Svätú stolicu
+const HOLY_SEE = /^https:\/\/www\.vatican\.va\//;
 const bad = [];
 let stubs = 0, searchActions = 0;
-const offCounts = [], catCounts = [];
+const catCounts = [];
 const fail = (what, where) => bad.push(`${what}: ${where}`);
 const one = (h, re) => (h.match(re) || [])[1] || "";
 const urlOf = f => site + f.replace(`${OUT}/`, "").replace(/index\.html$/, "");
@@ -104,14 +104,12 @@ for (const f of html) {
     for (const m of h.matchAll(/<section class="ptheme">([\s\S]*?)<\/section>/g))
       if (!/<div class="pcard"/.test(m[1])) fail("téma patrónov bez kategórie", rel);
   }
-  const offList = one(h, /<ul class="pat-off">([\s\S]*?)<\/ul>/);
-  if (offList) {
-    offCounts.push((offList.match(/<li>/g) || []).length);
-    for (const m of offList.matchAll(/<a href="(https?:[^"]+)"([^>]*)>/g)) {
-      if (!HOLY_SEE.test(m[1])) fail(`úradný patronát s odkazom mimo Svätej stolice (${m[1]})`, rel);
-      if (!/rel="noopener"/.test(m[2])) fail(`odkaz na dokument bez rel="noopener" (${m[1]})`, rel);
+  // kartička s úradným patronátom sa smie oprieť len o Svätú stolicu a odkaz musí otvárať bezpečne
+  for (const c of h.matchAll(/<div class="pcard"[\s\S]*?<\/div>/g))
+    for (const a of c[0].matchAll(/<a href="(https?:[^"]+)"([^>]*)>/g)) {
+      if (!HOLY_SEE.test(a[1])) fail(`úradný patronát s odkazom mimo Svätej stolice (${a[1]})`, rel);
+      if (!/rel="noopener"/.test(a[2])) fail(`odkaz na dokument bez rel="noopener" (${a[1]})`, rel);
     }
-  }
 
   // hreflang: každá jazyková verzia a x-default, a každá musí ukazovať na existujúcu stránku
   const alts = [...h.matchAll(/rel="alternate" hreflang="(.*?)" href="(.*?)"/g)].map(m => [m[1], m[2]]);
@@ -144,10 +142,6 @@ for (const lang of LANGS) {
     if (one(h, /rel="canonical" href="(.*?)"/) !== want) fail(`presmerovanie nevedie na ${want}`, old);
   }
 }
-
-// každý jazyk musí mať tie isté úradné patronáty; rozdielny počet znamená, že jeden o dáta prišiel
-if (offCounts.length !== LANGS.length || new Set(offCounts).size !== 1 || !offCounts[0])
-  fail(`úradné patronáty: na stránkach patrónov ${offCounts.join("/") || "0"} záznamov`, "patróni");
 
 if (catCounts.length !== LANGS.length || new Set(catCounts).size !== 1 || !catCounts[0])
   fail(`kategórie patrónov: na stránkach patrónov ${catCounts.join("/") || "0"} kartičiek`, "patróni");

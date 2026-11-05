@@ -366,17 +366,22 @@ await T("Úradný patronát: na dennej stránke je zdroj zo Svätej stolice a tr
   eq(r.rel, "noopener", "rel");
   ok(r.trad, "riadok podľa tradície chýba");
 });
-await T("Úradný patronát: stránka patrónov má úradné pred tradíciou a bez cudzích zdrojov", async () => {
+await T("Úradný patronát: je prvou témou, v reči kartičiek a bez cudzích zdrojov", async () => {
   await go(p, "/sk/patroni/");
-  const r = await p.evaluate(() => ({
-    pocet: document.querySelectorAll(".pat-off li").length,
-    cudzie: [...document.querySelectorAll(".pat-off a")].filter(a => !a.href.startsWith(location.origin))
-      .map(a => a.href).filter(h => !/\/\/([a-z]+\.)?(vatican\.va|kbs\.sk)[/?]/.test(h)),
-    nadpisy: [...document.querySelectorAll("h2")].map(h => h.textContent),
-  }));
-  ok(r.pocet >= 15, "záznamov je len " + r.pocet);
+  const r = await p.evaluate(() => {
+    const prva = document.querySelector(".ptheme");
+    return { nadpis: prva.querySelector("h3").textContent,
+      kariet: prva.querySelectorAll(".pcard").length,
+      mien: prva.querySelectorAll(".pcard .pat a:not([rel])").length,
+      dokumentov: prva.querySelectorAll('.pcard .pat a[rel="noopener"]').length,
+      cudzie: [...document.querySelectorAll(".pcard a")].filter(a => !a.href.startsWith(location.origin))
+        .map(a => a.href).filter(h => !/\/\/www\.vatican\.va\//.test(h)) };
+  });
+  ok(/Úradne/.test(r.nadpis), "prvá téma je " + r.nadpis);
+  ok(r.kariet >= 10, "kartičiek " + r.kariet);
+  ok(r.mien >= 15, "mien " + r.mien);
+  eq(r.dokumentov, r.mien, "každé meno má mať odkaz na dokument");
   eq(r.cudzie.length, 0, "cudzie zdroje: " + r.cudzie.join(" "));
-  ok(/Úradne/.test(r.nadpisy[0]) && /tradície/.test(r.nadpisy[1]), "poradie: " + r.nadpisy.join(" | "));
 });
 await T("Patróni: kategórie sú v témach a každá je práve raz", async () => {
   await go(p, "/sk/patroni/");
@@ -403,6 +408,8 @@ await T("Patróni: filter skryje, čo nesedí, prázdnu tému aj schová a vrát
   let s = await stav(); eq(s.karty.join(","), "chorí", "po „chor“"); eq(s.temy, 1, "tém");
   await p.fill("#pq", "agata");
   s = await stav(); ok(s.karty.length >= 2 && s.karty.includes("zdravotné sestry"), "bez diakritiky: " + s.karty.join(","));
+  await p.fill("#pq", "europy");
+  s = await stav(); eq(s.karty.join(","), "patróni Európy", "filter nechytá úradné: " + s.karty.join(","));
   await p.fill("#pq", "xyzxyz");
   s = await stav(); eq(s.karty.length, 0, "nič nesedí"); ok(s.hlaska, "hláška chýba");
   await p.fill("#pq", "");
