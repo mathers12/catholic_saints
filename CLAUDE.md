@@ -35,6 +35,10 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - Web sa jasne hlási ako rímskokatolícky (odkaz „✝ Rímskokatolícka stránka“ na každej dennej stránke → „O stránke“,
   JSON-LD `about` = Katolícka cirkev). Pri novom pápežovi zmeň konštantu `POPE` v `build.mjs`. Netvrď oficiálne
   schválenie Svätej stolice ani KBS, kým ho web naozaj nemá.
+- Rozsah je latinský (rímsky) obrad a nerozširuj ho: kalendár ide z Rímskeho misála, patronáty
+  z vatican.va a z latinského kalendára KBS. Gréckokatolícke eparchie na Slovensku sem nepatria –
+  nie preto, že by neboli katolícke (sú, v plnom spoločenstve s Rímom), ale preto, že majú vlastný
+  byzantský kalendár a web sa drží jedného. To isté platí pre pravoslávnych a iné cirkvi.
 - nasadenie: `.github/workflows/pages.yml` pri pushi a každú noc (dnešný svätý na domovskej). `_site/` sa necommituje.
 - lokálne: `node build.mjs && python -m http.server -d _site`. Adresa webu je konštanta `SITE` v `build.mjs`.
 - `style.css` a `app.js` sa odkazujú s `?v=<hash obsahu>`, aby prehliadač po nasadení nedržal starú verziu
