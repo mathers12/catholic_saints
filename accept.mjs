@@ -355,7 +355,7 @@ await T("Úradný patronát: na dennej stránke je zdroj zo Svätej stolice a tr
   await p.locator(".more summary").click();
   const r = await p.evaluate(() => {
     const dts = [...document.querySelectorAll(".more dt")];
-    const off = dts.find(x => /Úradne/.test(x.textContent));
+    const off = dts.find(x => /Úradn/.test(x.textContent));
     const a = off && off.nextElementSibling.querySelector("a");
     return { text: off && off.nextElementSibling.textContent, href: a && a.href, rel: a && a.rel,
       trad: dts.some(x => /tradície/.test(x.textContent)) };
@@ -371,7 +371,7 @@ await T("Úradný patronát: stránka patrónov má úradné pred tradíciou a b
   const r = await p.evaluate(() => ({
     pocet: document.querySelectorAll(".pat-off li").length,
     cudzie: [...document.querySelectorAll(".pat-off a")].filter(a => !a.href.startsWith(location.origin))
-      .map(a => a.href).filter(h => !/\/\/(www\.)?(vatican\.va|kbs\.sk)\//.test(h)),
+      .map(a => a.href).filter(h => !/\/\/([a-z]+\.)?(vatican\.va|kbs\.sk)[/?]/.test(h)),
     nadpisy: [...document.querySelectorAll("h2")].map(h => h.textContent),
   }));
   ok(r.pocet >= 15, "záznamov je len " + r.pocet);

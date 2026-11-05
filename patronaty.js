@@ -6,6 +6,11 @@
 // Tretiu skupinu nemá kto dekretovať, takže každý „zoznam patrónov“ vrátane Wikipédie je
 // privátna kompilácia. Tu sú len tie patronáty, ktoré Svätá stolica naozaj niekde hovorí.
 //
+// Patrónov slovenských diecéz priamo tak nazýva liturgický kalendár KBS („hlavného patróna
+// diecézy“), preto odkazujeme na konkrétny deň (lc.kbs.sk/?den=RRRRMMDD) – obsah toho dňa sa
+// už nezmení. Patronát pripájame k dňu, v ktorý toho svätého ukazuje tento web, nie k dňu,
+// keď ho slávi diecéza: Žilina slávi Cyrila a Metoda 14. 2., web ich má 5. 7.
+//
 // Pravidlo pre nový záznam: `url` musí byť stránka na vatican.va (alebo kbs.sk pre Slovensko),
 // ktorá ten patronát naozaj obsahuje – over to, nestačí, že sa to niekde píše. `by` a `year`
 // vyplň len vtedy, keď ich tá istá stránka uvádza; pri pochybnosti ich nechaj prázdne, radšej
@@ -48,9 +53,12 @@ window.PATRONATY = {
   "06-22": [{ what: ["patrón politikov a štátnikov", "patron of statesmen and politicians", "Patron der Regierenden und Politiker"],
     by: "jp2", year: 2000, doc: "E sancti Thomae Mori",
     url: "https://www.vatican.va/content/john-paul-ii/en/motu_proprio/documents/hf_jp-ii_motu-proprio_20001031_thomas-more.html" }],
-  "07-05": [{ what: ["spolupatróni Európy", "co-patrons of Europe", "Mitpatrone Europas"],
-    by: "jp2", year: 1980, doc: "Egregiae virtutis",
-    url: "https://www.vatican.va/content/john-paul-ii/la/apost_letters/1980/documents/hf_jp-ii_apl_31121980_egregiae-virtutis.html" }],
+  "07-05": [
+    { what: ["spolupatróni Európy", "co-patrons of Europe", "Mitpatrone Europas"],
+      by: "jp2", year: 1980, doc: "Egregiae virtutis",
+      url: "https://www.vatican.va/content/john-paul-ii/la/apost_letters/1980/documents/hf_jp-ii_apl_31121980_egregiae-virtutis.html" },
+    { what: ["hlavní patróni Žilinskej diecézy", "principal patrons of the Diocese of Žilina", "Hauptpatrone der Diözese Žilina"],
+      by: null, year: null, doc: null, url: "https://lc.kbs.sk/?den=20260214" }],
   "07-11": [{ what: ["patrón Európy", "patron of Europe", "Patron Europas"],
     by: "paul6", year: 1964, doc: "Pacis nuntius",
     url: "https://www.vatican.va/content/paul-vi/it/apost_letters/documents/hf_p-vi_apl_19641024_pacis-nuntius.html" }],
@@ -82,7 +90,48 @@ window.PATRONATY = {
   "10-04": [{ what: ["patrón ekológie", "patron of ecology", "Patron der Ökologie"],
     by: "jp2", year: 1979, doc: "Inter sanctos",
     url: "https://www.vatican.va/content/john-paul-ii/la/apost_letters/1979/documents/hf_jp-ii_apl_19791129_inter-sanctos.html" }],
-  "12-03": [{ what: ["patrón misií", "patron of the missions", "Patron der Mission"],
-    by: "pius11", year: 1927, doc: "Divini amoris scientia",
-    url: "https://www.vatican.va/content/john-paul-ii/en/apost_letters/1997/documents/hf_jp-ii_apl_19101997_divini-amoris.html" }],
+  "12-03": [
+    { what: ["patrón misií", "patron of the missions", "Patron der Mission"],
+      by: "pius11", year: 1927, doc: "Divini amoris scientia",
+      url: "https://www.vatican.va/content/john-paul-ii/en/apost_letters/1997/documents/hf_jp-ii_apl_19101997_divini-amoris.html" },
+    { what: ["hlavný patrón Banskobystrickej diecézy", "principal patron of the Diocese of Banská Bystrica", "Hauptpatron der Diözese Banská Bystrica"],
+      by: null, year: null, doc: null, url: "https://lc.kbs.sk/?den=20261203" }],
+  "01-20": [
+  { what: ["hlavný patrón Ordinariátu OS a OZ SR", "principal patron of the Military Ordinariate of Slovakia", "Hauptpatron des Militärordinariats der Slowakei"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20260120" }
+  ],
+  "05-16": [
+  { what: ["hlavný patrón Rožňavskej diecézy", "principal patron of the Diocese of Rožňava", "Hauptpatron der Diözese Rožňava"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20260516" }
+  ],
+  "06-24": [
+  { what: ["hlavný patrón Trnavskej arcidiecézy", "principal patron of the Archdiocese of Trnava", "Hauptpatron der Erzdiözese Trnava"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20260624" }
+  ],
+  "07-17": [
+  { what: ["hlavní patróni Nitrianskej diecézy", "principal patrons of the Diocese of Nitra", "Hauptpatrone der Diözese Nitra"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20260717" },
+  { what: ["patrón mesta Nitra", "patron of the city of Nitra", "Patron der Stadt Nitra"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20260717" }
+  ],
+  "11-11": [
+  { what: ["hlavný patrón Bratislavskej arcidiecézy a Spišskej diecézy", "principal patron of the Archdiocese of Bratislava and the Diocese of Spiš", "Hauptpatron der Erzdiözese Bratislava und der Diözese Spiš"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20261111" }
+  ],
+  "11-17": [
+  { what: ["patrónka mesta Košice", "patroness of the city of Košice", "Patronin der Stadt Košice"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20261117" }
+  ],
+  "11-30": [
+  { what: ["hlavný patrón Košickej arcidiecézy", "principal patron of the Archdiocese of Košice", "Hauptpatron der Erzdiözese Košice"],
+    by: null, year: null, doc: null,
+    url: "https://lc.kbs.sk/?den=20261130" }
+  ],
 };

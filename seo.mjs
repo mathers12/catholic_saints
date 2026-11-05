@@ -20,7 +20,7 @@ const html = [];
 
 const LANGS = ["sk", "en", "de"];
 // úradný patronát sa smie oprieť len o Svätú stolicu (vatican.va) alebo KBS
-const HOLY_SEE = /^https:\/\/(www\.vatican\.va|(www\.)?kbs\.sk)\//;
+const HOLY_SEE = /^https:\/\/(www\.vatican\.va|([a-z]+\.)?kbs\.sk)[/?]/;
 const bad = [];
 let stubs = 0, searchActions = 0;
 const offCounts = [];
