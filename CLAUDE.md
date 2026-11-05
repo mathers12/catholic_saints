@@ -3,12 +3,19 @@
 Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do `_site/`:
 - dáta: `saints.js` (slovensky) a preklady `i18n/en.js`, `i18n/de.js` (feast -> [name, title, years, quote, source, story]);
 - vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`. Prepínanie stránok (`show()` v `app.js`) načíta cieľovú statickú stránku a vymení `main`, dialóg a metaúdaje, pozadie sa nedotkne. Bez JS, v starom prehliadači a pri chybe fungujú obyčajné odkazy, takže každá stránka musí ostať plnohodnotná statická stránka. Nový skript pre stránku patrí do `wire()` v `app.js`, nie inline do šablóny, inak sa po prepnutí nespustí. `app.js` píš bez `?.` a `||=`;
-- výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, patróni, „O stránke“, sitemap.xml, robots.txt (SEO).
+- výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, patróni, „O stránke“, sitemap.xml, robots.txt (SEO)
+  a presmerovania zo starých adries dní.
 - `facts.js` (patróni, miesta, odkazy na Wikipédiu) generuje `node tools/facts.mjs`, `meniny.js` generuje `node tools/meniny.mjs`, `imgs.js` (priame adresy obrázkov) generuje `node tools/imgs.mjs`; ručne ich neupravuj. Nové kategórie patrónov dopĺňaj do `PATRONS` v `tools/facts.mjs` so všetkými tromi názvami.
 - Fonty (Marcellus, Spectral) sú vlastné v `fonts/`, nie z Google Fonts: cudzí stylesheet blokoval vykreslenie.
   `@font-face` je v `style.css`, `preload` v konštante `FONTS` v `build.mjs`, a adresy musia byť rovnaké,
   ináč sa font stiahne dvakrát (`seo.mjs` to kontroluje). Nový rez alebo novšiu verziu vyrob podľa
   `fonts/README.md`; licencie OFL sa nasadzujú spolu s fontmi.
+- Adresa dňa nesie dátum aj meno svätého: `/en/november-4-charles-borromeo/`, `/sk/4-november-karol-boromejsky/`,
+  `/de/4-november-karl-borromaeus/`. Skladá ju `daySlug()` v `build.mjs` z mena v danom jazyku (nemčina má `ae`,
+  `oe`, `ue`), bez „sv.“, „St.“, „Hl.“ a bez vysvetlivky v zátvorke. Staré adresy `/sk/11-04/` ostávajú ako
+  presmerovania (`redirect()`): vedú na ne existujúce odkazy a Google ich má v indexe, takže ich neruš
+  a do sitemapy nedávaj. Adresu dňa nikde nepíš ručne – `app.js`, `check.mjs` aj `accept.mjs` ju berú
+  z `names.json` (`deň -> [meno, adresa]`), `search.json` ju má v poli `s`.
 - Pozadie je fotka kríža v oblakoch s pomalým svitaním (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
   cez `clip-path`, takže modrá noc ani tieň ho neprekryjú. Na mobile stojí na kopci (`.stage::after`), ktorý prejde do karty, lebo fotka končí uprostred stĺpa. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
 - Web sa jasne hlási ako rímskokatolícky (odkaz „✝ Rímskokatolícka stránka“ na každej dennej stránke → „O stránke“,
@@ -20,8 +27,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   z cache. Nové statické súbory pridávaj cez `asset()` v `build.mjs`, nie natvrdo.
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
 - SEO: `node seo.mjs` (nad `_site/`, bez závislostí: titulok do 65 znakov, popis do 160, canonical, hreflang
-  vrátane `x-default`, jeden `h1`, platné JSON-LD, sitemap, rozbité odkazy a že `preload` fotky aj fontov sedí s adresami
-  v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
+  vrátane `x-default`, jeden `h1`, platné JSON-LD, sitemap, rozbité odkazy, presmerovania zo starých adries dní
+  a že `preload` fotky aj fontov sedí s adresami v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
 - akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám). `--browser=firefox` alebo `--browser=webkit` ich pustí v inom prehliadači, dotyk a snímky obrazovky sú len v Chromiu. Pri zmene správania test doplň alebo uprav.
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).

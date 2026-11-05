@@ -16,7 +16,8 @@ if (page.home && !isBot) {
     .map(l => l === "cs" ? "sk" : l).find(l => langs.includes(l)) || "en";
   const opt = [...$("lang").options].find(o => o.value === want);
   if (want !== page.lang && opt) location.replace(opt.dataset.href);
-  // poistka: keby sa domovská stránka v noci nepregenerovala, ukáž dnešného svätého
+  // poistka: keby sa domovská stránka v noci nepregenerovala, ukáž dnešného svätého.
+  // Ide to starou adresou /sk/11-05/, tá presmeruje – meno svätého v adrese tu nepoznáme.
   else if (page.feast !== todayKey) location.replace(`${page.days}${todayKey}/`);
 }
 
@@ -37,7 +38,17 @@ function renderCal() {
   $("calGrid").innerHTML = h;
   $("calTip").textContent = "";
   $("calAll").hash = `m${mo + 1}`;
-  loadNames().then(n => { if ($("calGrid")) $("calGrid").querySelectorAll("a").forEach(a => a.title = n[a.dataset.k] || ""); });
+  // Odkazy v mriežke sú najprv na starú adresu /sk/11-04/ (tá presmeruje), lebo meno svätého
+  // v adrese sa nedá uhádnuť – príde v names.json. Keď dorazí, doplníme popisok aj adresu.
+  loadNames().then(n => {
+    if (!$("calGrid")) return;
+    $("calGrid").querySelectorAll("a").forEach(a => {
+      const x = n[a.dataset.k];
+      if (!x) return;
+      a.title = x[0];
+      a.href = `${page.root}${page.lang}/${x[1]}/`;
+    });
+  });
 }
 const shiftMonth = n => { view.setMonth(view.getMonth() + n); renderCal(); };
 
@@ -59,7 +70,7 @@ function wireSearch() {
     if (!hits.length) { const li = document.createElement("li"); li.textContent = q.dataset.none; res.append(li); return; }
     for (const x of hits) {
       const li = document.createElement("li"), a = document.createElement("a"), d = document.createElement("span"), wrap = document.createElement("span"), sm = document.createElement("small");
-      a.href = `${q.dataset.base}${x.f}/`; d.className = "d"; d.textContent = x.d;
+      a.href = `${q.dataset.base}${x.s}/`; d.className = "d"; d.textContent = x.d;
       wrap.textContent = x.n; sm.textContent = [x.t, ...x.p].filter(Boolean).join(", "); wrap.append(sm);
       a.append(d, wrap); li.append(a); res.append(li);
     }
@@ -72,7 +83,9 @@ function wireSearch() {
 }
 
 // kam sa vrátiť z kalendára a podobných stránok: prvý deň, z ktorého si ich otvoril
-const DAY_URL = /\/\d\d-\d\d\/$/;
+// denná stránka: posledná časť adresy má v sebe číslo dňa („4-november-karol-boromejsky“ aj staré
+// „11-04“); kalendár, patróni ani „O stránke“ číslo nemajú
+const DAY_URL = /\/[^/]*\d[^/]*\/$/;
 let returnTo = document.referrer && new URL(document.referrer).origin === location.origin && DAY_URL.test(new URL(document.referrer).pathname) ? document.referrer : null;
 
 // oživenie stránky: pri načítaní a po každom prepnutí na inú stránku
@@ -113,6 +126,7 @@ function wire() {
 
   const dlg = $("cal");
   if (!dlg.showModal) return; // starý prehliadač bez <dialog>: dátum ostane odkazom na celý kalendár
+  $("date").onmouseover = loadNames; // mená si vyžiadame skôr, než sa kalendár otvorí
   $("date").onclick = e => { e.preventDefault(); view = new Date(date.getFullYear(), date.getMonth(), 1); renderCal(); dlg.showModal(); };
   $("calPrev").onclick = () => shiftMonth(-1);
   $("calNext").onclick = () => shiftMonth(1);

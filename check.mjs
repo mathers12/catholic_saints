@@ -56,12 +56,15 @@ const server = http.createServer((req, res) => {
 await new Promise(r => server.listen(0, "127.0.0.1", r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
-const feasts = fs.readdirSync(path.join(ROOT, "sk")).filter(d => /^\d\d-\d\d$/.test(d)).sort();
+// adresa dňa nesie meno svätého; mapovanie deň -> adresa je v names.json (generuje build.mjs)
+const SLUGS = Object.fromEntries(LANGS.map(l => [l, JSON.parse(fs.readFileSync(path.join(ROOT, l, "names.json"), "utf8"))]));
+const feasts = Object.keys(SLUGS.sk).sort();
+const dayUrl = (l, f) => `/${l}/${SLUGS[l][f][1]}/`;
 const days = all ? feasts : feasts.filter((_, i) => i % Math.ceil(feasts.length / sample) === 0);
 const pages = [];
 for (const l of LANGS) {
   pages.push({ url: `/${l === "sk" ? "" : l + "/"}`, day: true });
-  for (const f of days) pages.push({ url: `/${l}/${f}/`, day: true });
+  for (const f of days) pages.push({ url: dayUrl(l, f), day: true });
   pages.push({ url: `/${CAL[l]}/`, day: false });
   pages.push({ url: `/${ABOUT[l]}/`, day: false });
   pages.push({ url: `/${PATRONS[l]}/`, day: false });
@@ -170,10 +173,10 @@ for (const [w, h] of SIZES) {
     };
     for (const l of LANGS) {
       for (const f of LONG) {
-        await sp.goto(`${BASE}/${l}/${f}/`, { waitUntil: "domcontentloaded" });
+        await sp.goto(BASE + dayUrl(l, f), { waitUntil: "domcontentloaded" });
         await sp.evaluate(() => document.querySelector(".more").open = true);
         await sp.waitForTimeout(60);
-        judge(`${w}×${h} /${l}/${f}/ Viac`, await sp.evaluate(scan, MIN_TAP));
+        judge(`${w}×${h} ${dayUrl(l, f)} Viac`, await sp.evaluate(scan, MIN_TAP));
       }
       await sp.goto(`${BASE}/${CAL[l]}/`, { waitUntil: "domcontentloaded" });
       await sp.waitForTimeout(60);
@@ -185,7 +188,7 @@ for (const [w, h] of SIZES) {
   // zväčšené písmo na celých stránkach: kontroluje sa len orezanie a presah, nie zmestenie na obrazovku
   {
     const bigPages = [...LANGS.map(l => `/${l === "sk" ? "" : l + "/"}`), ...LANGS.map(l => `/${CAL[l]}/`), ...LANGS.map(l => `/${ABOUT[l]}/`),
-                      ...LANGS.flatMap(l => days.slice(0, 3).map(f => `/${l}/${f}/`))];
+                      ...LANGS.flatMap(l => days.slice(0, 3).map(f => dayUrl(l, f)))];
     const bp = await ctx.newPage();
     await bp.addInitScript(px => addEventListener("DOMContentLoaded",
       () => document.documentElement.style.fontSize = px + "px"), BIG_FONT);
@@ -220,7 +223,7 @@ for (const [w, h] of SIZES) {
       const dp = await ctx.newPage();
       if (font) await dp.addInitScript(px => addEventListener("DOMContentLoaded",
         () => document.documentElement.style.fontSize = px + "px"), font);
-      await dp.goto(`${BASE}/${l}/09-22/`, { waitUntil: "domcontentloaded" });
+      await dp.goto(BASE + dayUrl(l, "09-22"), { waitUntil: "domcontentloaded" });
       await dp.waitForTimeout(250);
       const opened = await dp.evaluate(() => { const d = document.getElementById("date"); if (!d) return false; d.click(); return true; });
       await dp.waitForTimeout(250);
