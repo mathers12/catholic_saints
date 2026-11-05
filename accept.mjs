@@ -429,6 +429,25 @@ await T("Patróni: dopyt z adresy filtruje hneď a bez JavaScriptu je políčko 
   ok((await n.locator(".pcard .pat a").count()) >= 150, "mená bez JS");
   await n.context().close();
 });
+await T("Menu: patróni sú v lište na dennej stránke a vedú na svoju stránku", async () => {
+  const q = await mk({ viewport: { width: 1366, height: 768 } });
+  await go(q, dayUrl("sk", "11-04"));
+  const r = await q.evaluate(() => [...document.querySelectorAll(".links a")].map(a => a.textContent));
+  eq(r.join(" | "), "Kalendár svätých | Patróni | O stránke", "lišta");
+  await q.click(".pat-link");
+  await q.waitForURL("**/sk/patroni/");
+  eq(await q.locator("h1").innerText(), "Patróni", "stránka");
+  await q.context().close();
+});
+await T("Menu: na mobile lišta nie je a z kalendára sa na patrónov dá dostať aj tak", async () => {
+  const q = await mk({ viewport: { width: 375, height: 812 } });
+  await go(q, dayUrl("sk", "11-04"));
+  ok(await q.locator(".pat-link").isHidden(), "odkaz v lište má byť na mobile skrytý");
+  await go(q, "/sk/kalendar/");
+  await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click();
+  await q.waitForURL("**/sk/patroni/");
+  await q.context().close();
+});
 await b.close();
 server.close();
 for (const r of res) console.log(r[0].padEnd(6), r[1], r[2] ? "\n       → " + r[2] : "");

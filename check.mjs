@@ -19,7 +19,7 @@ const MIN_TAP = 24;          // px – najmenší rozmer klikateľného prvku
 const FIT_W = 320, FIT_H = 568; // od tejto veľkosti sa denná stránka musí zmestiť bez posúvania
 const CROSS_H = 640;         // px – od tejto výšky musí byť na mobile celý kríž nad kartou
 const BIG_FONT = 20;         // px – používateľ so zväčšeným písmom (predvolené je 16)
-const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [768, 1024], [1366, 768], [1920, 1080]];
+const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [540, 720], [768, 1024], [1366, 768], [1920, 1080]];
 const LANGS = ["sk", "en", "de"];
 const CAL = { sk: "sk/kalendar", en: "en/calendar", de: "de/kalender" };
 const ABOUT = { sk: "sk/o-stranke", en: "en/about", de: "de/ueber-uns" };
