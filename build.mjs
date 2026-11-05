@@ -215,6 +215,21 @@ function moreBlock(lang, feast, shareText) {
   return `<div class="extra"><details class="more"><summary>${x.more}</summary>${rows ? `<dl>${rows}</dl>` : ""}<p class="more-links">${links}</p>${trad || wl ? `<p class="more-src">${x.src}</p>` : ""}</details><button type="button" class="share" id="share" hidden data-text="${esc(shareText)}" data-done="${x.copied}">${x.share}</button></div>`;
 }
 
+// Lišta hlavného menu je na každej stránke rovnaká. Odkaz na stránku, na ktorej práve si, nie je
+// odkaz, ale `.here`, takže poradie v lište ostáva a vidno, kde si. Na užších displejoch sa časť
+// odkazov do lišty nezmestí (CSS ich skryje), preto ich podstránky majú aj v navigácii pod kartou
+// – a tie sa naopak skryjú tam, kde ich ukazuje lišta. Jazyk je prepínač, nie tlačidlá.
+const menu = (lang, rel, alts, here) => {
+  const item = (cls, href, text) => here === cls
+    ? `<span class="${cls} here" aria-current="page">${esc(text)}</span>`
+    : `<a class="${cls}" href="${rel}${href}">${esc(text)}</a>`;
+  return `<div class="links">${item("cal-link", calPath(lang), UI[lang].cal)}`
+    + `${item("pat-link", patPath(lang), EXTRA[lang].patrons)}`
+    + `${item("about-link", aboutPath(lang), UI[lang].about)}`
+    + `<select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l =>
+        `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div>`;
+};
+
 // krížik ako kresba: znak ✝ niektoré prehliadače ukazujú ako farebné emoji
 const CROSS = '<svg class="cross-sign" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 0v14M1 4.5h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 
@@ -321,7 +336,7 @@ function dayView(lang, feast, home) {
   // než 500 px ale chodí ako originál z upload.wikimedia.org, a to je ďalší hostiteľ
   const imgHost = new URL(imgUrl(s.img, 500)).origin;
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), imageAlt: s.name, imgHost, jsonld, bodyAttrs, body: rel => `<main>
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="pat-link" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a>${menu(lang, rel, alts, null)}</div>
 ${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dt}</a>
 ${lang === "sk" && MENINY[feast] ? `<p class="nameday">${EXTRA.sk.nameday}: ${esc(MENINY[feast])}</p>` : ""}
 <p class="badge">${home ? u.badgeToday : u.badgeDay}</p>`, `<nav>
@@ -360,7 +375,7 @@ function calendar(lang) {
         isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
       crumbs([[u.site, homePath(lang)], [u.cal, path]]) ] },
     body: rel => `<main class="calendar">
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a>${menu(lang, rel, alts, "cal-link")}<a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
 <h1>${u.cal}</h1>
 <p>${u.calIntro}</p>
@@ -372,8 +387,7 @@ ${months.map((list, i) => `<section class="month${i + 1 === md(todayKey)[0] ? " 
 <div class="mbody">${grid(i, list, rel)}
 <ol>${list.map(s => `<li${s.feast === todayKey ? ' class="today"' : ""}><a href="${rel}${dayPath(lang, s.feast)}"><span class="d">${md(s.feast)[1]}.</span> ${esc(saint(lang, s).name)}</a></li>`).join("")}</ol></div></section>`).join("\n")}
 </article>
-<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
-  : `<a class="btn" hreflang="${l}" href="${rel}${calPath(l)}" title="${UI[l].cal}">${l.toUpperCase()}</a>`).join("")}</nav>
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn pat-btn" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a><a class="btn about-btn" href="${rel}${aboutPath(lang)}">${u.about}</a></nav>
 </main>` }));
   return path;
 }
@@ -420,7 +434,7 @@ function aboutPage(lang) {
         isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
       crumbs([[u.site, homePath(lang)], [u.about, path]]) ] },
     body: rel => `<main class="prose">
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a>${menu(lang, rel, alts, "about-link")}<a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
 <p class="seal">${CROSS}</p>
 <h1>${u.about}</h1>
@@ -428,8 +442,7 @@ function aboutPage(lang) {
 ${a.parts.map(([h, ps]) => `<h2>${h}</h2>\n${ps.map(p => `<p>${esc(p)}</p>`).join("\n")}`).join("\n")}
 <ul>${LINKS.map(([href, t]) => `<li><a href="${href}" rel="noopener">${t}</a></li>`).join("")}</ul>
 </article>
-<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
-  : `<a class="btn" hreflang="${l}" href="${rel}${aboutPath(l)}" title="${UI[l].about}">${l.toUpperCase()}</a>`).join("")}</nav>
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn cal-btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn pat-btn" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a></nav>
 </main>` }));
   return path;
 }
@@ -479,7 +492,7 @@ function patronsPage(lang) {
         isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },
       crumbs([[u.site, homePath(lang)], [x.patrons, path]]) ] },
     body: rel => `<main class="prose">
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a>${menu(lang, rel, alts, "pat-link")}<a class="close" id="close" href="${rel}${homePath(lang)}" aria-label="${u.close}" title="${u.close}">×</a></div>
 <article class="card">
 <h1>${x.patrons}</h1>
 <p class="lead">${x.patIntro}</p>
@@ -489,8 +502,7 @@ function patronsPage(lang) {
 <section class="ptheme"><h3>${x.officialH}</h3>\n<p class="pnote">${x.officialIntro}</p>\n<div class="pgrid">${officialCards(lang, rel).join("")}</div></section>
 ${groups(rel).map(([name, cards]) => `<section class="ptheme"><h3>${esc(name)}</h3>\n<div class="pgrid">${cards.join("")}</div></section>`).join("\n")}
 </article>
-<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
-  : `<a class="btn" hreflang="${l}" href="${rel}${patPath(l)}" title="${EXTRA[l].patrons}">${l.toUpperCase()}</a>`).join("")}</nav>
+<nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn cal-btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn about-btn" href="${rel}${aboutPath(lang)}">${u.about}</a></nav>
 </main>` }));
   return path;
 }
