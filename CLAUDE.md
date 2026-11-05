@@ -5,7 +5,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - vzhľad a správanie: `style.css`, `app.js`; HTML stránok je šablóna v `build.mjs`. Prepínanie stránok (`show()` v `app.js`) načíta cieľovú statickú stránku a vymení `main`, dialóg a metaúdaje, pozadie sa nedotkne. Bez JS, v starom prehliadači a pri chybe fungujú obyčajné odkazy, takže každá stránka musí ostať plnohodnotná statická stránka. Nový skript pre stránku patrí do `wire()` v `app.js`, nie inline do šablóny, inak sa po prepnutí nespustí. `app.js` píš bez `?.` a `||=`;
 - výstup: domovská stránka pre každý jazyk, 366 denných stránok × jazyk, kalendár, patróni, „O stránke“, sitemap.xml, robots.txt (SEO)
   a presmerovania zo starých adries dní.
-- `facts.js` (patróni, miesta, odkazy na Wikipédiu) generuje `node tools/facts.mjs`, `meniny.js` generuje `node tools/meniny.mjs`, `imgs.js` (priame adresy obrázkov) generuje `node tools/imgs.mjs`; ručne ich neupravuj. Nové kategórie patrónov dopĺňaj do `PATRONS` v `tools/facts.mjs` so všetkými tromi názvami.
+- `facts.js` (patróni, miesta, odkazy na Wikipédiu) generuje `node tools/facts.mjs`, `meniny.js` generuje `node tools/meniny.mjs`, `imgs.js` (priame adresy obrázkov) generuje `node tools/imgs.mjs`; ručne ich neupravuj. Nové kategórie patrónov dopĺňaj do `PATRONS` v `tools/facts.mjs` so všetkými tromi názvami
+  a zaraď ich do niektorej témy v `THEMES` v `build.mjs` – build spadne, kým kategória nie je v práve jednej téme.
 - Fonty (Marcellus, Spectral) sú vlastné v `fonts/`, nie z Google Fonts: cudzí stylesheet blokoval vykreslenie.
   `@font-face` je v `style.css`, `preload` v konštante `FONTS` v `build.mjs`, a adresy musia byť rovnaké,
   ináč sa font stiahne dvakrát (`seo.mjs` to kontroluje). Nový rez alebo novšiu verziu vyrob podľa
@@ -25,6 +26,12 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   k dňu, v ktorý toho svätého ukazuje tento web, nie k dňu, keď ho slávi diecéza. Build spadne, keď deň neexistuje, chýba názov v jednom
   z jazykov, odkaz nie je zo Svätej stolice alebo pápež nie je v `POPES`. Patronáty z `facts.js` (Wikipédia)
   sú na webe označené „podľa tradície“ a sú pod úradnými – nemiešaj ich.
+- Stránka patrónov: kategórie sú zoskupené do piatich tém (`THEMES` v `build.mjs`), každá je kartička
+  so všetkými menami, nie len s ukážkou – na detail netreba druhý klik. Rozloženie je viacstĺpcové
+  (`.pgrid { columns }`), nie grid, lebo kartičky sú rôzne vysoké. `.pcard` ani `.ptheme` nesmú dostať
+  vlastný `display`, ináč prestane fungovať atribút `hidden`, ktorým filter skrýva. Filter je
+  `wirePatrons()` v `app.js`: porovnáva s `data-find` priamo v HTML, nič nesťahuje, a prázdnu tému
+  skryje tiež. Bez JS je políčko skryté a všetky kategórie aj mená sú v stránke.
 - Hľadanie v kalendári drží dopyt v adrese (`?q=`), takže sa výsledky dajú poslať odkazom a Späť sa na ne
   vráti. `wireSearch()` v `app.js` ho pri načítaní prečíta a pri písaní zapíše (`replaceState` s odkladom,
   prehliadače počet zmien adresy obmedzujú). Tú istú adresu uvádza `SearchAction` v JSON-LD na domovskej
@@ -46,8 +53,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
 - SEO: `node seo.mjs` (nad `_site/`, bez závislostí: titulok do 65 znakov, popis do 160, canonical, hreflang
   vrátane `x-default`, jeden `h1`, platné JSON-LD, sitemap, rozbité odkazy, presmerovania zo starých adries dní,
-  `SearchAction`, úradné patronáty (odkaz na Svätú stolicu,
-  rovnaký počet vo všetkých jazykoch) a že `preload` fotky aj fontov sedí s adresami v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
+  `SearchAction`, úradné patronáty aj kategórie patrónov
+  (odkaz na Svätú stolicu, rovnaký počet vo všetkých jazykoch, žiadna prázdna téma) a že `preload` fotky aj fontov sedí s adresami v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
 - akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám). `--browser=firefox` alebo `--browser=webkit` ich pustí v inom prehliadači, dotyk a snímky obrazovky sú len v Chromiu. Pri zmene správania test doplň alebo uprav.
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).

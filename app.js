@@ -54,6 +54,20 @@ const shiftMonth = n => { view.setMonth(view.getMonth() + n); renderCal(); };
 
 // hľadanie v kalendári: meno, titul aj patronát, bez ohľadu na diakritiku; údaje sa stiahnu až pri prvom použití
 const plain = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+// Dopyt držíme v adrese (?q=), takže sa výsledok dá poslať odkazom a Späť sa naň vráti. Mesiac
+// v adrese (#mN) necháme, ako je. Adresu prepisujeme s odkladom, lebo prehliadače počet zmien
+// adresy obmedzujú a pri písaní by to bola zmena na každý znak.
+const param = n => new URL(location.href).searchParams.get(n);
+let qTimer = null;
+const remember = v => {
+  if (!history.replaceState) return;
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => {
+    const u = new URL(location.href);
+    if (v) u.searchParams.set("q", v); else u.searchParams.delete("q");
+    history.replaceState(null, "", u.pathname + u.search + u.hash);
+  }, 300);
+};
 function wireSearch() {
   const q = $("q");
   if (!q) return;
@@ -80,22 +94,32 @@ function wireSearch() {
     fill();
     fetch(q.dataset.src).then(r => r.json()).then(j => { data = j.map(x => ({ ...x, hay: plain([x.n, x.t, ...x.p].join(" ")) })); fill(); }).catch(() => {});
   };
-  // Dopyt držíme v adrese (?q=), takže sa výsledky dajú poslať odkazom a Späť sa na ne vráti.
-  // Mesiac v adrese (#mN) necháme, ako je. Adresu prepisujeme s odkladom, lebo prehliadače
-  // počet zmien adresy obmedzujú a pri písaní by to bola zmena na každý znak.
-  let timer = null;
-  const remember = () => {
-    if (!history.replaceState) return;
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      const u = new URL(location.href);
-      if (q.value) u.searchParams.set("q", q.value); else u.searchParams.delete("q");
-      history.replaceState(null, "", u.pathname + u.search + u.hash);
-    }, 300);
-  };
-  q.oninput = () => { run(); remember(); };
-  const want = new URL(location.href).searchParams.get("q"); // prišiel odkaz s dopytom
+  q.oninput = () => { run(); remember(q.value); };
+  const want = param("q"); // prišiel odkaz s dopytom
   if (want) { q.value = want; run(); }
+}
+
+// Filter na stránke patrónov: kartičky aj mená sú už v HTML (data-find), netreba nič sťahovať.
+// Skrývame kartičky, ktoré nesedia, aj témy, ktoré tým ostali prázdne.
+function wirePatrons() {
+  const q = $("pq");
+  if (!q) return;
+  const cards = [...document.querySelectorAll(".pcard")], themes = [...document.querySelectorAll(".ptheme")], none = $("pqnone");
+  q.hidden = false;
+  const fill = () => {
+    const words = plain(q.value).split(/\s+/).filter(Boolean);
+    let hits = 0;
+    for (const c of cards) {
+      const ok = words.every(w => c.dataset.find.indexOf(w) >= 0);
+      c.hidden = !ok;
+      if (ok) hits++;
+    }
+    for (const t of themes) t.hidden = !t.querySelector(".pcard:not([hidden])");
+    none.hidden = !words.length || hits > 0;
+  };
+  q.oninput = () => { fill(); remember(q.value); };
+  const want = param("q");
+  if (want) { q.value = want; fill(); }
 }
 
 // kam sa vrátiť z kalendára a podobných stránok: prvý deň, z ktorého si ich otvoril
@@ -109,6 +133,7 @@ function wire() {
   const tabs = document.querySelector(".mtabs"), tab = tabs && tabs.querySelector(".now");
   if (tab) tabs.scrollLeft = tab.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - tab.offsetWidth) / 2;
   wireSearch();
+  wirePatrons();
   if ($("close") && returnTo) $("close").href = returnTo; // krížik vráti tam, odkiaľ si prišiel; inak vedie na domovskú stránku
   if (!$("date")) return;
 
