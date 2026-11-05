@@ -88,6 +88,10 @@ const oldDayPath = (lang, feast) => `${lang}/${feast}/`;
 const calPath = lang => `${lang}/${UI[lang].calSlug}/`;
 const aboutPath = lang => `${lang}/${UI[lang].aboutSlug}/`;
 const patPath = lang => `${lang}/${EXTRA[lang].patSlug}/`;
+// Hľadanie drží dopyt v adrese (?q=), takže sa výsledky dajú poslať odkazom; SearchAction to
+// isté hovorí strojom. Google síce vyhľadávacie okienko vo výsledkoch od 21. 11. 2024 neukazuje
+// a značku už nepodporuje, ale je to platná schema.org a ostatné čítačky JSON-LD ju čítajú.
+const searchTarget = lang => `${SITE}${calPath(lang)}?q={search_term_string}`;
 
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 // Priamo sa dá odkazať len na tieto šírky thumbnailov, iné Commons odmietne so 400:
@@ -249,7 +253,8 @@ function dayView(lang, feast, home) {
   const desc = clip(home ? `${u.site} – ${u.every}. ${u.badgeToday}: ${s.name}. ${q(lang, s.quote)}` : `${q(lang, s.quote)} ${s.story}`);
   const person = entityLd(lang, s, feast);
   const jsonld = home
-    ? { "@context": "https://schema.org", "@type": "WebSite", name: BRAND, alternateName: u.site, url: SITE, inLanguage: lang, description: desc, about: CHURCH }
+    ? { "@context": "https://schema.org", "@type": "WebSite", name: BRAND, alternateName: u.site, url: SITE, inLanguage: lang, description: desc, about: CHURCH,
+        potentialAction: { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: searchTarget(lang) }, "query-input": "required name=search_term_string" } }
     : { "@context": "https://schema.org", "@graph": [
         { "@type": "WebPage", name: title, url: SITE + path, inLanguage: lang, description: desc, about: person,
           isPartOf: { "@type": "WebSite", name: BRAND, url: SITE } },

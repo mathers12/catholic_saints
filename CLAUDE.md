@@ -16,6 +16,11 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   presmerovania (`redirect()`): vedú na ne existujúce odkazy a Google ich má v indexe, takže ich neruš
   a do sitemapy nedávaj. Adresu dňa nikde nepíš ručne – `app.js`, `check.mjs` aj `accept.mjs` ju berú
   z `names.json` (`deň -> [meno, adresa]`), `search.json` ju má v poli `s`.
+- Hľadanie v kalendári drží dopyt v adrese (`?q=`), takže sa výsledky dajú poslať odkazom a Späť sa na ne
+  vráti. `wireSearch()` v `app.js` ho pri načítaní prečíta a pri písaní zapíše (`replaceState` s odkladom,
+  prehliadače počet zmien adresy obmedzujú). Tú istú adresu uvádza `SearchAction` v JSON-LD na domovskej
+  stránke (`searchTarget()` v `build.mjs`). Google z nej vyhľadávacie okienko vo výsledkoch od 21. 11. 2024
+  nerobí a značku nepodporuje, ostáva ako platná schema.org pre ostatné čítačky.
 - Pozadie je fotka kríža v oblakoch s pomalým svitaním (`.scene` v `build.mjs` a `style.css`). Kríž je vrchná vrstva tej istej fotky orezaná
   cez `clip-path`, takže modrá noc ani tieň ho neprekryjú. Na mobile stojí na kopci (`.stage::after`), ktorý prejde do karty, lebo fotka končí uprostred stĺpa. Nepoužívaj `color-dodge` (kríž zafarbí) a animuj len `opacity` a `transform`.
 - Web sa jasne hlási ako rímskokatolícky (odkaz „✝ Rímskokatolícka stránka“ na každej dennej stránke → „O stránke“,
@@ -27,8 +32,8 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   z cache. Nové statické súbory pridávaj cez `asset()` v `build.mjs`, nie natvrdo.
 - kontrola: `node check.mjs` (responzivita a rozloženie nad `_site/`, potrebuje `npm i -g playwright`).
 - SEO: `node seo.mjs` (nad `_site/`, bez závislostí: titulok do 65 znakov, popis do 160, canonical, hreflang
-  vrátane `x-default`, jeden `h1`, platné JSON-LD, sitemap, rozbité odkazy, presmerovania zo starých adries dní
-  a že `preload` fotky aj fontov sedí s adresami v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
+  vrátane `x-default`, jeden `h1`, platné JSON-LD, sitemap, rozbité odkazy, presmerovania zo starých adries dní,
+  `SearchAction` a že `preload` fotky aj fontov sedí s adresami v CSS). Musí dobehnúť bez nálezov; pri novej stránke alebo metaúdaji kontrolu doplň.
 - akceptačné testy: `node accept.mjs` (správanie v prehliadači: navigácia, kalendár, prepínanie dní bez načítania, dotyk, kontrast; vlastný server, potrebuje internet kvôli fotkám). `--browser=firefox` alebo `--browser=webkit` ich pustí v inom prehliadači, dotyk a snímky obrazovky sú len v Chromiu. Pri zmene správania test doplň alebo uprav.
 
 Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako „Matt 5:8“ (en), „Mt 5,8“ (de).

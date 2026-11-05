@@ -18,8 +18,9 @@ const html = [];
     e.isDirectory() ? walk(`${d}/${e.name}`) : e.name.endsWith(".html") && html.push(`${d}/${e.name}`);
 })(OUT);
 
+const LANGS = ["sk", "en", "de"];
 const bad = [];
-let stubs = 0;
+let stubs = 0, searchActions = 0;
 const fail = (what, where) => bad.push(`${what}: ${where}`);
 const one = (h, re) => (h.match(re) || [])[1] || "";
 const urlOf = f => site + f.replace(`${OUT}/`, "").replace(/index\.html$/, "");
@@ -61,8 +62,20 @@ for (const f of html) {
   if ((h.match(/<h1[\s>]/g) || []).length !== 1) fail("nie je presne jeden h1", rel);
   if (!/<html lang="[a-z]{2}"/.test(h)) fail("bez lang na html", rel);
 
-  for (const m of h.matchAll(/application\/ld\+json">(.*?)<\/script>/gs))
-    try { JSON.parse(m[1]); } catch (e) { fail("rozbité JSON-LD", rel); }
+  for (const m of h.matchAll(/application\/ld\+json">(.*?)<\/script>/gs)) {
+    let j = null;
+    try { j = JSON.parse(m[1]); } catch (e) { fail("rozbité JSON-LD", rel); continue; }
+    // hľadanie s dopytom v adrese: cieľ musí byť existujúca stránka a šablóna presne taká,
+    // akú schema.org čaká – ináč je značka na nič
+    const act = j.potentialAction || {};
+    if (act["@type"] !== "SearchAction") continue;
+    searchActions++;
+    const t = (act.target || {}).urlTemplate || "";
+    const base = t.replace(/\?q=\{search_term_string\}$/, "");
+    if (base === t) fail(`SearchAction nemá v adrese ?q={search_term_string} (${t || "chýba"})`, rel);
+    else if (!base.startsWith(site) || !exists(`${OUT}/${base.slice(site.length)}`)) fail(`SearchAction vedie nikam (${t})`, rel);
+    if (act["query-input"] !== "required name=search_term_string") fail("SearchAction bez query-input", rel);
+  }
 
   if (noindex) continue;
   const canonical = one(h, /rel="canonical" href="(.*?)"/);
@@ -99,7 +112,7 @@ for (const f of html) {
 for (const l of locs) if (!exists(`${OUT}/${l.slice(site.length)}`)) fail("sitemap ukazuje na neexistujúcu stránku", l);
 // Stará adresa dňa (/sk/11-04/) musí presmerovať na novú, ináč sa stratia existujúce odkazy
 // aj to, čo má Google v indexe. Slug berieme z names.json, odtiaľ ho berie aj app.js.
-for (const lang of ["sk", "en", "de"]) {
+for (const lang of LANGS) {
   const names = JSON.parse(fs.readFileSync(`${OUT}/${lang}/names.json`, "utf8"));
   for (const feast of Object.keys(names)) {
     const old = `${lang}/${feast}/`, slug = (names[feast] || [])[1];
@@ -110,6 +123,10 @@ for (const lang of ["sk", "en", "de"]) {
     if (one(h, /rel="canonical" href="(.*?)"/) !== want) fail(`presmerovanie nevedie na ${want}`, old);
   }
 }
+
+// SearchAction patrí na domovskú stránku každého jazyka; keby chýbala, nikto by sa nedozvedel,
+// že hľadanie berie dopyt z adresy
+if (searchActions !== LANGS.length) fail(`SearchAction je na ${searchActions} stránkach namiesto ${LANGS.length}`, "domovské stránky");
 
 if (!cssFonts.size) fail("žiadny @font-face v CSS, fonty by išli z cudzej domény", "style.css");
 for (const f of cssFonts) if (!fs.existsSync(`${OUT}/${f}`)) fail("font z @font-face sa do _site nedostal", f);
