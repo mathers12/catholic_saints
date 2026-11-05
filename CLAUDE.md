@@ -37,7 +37,10 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   dvakrát; `accept.mjs` to kontroluje na počítači aj na mobile.
 - Stránka patrónov: všetko je v jednej reči kartičiek pod jedným filtrom. Prvá téma sú úradné patronáty
   z `patronaty.js` (`officialCards()`), za ňou päť tém kategórií z Wikipédie (`THEMES` v `build.mjs`).
-  Kartička má všetky mená, nie len ukážku – na detail netreba druhý klik. Rozloženie je viacstĺpcové
+  Kartička má všetky mená, nie len ukážku – na detail netreba druhý klik, a má id `pat-<kľúč>`:
+  patronát na dennej stránke je odkaz na ňu (`patronLinks()`), nech sa z jedného svätého dá prejsť
+  na ostatných patrónov tej istej veci. `seo.mjs` overuje po jazykoch, že tie kotvy existujú –
+  kontrola vnútorných odkazov totiž hash ignoruje. Rozloženie je viacstĺpcové
   (`.pgrid { columns }`), nie grid, lebo kartičky sú rôzne vysoké. `.pcard` ani `.ptheme` nesmú dostať
   vlastný `display`, ináč prestane fungovať atribút `hidden`, ktorým filter skrýva. Filter je
   `wirePatrons()` v `app.js`: porovnáva s `data-find` priamo v HTML, nič nesťahuje, a prázdnu tému

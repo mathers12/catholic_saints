@@ -23,7 +23,8 @@ const LANGS = ["sk", "en", "de"];
 const HOLY_SEE = /^https:\/\/www\.vatican\.va\//;
 const bad = [];
 let stubs = 0, searchActions = 0;
-const catCounts = [];
+const catCounts = [], anchorsUsed = new Map(), anchorsHave = new Map();
+const addAnchor = (map, lang, id) => { if (!map.has(lang)) map.set(lang, new Set()); map.get(lang).add(id); };
 const fail = (what, where) => bad.push(`${what}: ${where}`);
 const one = (h, re) => (h.match(re) || [])[1] || "";
 const urlOf = f => site + f.replace(`${OUT}/`, "").replace(/index\.html$/, "");
@@ -97,6 +98,12 @@ for (const f of html) {
 
   // Úradné patronáty na stránke patrónov: každý odkaz musí viesť na Svätú stolicu a otvárať sa
   // bezpečne. Cudzí odkaz by znamenal, že sa do dát dostal zdroj, ktorý nič neúraduje.
+  // Patronát na dennej stránke vedie na kotvu medzi patrónmi. Kontrola odkazov nižšie hash
+  // ignoruje, takže premenovaný kľúč v tools/facts.mjs by sa tu inak stratil potichu.
+  const pageLang = one(h, /<html lang="([a-z]{2})"/);
+  for (const m of h.matchAll(/href="[^"]*#(pat-[a-z0-9-]+)"/g)) addAnchor(anchorsUsed, pageLang, m[1]);
+  for (const m of h.matchAll(/id="(pat-[a-z0-9-]+)"/g)) addAnchor(anchorsHave, pageLang, m[1]);
+
   // kategórie patrónov: rovnako veľa vo všetkých jazykoch a žiadna téma nesmie ostať prázdna
   const cards = (h.match(/<div class="pcard"/g) || []).length;
   if (cards) {
@@ -141,6 +148,12 @@ for (const lang of LANGS) {
     const want = `${site}${lang}/${slug}/`;
     if (one(h, /rel="canonical" href="(.*?)"/) !== want) fail(`presmerovanie nevedie na ${want}`, old);
   }
+}
+
+for (const lang of LANGS) {
+  const used = anchorsUsed.get(lang) || new Set(), have = anchorsHave.get(lang) || new Set();
+  if (!used.size) fail("patronáty na dennej stránke nevedú na stránku patrónov", lang);
+  for (const a of used) if (!have.has(a)) fail(`odkaz na kotvu #${a}, ktorú stránka patrónov nemá`, lang);
 }
 
 if (catCounts.length !== LANGS.length || new Set(catCounts).size !== 1 || !catCounts[0])
