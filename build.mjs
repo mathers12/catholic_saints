@@ -131,23 +131,23 @@ const { PATRONATY, POPES } = load("patronaty.js");
 const LANG_I = { sk: 0, en: 1, de: 2 };
 const YEAR = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
 const EXTRA = {
-  sk: { filter: "Hľadať patronát alebo meno", kbs: "Liturgický kalendár KBS", more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
+  sk: { filter: "Hľadať patronát alebo meno", more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
     patrons: "Patróni", patSlug: "patroni", patIntro: "Svätí podľa toho, koho majú pod ochranou: najprv patronáty vyhlásené Cirkvou s odkazom na dokument, potom tie z tradície.",
     official: "Úradný patronát", officialH: "Úradne vyhlásené patronáty", holySee: "Svätá stolica",
     officialIntro: "Patronáty, ktoré vyhlásil pápež alebo ich uvádza Svätá stolica. Pri každom je odkaz na dokument. Súhrnný oficiálny zoznam patrónov neexistuje, preto je tento krátky.",
-    traditionH: "Patróni podľa tradície", traditionIntro: "Vychádza z údajov anglickej Wikipédie: zoznam nie je úplný a nie sú to úradné vyhlásenia.",
+    traditionIntro: "Patronáty bez odkazu na dokument vychádzajú z anglickej Wikipédie: zoznam nie je úplný a nie sú to úradné vyhlásenia.",
     search: "Hľadať meno alebo patróna", none: "Nič sa nenašlo." },
-  en: { filter: "Search a patronage or name", kbs: "Slovak Bishops' Conference", more: "More", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
+  en: { filter: "Search a patronage or name", more: "More", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
     patrons: "Patron saints", patSlug: "patrons", patIntro: "Saints by those they watch over: first the patronages declared by the Church, with a link to the document, then those from tradition.",
     official: "Official patronage", officialH: "Officially declared patronages", holySee: "Holy See",
     officialIntro: "Patronages declared by a Pope or stated by the Holy See. Each one links to the document. No comprehensive official list of patron saints exists, which is why this one is short.",
-    traditionH: "Patrons by tradition", traditionIntro: "Based on English Wikipedia data: the list is not complete and these are not official declarations.",
+    traditionIntro: "Patronages without a link to a document come from English Wikipedia: the list is not complete and these are not official declarations.",
     search: "Search a name or patronage", none: "Nothing found." },
-  de: { filter: "Patronat oder Name suchen", kbs: "Slowakische Bischofskonferenz", more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
+  de: { filter: "Patronat oder Name suchen", more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
     patrons: "Schutzpatrone", patSlug: "schutzpatrone", patIntro: "Heilige danach, wen sie beschützen: zuerst die von der Kirche erklärten Patronate mit Link zum Dokument, dann die aus der Überlieferung.",
     official: "Amtliches Patronat", officialH: "Amtlich erklärte Patronate", holySee: "Heiliger Stuhl",
     officialIntro: "Patronate, die ein Papst erklärt hat oder die der Heilige Stuhl nennt. Zu jedem gibt es den Link zum Dokument. Eine vollständige amtliche Liste der Schutzpatrone gibt es nicht, darum ist diese kurz.",
-    traditionH: "Patrone nach Überlieferung", traditionIntro: "Grundlage sind Daten der englischen Wikipedia: die Liste ist nicht vollständig und es sind keine amtlichen Erklärungen.",
+    traditionIntro: "Patronate ohne Link zu einem Dokument stammen aus der englischen Wikipedia: die Liste ist nicht vollständig und es sind keine amtlichen Erklärungen.",
     search: "Name oder Patronat suchen", none: "Nichts gefunden." },
 };
 // čítania daného dňa v aktuálnom roku; 29. 2. v neprestupnom roku neexistuje
@@ -162,9 +162,29 @@ const readingsUrl = (lang, feast) => {
 // keď ich zdroj nehovorí – radšej menej údajov než vymyslený.
 const officialPatron = (lang, feast) => (PATRONATY[feast] || []).map(o => {
   const who = [o.by ? POPES[o.by][LANG_I[lang]] : null, o.year].filter(Boolean).join(", ");
-  const src = o.doc || (/kbs\.sk/.test(o.url) ? EXTRA[lang].kbs : EXTRA[lang].holySee);
+  const src = o.doc || EXTRA[lang].holySee;
   return `${esc(o.what[LANG_I[lang]])}${who ? ` · ${esc(who)}` : ""} <a href="${o.url}" rel="noopener">${esc(src)} ↗</a>`;
 });
+// Úradné patronáty na stránke patrónov: tie isté kartičky ako pri kategóriách, aby to bola
+// jedna reč a aby ich chytil ten istý filter. Väčšie kartičky idú prvé, potom podľa abecedy.
+const officialCards = (lang, rel) => {
+  const by = new Map();
+  for (const f of Object.keys(PATRONATY).sort()) for (const o of PATRONATY[f]) {
+    const label = (o.card || o.what)[LANG_I[lang]];
+    if (!by.has(label)) by.set(label, []);
+    by.get(label).push([f, o]);
+  }
+  return [...by].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], lang)).map(([label, items]) => {
+    const rows = items.map(([f, o]) => {
+      const who = [o.by ? POPES[o.by][LANG_I[lang]] : null, o.year].filter(Boolean).join(", ");
+      return `<li><a href="${rel}${dayPath(lang, f)}">${esc(saint(lang, byFeast[f]).name)}</a>`
+        + `${who ? ` · ${esc(who)}` : ""} <a href="${o.url}" rel="noopener">${esc(o.doc || EXTRA[lang].holySee)} ↗</a></li>`;
+    }).join("");
+    const find = plain(`${label} ${items.map(([f]) => saint(lang, byFeast[f]).name).join(" ")}`);
+    return `<div class="pcard" data-find="${esc(find)}"><b>${esc(label)}</b><span class="pnum">${items.length}</span>`
+      + `<ul class="pat">${rows}</ul></div>`;
+  });
+};
 const patronLabels = (lang, feast) => ((FACTS[feast] || {}).patron || []).map(k => PATRON_NAMES[k][LANG_I[lang]]);
 const wikiUrl = (l, t) => `https://${l}.wikipedia.org/wiki/${encodeURIComponent(t.replace(/ /g, "_"))}`;
 
@@ -260,7 +280,7 @@ const byFeast = Object.fromEntries(SAINTS.map(s => [s.feast, s]));
 const neighbour = (feast, step) => FEASTS[(FEASTS.indexOf(feast) + step + FEASTS.length) % FEASTS.length];
 // Úradný patronát bez dňa, bez názvu v troch jazykoch alebo bez odkazu na Svätú stolicu je
 // tvrdenie bez zdroja, a práve tomu má patronaty.js brániť – tak to radšej zastavíme hneď tu.
-const HOLY_SEE = /^https:\/\/(www\.vatican\.va|([a-z]+\.)?kbs\.sk)[/?]/;
+const HOLY_SEE = /^https:\/\/www\.vatican\.va\//;
 for (const [f, list] of Object.entries(PATRONATY)) {
   if (!byFeast[f]) throw new Error(`patronaty.js: deň ${f} v saints.js nie je`);
   for (const o of list) {
@@ -463,14 +483,10 @@ function patronsPage(lang) {
 <article class="card">
 <h1>${x.patrons}</h1>
 <p class="lead">${x.patIntro}</p>
-<h2>${x.officialH}</h2>
-<p>${x.officialIntro}</p>
-<ul class="pat-off">${Object.keys(PATRONATY).sort().map(f => officialPatron(lang, f).map(o =>
-  `<li><a href="${rel}${dayPath(lang, f)}">${esc(saint(lang, byFeast[f]).name)}</a> – ${o}</li>`).join("")).join("")}</ul>
-<h2>${x.traditionH}</h2>
-<p>${x.traditionIntro}</p>
+<p class="pnote">${x.traditionIntro}</p>
 <input type="search" class="q" id="pq" hidden placeholder="${esc(x.filter)}" aria-label="${esc(x.filter)}" data-none="${esc(x.none)}">
 <p class="qnone" id="pqnone" hidden>${esc(x.none)}</p>
+<section class="ptheme"><h3>${x.officialH}</h3>\n<p class="pnote">${x.officialIntro}</p>\n<div class="pgrid">${officialCards(lang, rel).join("")}</div></section>
 ${groups(rel).map(([name, cards]) => `<section class="ptheme"><h3>${esc(name)}</h3>\n<div class="pgrid">${cards.join("")}</div></section>`).join("\n")}
 </article>
 <nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`

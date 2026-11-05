@@ -20,14 +20,16 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
 - `patronaty.js` = úradne vyhlásené patronáty, **vedie sa ručne a negeneruje sa**. Súhrnný oficiálny zoznam
   patrónov neexistuje: patronát vzniká vyhlásením pápeža, potvrdením dikastéria, alebo – a tak väčšina –
   zvykom, ktorý nemá kto dekretovať. Preto tu smie byť len to, čo Svätá stolica naozaj niekde hovorí: `url`
-  musí byť stránka na vatican.va alebo kbs.sk, ktorá ten patronát obsahuje (over to), a `by` s `year` vyplň
-  len vtedy, keď ich tá istá stránka uvádza. Patrónov slovenských diecéz priamo tak nazýva liturgický
-  kalendár KBS, preto sa pri nich odkazuje na konkrétny deň (`lc.kbs.sk/?den=RRRRMMDD`); patronát patrí
-  k dňu, v ktorý toho svätého ukazuje tento web, nie k dňu, keď ho slávi diecéza. Build spadne, keď deň neexistuje, chýba názov v jednom
+  musí byť stránka na vatican.va, ktorá ten patronát obsahuje (over to), a `by` s `year` vyplň len vtedy,
+  keď ich tá istá stránka uvádza. `card` je spoločný názov kartičky, keď sa má viac záznamov zlúčiť
+  (patróni Európy majú každý svoje znenie). Web je pre tri jazyky, takže patrón jednej diecézy jednej
+  krajiny sem nepatrí – patronáty slovenských diecéz tu boli a vypadli; národný patronát (Slovensko,
+  Francúzsko) ostáva, ten má väčšina krajín. Build spadne, keď deň neexistuje, chýba názov v jednom
   z jazykov, odkaz nie je zo Svätej stolice alebo pápež nie je v `POPES`. Patronáty z `facts.js` (Wikipédia)
-  sú na webe označené „podľa tradície“ a sú pod úradnými – nemiešaj ich.
-- Stránka patrónov: kategórie sú zoskupené do piatich tém (`THEMES` v `build.mjs`), každá je kartička
-  so všetkými menami, nie len s ukážkou – na detail netreba druhý klik. Rozloženie je viacstĺpcové
+  nemajú odkaz na dokument a web to pri nich hovorí – nemiešaj ich s úradnými.
+- Stránka patrónov: všetko je v jednej reči kartičiek pod jedným filtrom. Prvá téma sú úradné patronáty
+  z `patronaty.js` (`officialCards()`), za ňou päť tém kategórií z Wikipédie (`THEMES` v `build.mjs`).
+  Kartička má všetky mená, nie len ukážku – na detail netreba druhý klik. Rozloženie je viacstĺpcové
   (`.pgrid { columns }`), nie grid, lebo kartičky sú rôzne vysoké. `.pcard` ani `.ptheme` nesmú dostať
   vlastný `display`, ináč prestane fungovať atribút `hidden`, ktorým filter skrýva. Filter je
   `wirePatrons()` v `app.js`: porovnáva s `data-find` priamo v HTML, nič nesťahuje, a prázdnu tému

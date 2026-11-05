@@ -126,7 +126,7 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .more-src { font-size: .85em; color: var(--muted); }
 /* odkaz na dokument k úradnému patronátu: rovnaká ťuknuteľná výška ako ostatné odkazy v „Viac“ */
 /* inline-block, nie inline-flex: dlhý názov zdroja („Slowakische Bischofskonferenz“) sa musí dať zlomiť */
-.more dd a, .pat-off a { display: inline-block; min-height: 26px; color: var(--accent); }
+.more dd a, .pcard .pat a[rel] { display: inline-block; min-height: 26px; color: var(--accent); }
 .share { position: absolute; top: 0; right: 0; min-height: 26px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
 .share:hover { color: var(--ink); }
 .faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.8rem, 1.81vh, .96rem); font-style: italic; color: var(--muted); text-decoration: none; }
@@ -192,7 +192,8 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .pcard { break-inside: avoid; margin-bottom: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
 .pcard b { font-family: Marcellus, Georgia, serif; font-weight: 400; font-size: 1.02rem; color: var(--accent); }
 .pcard .pnum { float: right; font-size: .82rem; color: var(--muted); }
-.qnone { margin-top: 8px; color: var(--muted); }
+.qnone, .pnote { margin-top: 6px; color: var(--muted); }
+.pnote { font-size: .92rem; }
 .pat { columns: 2 14em; }
 .pcard .pat { columns: auto; margin: 2px 0 0; padding-left: 1.1em; line-height: 1.45; }
 .calendar .card, .prose .card { margin-top: 0; padding-bottom: 8px; }
@@ -203,8 +204,6 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .calendar h2, .prose h2, .prose h3 { font-family: Marcellus, Georgia, serif; font-weight: 400; color: var(--accent); }
 .prose h3 { font-size: 1.05rem; }
 /* úradné patronáty: riadok na svätého, aby sa zmestil pápež, rok aj odkaz na dokument */
-.pat-off { margin: 8px 0 4px; padding-left: 1.1em; }
-.pat-off li { margin-bottom: 6px; line-height: 1.35; }
 .calendar h2 { font-size: 1.1rem; }
 .calendar ol { list-style: none; padding: 0; margin-top: 8px; columns: 2 220px; column-gap: 28px; }
 .calendar li { break-inside: avoid; font-size: 1.01rem; line-height: 1.15; }
