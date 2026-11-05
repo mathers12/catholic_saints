@@ -27,6 +27,10 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   Francúzsko) ostáva, ten má väčšina krajín. Build spadne, keď deň neexistuje, chýba názov v jednom
   z jazykov, odkaz nie je zo Svätej stolice alebo pápež nie je v `POPES`. Patronáty z `facts.js` (Wikipédia)
   nemajú odkaz na dokument a web to pri nich hovorí – nemiešaj ich s úradnými.
+- Lišta hlavného menu je len na dennej stránke (): kalendár, patróni (od 768 px, nižšie sa
+  „Schutzpatrone“ vedľa „Heiligenkalender“ nezmestí) a „O stránke“ (len na počítači). Podstránky majú
+  namiesto nej krížik a navigáciu pod kartou, preto odkaz na patrónov v kalendári nesmie zmiznúť –
+  bez neho by sa tam na patrónov nedalo dostať.
 - Stránka patrónov: všetko je v jednej reči kartičiek pod jedným filtrom. Prvá téma sú úradné patronáty
   z `patronaty.js` (`officialCards()`), za ňou päť tém kategórií z Wikipédie (`THEMES` v `build.mjs`).
   Kartička má všetky mená, nie len ukážku – na detail netreba druhý klik. Rozloženie je viacstĺpcové

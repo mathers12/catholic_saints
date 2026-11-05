@@ -321,7 +321,7 @@ function dayView(lang, feast, home) {
   // než 500 px ale chodí ako originál z upload.wikimedia.org, a to je ďalší hostiteľ
   const imgHost = new URL(imgUrl(s.img, 500)).origin;
   const html = page({ lang, path, title, desc, alts, image: imgUrl(s.img, 1200), imageAlt: s.name, imgHost, jsonld, bodyAttrs, body: rel => `<main>
-<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
+<div class="top"><a class="brand" href="${rel}${homePath(lang)}">${u.site}</a><div class="links"><a class="cal-link" href="${rel}${calPath(lang)}">${u.cal}</a><a class="pat-link" href="${rel}${patPath(lang)}">${EXTRA[lang].patrons}</a><a class="about-link" href="${rel}${aboutPath(lang)}">${u.about}</a><select class="lang" id="lang" aria-label="Jazyk / Language / Sprache">${LANGS.map(l => `<option value="${l}" data-href="${rel}${alts[l]}"${l === lang ? " selected" : ""}>${l.toUpperCase()}</option>`).join("")}</select></div></div>
 ${card(s, `<a class="date" id="date" aria-haspopup="dialog" href="${rel}${calPath(lang)}" title="${esc(u.cal)}">${dt}</a>
 ${lang === "sk" && MENINY[feast] ? `<p class="nameday">${EXTRA.sk.nameday}: ${esc(MENINY[feast])}</p>` : ""}
 <p class="badge">${home ? u.badgeToday : u.badgeDay}</p>`, `<nav>
