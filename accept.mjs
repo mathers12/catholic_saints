@@ -58,7 +58,7 @@ await T("Navigácia: odkazy hore vedú na kalendár a O stránke", async () => {
 await T("Kalendár: ukazuje jeden aktuálny mesiac a dnešok je označený", async () => { await go(p, "/sk/kalendar/"); eq(await p.locator(".month:visible").count(), 1); ok(await p.locator(".mgrid:visible a.today").count() === 1, "dnešok"); });
 await T("Kalendár: záložka, ‹ › a klik na deň aj na meno", async () => { await go(p, "/sk/kalendar/"); await p.click('.mtabs a[href="#m3"]'); ok(/Marec/.test(await p.locator(".month:visible h2").innerText()), "marec"); await p.click(".month:visible .mnav a:last-child"); ok(/Apríl/.test(await p.locator(".month:visible h2").innerText()), "apríl"); await p.click(".month:visible .mgrid a >> nth=4"); await p.waitForURL("**" + dayUrl("sk", "04-05")); await go(p, "/sk/kalendar/#m1"); await p.click(".month:visible ol a >> nth=5"); await p.waitForURL("**" + dayUrl("sk", "01-06")); });
 await T("Kalendár: šípky prepínajú mesiac", async () => { await go(p, "/sk/kalendar/#m5"); await p.keyboard.press("ArrowRight"); await p.waitForTimeout(150); ok(/Jún/.test(await p.locator(".month:visible h2").innerText()), "jún"); });
-await T("Kalendár a O stránke: prepínač jazyka vedie na tú istú stránku", async () => { await go(p, "/sk/kalendar/"); await p.click('main > nav a[hreflang="en"]'); await p.waitForURL("**/en/calendar/"); await p.click('main > nav a[hreflang="de"]'); await p.waitForURL("**/de/kalender/"); await go(p, "/sk/o-stranke/"); await p.click('main > nav a[hreflang="de"]'); await p.waitForURL("**/de/ueber-uns/"); });
+await T("Kalendár a O stránke: prepínač jazyka vedie na tú istú stránku", async () => { await go(p, "/sk/kalendar/"); await p.selectOption("#lang", "en"); await p.waitForURL("**/en/calendar/"); await p.selectOption("#lang", "de"); await p.waitForURL("**/de/kalender/"); await go(p, "/sk/o-stranke/"); await p.selectOption("#lang", "de"); await p.waitForURL("**/de/ueber-uns/"); });
 await T("O stránke: rímskokatolícky text, pápež a oficiálne odkazy", async () => { await go(p, "/sk/o-stranke/"); const t = await p.locator("main").innerText(); ok(/rímskokatolícka/i.test(t) && /Levom XIV/.test(t), "text"); ok(/Nie je oficiálnou/.test(t), "odmietnutie"); eq(await p.locator('main li a[href^="https"]').count(), 3); });
 await T("404: stránka sa zobrazí so štýlom a odkazmi", async () => { const r = await p.goto(BASE + "/404.html"); ok(r.ok(), "status"); eq(await p.locator("h1").innerText(), "404"); eq(await p.locator("nav a").count(), 3); });
 await T("Scéna: fotka sa načíta a kríž je vrstva nad nocou aj tieňom", async () => { await go(p, dayUrl("sk", "11-04")); const r = await p.evaluate(() => { const k = [...document.querySelector(".move").children].map(e => e.className); const c = document.querySelector(".cross"); return { last: k.at(-1), clip: getComputedStyle(c).clipPath.startsWith("polygon"), bg: getComputedStyle(c).backgroundImage.includes("A_silhouette"), anim: document.querySelector(".dark").getAnimations().length > 0, blend: [...document.querySelectorAll(".scene *")].some(e => getComputedStyle(e).mixBlendMode !== "normal") }; }); eq(r.last, "photo cross"); ok(r.clip, "clip"); ok(r.bg, "foto"); ok(r.anim, "animácia"); ok(!r.blend, "blend-mode"); const ok2 = await p.evaluate(u => new Promise(res => { const i = new Image(); i.onload = () => res(i.naturalWidth); i.onerror = () => res(0); i.src = u; }), await p.evaluate(() => getComputedStyle(document.querySelector(".photo")).backgroundImage.slice(5, -2))); ok(ok2 > 0, "fotka sa nenačítala"); });
@@ -184,7 +184,7 @@ await T("Stránky: deň, kalendár, deň z kalendára a O stránke sa prepínaj�
   await q.keyboard.press("ArrowRight"); await q.waitForTimeout(150); ok(/#m\d+$/.test(q.url()), "šípka mení mesiac"); ok(await same(q), "mesiac");
   await q.locator(".month:visible li a").first().click(); await q.waitForFunction(() => document.body.className === "day"); ok(await same(q), "kalendár → deň"); eq(await q.locator("h1").count(), 1, "h1 dňa");
   await q.click(".about-link"); await q.waitForURL("**/sk/o-stranke/"); ok(await same(q), "deň → O stránke"); eq(await deadLinks(q), 0, "mŕtve odkazy O stránke");
-  await q.locator(".prose nav .btn").nth(1).click(); await q.waitForURL("**/sk/kalendar/"); ok(await same(q), "O stránke → kalendár");
+  await q.click(".cal-link"); await q.waitForURL("**/sk/kalendar/"); ok(await same(q), "O stránke → kalendár");
   await q.goBack(); await q.waitForFunction(() => /o-stranke/.test(location.pathname) && document.querySelector(".prose")); ok(await same(q), "Späť na O stránke");
   await q.goBack(); await q.waitForFunction(() => document.body.className === "day"); ok(await same(q), "Späť na deň"); await q.click("#date"); await q.waitForSelector("#cal[open]"); await q.keyboard.press("Escape");
   await q.locator("#lang").selectOption("de"); await q.waitForFunction(() => document.documentElement.lang === "de"); ok(await same(q), "zmena jazyka"); ok(/\/de\//.test(q.url()), "nemecká adresa");
@@ -241,7 +241,7 @@ await T("Patróni: stránka v troch jazykoch, kategórie a funkčné odkazy, je 
   const q = await mk();
   for (const u of ["/sk/patroni/", "/en/patrons/", "/de/schutzpatrone/"]) { await go(q, u); ok((await q.locator(".pcard").count()) >= 30, "kategórie " + u); eq(await q.locator("h1").count(), 1, "h1"); eq(await deadLinks(q), 0, "mŕtve odkazy " + u); }
   const sm = await (await q.request.get(BASE + "/sitemap.xml")).text(); ok(/patroni\//.test(sm) && /schutzpatrone\//.test(sm), "sitemap");
-  await go(q, "/sk/kalendar/"); await q.waitForTimeout(300); await mark(q); await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click(); await q.waitForURL("**/sk/patroni/"); ok(await same(q), "načítanie"); await q.context().close();
+  await go(q, "/sk/kalendar/"); await q.waitForTimeout(300); await mark(q); await q.click(".pat-link"); await q.waitForURL("**/sk/patroni/"); ok(await same(q), "načítanie"); await q.context().close();
 });
 await T("Meniny: po slovensky na dennej stránke, v iných jazykoch nie", async () => {
   const q = await mk(); await go(q, dayUrl("sk", "11-04")); ok(/Meniny: Karol/.test(await q.locator(".nameday").innerText()), "meniny"); await go(q, dayUrl("en", "11-04")); eq(await q.locator(".nameday").count(), 0, "EN"); await go(q, dayUrl("de", "11-04")); eq(await q.locator(".nameday").count(), 0, "DE"); await q.context().close();
@@ -251,7 +251,7 @@ await T("Zatvorenie: krížik a Esc vrátia na pôvodný deň aj po zmene mesiac
   await q.click(".cal-link"); await q.waitForURL("**/sk/kalendar/"); await q.waitForSelector("#close"); await q.click("#close"); await q.waitForURL("**" + dayUrl("sk", "11-05")); ok(await same(q), "krížik načítal stránku"); eq(await q.evaluate(() => document.body.dataset.feast), "11-05", "deň");
   await q.click(".about-link"); await q.waitForURL("**/sk/o-stranke/"); await q.waitForSelector(".prose"); await q.keyboard.press("Escape"); await q.waitForURL("**" + dayUrl("sk", "11-05")); ok(await same(q), "Esc načítalo stránku");
   await q.click(".cal-link"); await q.waitForURL("**/sk/kalendar/"); await q.waitForSelector(".mtabs"); await q.keyboard.press("ArrowRight"); await q.waitForTimeout(100); await q.locator(".mtabs a").nth(2).click(); await q.waitForTimeout(100);
-  await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click(); await q.waitForURL("**/sk/patroni/"); await q.waitForSelector(".prose"); await q.click("#close"); await q.waitForURL("**" + dayUrl("sk", "11-05")); ok(await same(q), "z patrónov"); await q.context().close();
+  await q.click(".pat-link"); await q.waitForURL("**/sk/patroni/"); await q.waitForSelector(".prose"); await q.click("#close"); await q.waitForURL("**" + dayUrl("sk", "11-05")); ok(await same(q), "z patrónov"); await q.context().close();
   const d = await mk(); await go(d, "/sk/o-stranke/"); await d.waitForTimeout(300); await d.click("#close"); await d.waitForFunction(() => document.body.dataset.home === "1"); await d.context().close();
   const r = await mk(); await go(r, dayUrl("sk", "11-05")); await r.waitForTimeout(200); await r.goto(BASE + "/sk/kalendar/", { referer: BASE + dayUrl("sk", "11-05") }); await r.waitForTimeout(200); ok((await r.getAttribute("#close", "href")).endsWith(dayUrl("sk", "11-05")), "návrat po obyčajnom načítaní"); await r.context().close();
   const n = await mk({ javaScriptEnabled: false }); await go(n, "/sk/kalendar/"); await n.click("#close"); await n.waitForLoadState("load"); ok(await n.locator("#date").count(), "bez JS domovská"); await n.context().close();
@@ -446,6 +446,24 @@ await T("Menu: na mobile lišta nie je a z kalendára sa na patrónov dá dosta�
   await go(q, "/sk/kalendar/");
   await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click();
   await q.waitForURL("**/sk/patroni/");
+  await q.context().close();
+});
+await T("Menu: lišta je na každej stránke a aktuálna položka nie je odkaz", async () => {
+  const q = await mk({ viewport: { width: 1366, height: 768 } });
+  for (const [u, tu] of [[dayUrl("sk", "11-04"), ""], ["/sk/kalendar/", "Kalendár svätých"], ["/sk/patroni/", "Patróni"], ["/sk/o-stranke/", "O stránke"]]) {
+    await go(q, u);
+    const r = await q.evaluate(() => ({
+      polozky: [...document.querySelectorAll(".links a, .links .here")].map(e => e.textContent),
+      tu: [...document.querySelectorAll(".links .here")].map(e => e.textContent).join(""),
+      prepinac: !!document.getElementById("lang"),
+      dvakrat: [...document.querySelectorAll("main > nav .btn")].filter(b => b.offsetParent !== null)
+        .map(b => b.textContent).filter(t => [...document.querySelectorAll(".links a")].some(a => a.textContent === t)),
+    }));
+    eq(r.polozky.join(" · "), "Kalendár svätých · Patróni · O stránke", u);
+    eq(r.tu, tu, u + ": aktuálna položka");
+    ok(r.prepinac, u + ": prepínač jazyka");
+    eq(r.dvakrat.length, 0, u + ": ten istý odkaz je aj pod kartou: " + r.dvakrat.join(", "));
+  }
   await q.context().close();
 });
 await b.close();
