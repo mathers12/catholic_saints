@@ -239,7 +239,7 @@ await T("Hľadanie: meno bez diakritiky aj patrón, výsledok vedie na deň bez 
 });
 await T("Patróni: stránka v troch jazykoch, kategórie a funkčné odkazy, je v sitemape", async () => {
   const q = await mk();
-  for (const u of ["/sk/patroni/", "/en/patrons/", "/de/schutzpatrone/"]) { await go(q, u); ok((await q.locator(".prose h3").count()) >= 10, "kategórie " + u); eq(await q.locator("h1").count(), 1, "h1"); eq(await deadLinks(q), 0, "mŕtve odkazy " + u); }
+  for (const u of ["/sk/patroni/", "/en/patrons/", "/de/schutzpatrone/"]) { await go(q, u); ok((await q.locator(".pcard").count()) >= 30, "kategórie " + u); eq(await q.locator("h1").count(), 1, "h1"); eq(await deadLinks(q), 0, "mŕtve odkazy " + u); }
   const sm = await (await q.request.get(BASE + "/sitemap.xml")).text(); ok(/patroni\//.test(sm) && /schutzpatrone\//.test(sm), "sitemap");
   await go(q, "/sk/kalendar/"); await q.waitForTimeout(300); await mark(q); await q.locator(".calendar > nav .btn", { hasText: "Patróni" }).click(); await q.waitForURL("**/sk/patroni/"); ok(await same(q), "načítanie"); await q.context().close();
 });
@@ -377,6 +377,50 @@ await T("Úradný patronát: stránka patrónov má úradné pred tradíciou a b
   ok(r.pocet >= 15, "záznamov je len " + r.pocet);
   eq(r.cudzie.length, 0, "cudzie zdroje: " + r.cudzie.join(" "));
   ok(/Úradne/.test(r.nadpisy[0]) && /tradície/.test(r.nadpisy[1]), "poradie: " + r.nadpisy.join(" | "));
+});
+await T("Patróni: kategórie sú v témach a každá je práve raz", async () => {
+  await go(p, "/sk/patroni/");
+  const r = await p.evaluate(() => {
+    const cards = [...document.querySelectorAll(".pcard")];
+    const mena = cards.map(c => c.querySelector("b").textContent);
+    return { tem: document.querySelectorAll(".ptheme").length, kariet: cards.length, unikatnych: new Set(mena).size,
+      bezMien: cards.filter(c => !c.querySelector(".pat a")).length,
+      prazdneTemy: [...document.querySelectorAll(".ptheme")].filter(t => !t.querySelector(".pcard")).length };
+  });
+  ok(r.tem >= 4, "tém " + r.tem);
+  ok(r.kariet >= 30, "kartičiek " + r.kariet);
+  eq(r.unikatnych, r.kariet, "kategória je dvakrát");
+  eq(r.bezMien, 0, "kartička bez mien");
+  eq(r.prazdneTemy, 0, "prázdna téma");
+});
+await T("Patróni: filter skryje, čo nesedí, prázdnu tému aj schová a vráti sa späť", async () => {
+  await go(p, "/sk/patroni/");
+  const stav = () => p.evaluate(() => ({
+    karty: [...document.querySelectorAll(".pcard")].filter(c => !c.hidden).map(c => c.querySelector("b").textContent),
+    temy: [...document.querySelectorAll(".ptheme")].filter(t => !t.hidden).length,
+    hlaska: !document.getElementById("pqnone").hidden }));
+  await p.fill("#pq", "chor");
+  let s = await stav(); eq(s.karty.join(","), "chorí", "po „chor“"); eq(s.temy, 1, "tém");
+  await p.fill("#pq", "agata");
+  s = await stav(); ok(s.karty.length >= 2 && s.karty.includes("zdravotné sestry"), "bez diakritiky: " + s.karty.join(","));
+  await p.fill("#pq", "xyzxyz");
+  s = await stav(); eq(s.karty.length, 0, "nič nesedí"); ok(s.hlaska, "hláška chýba");
+  await p.fill("#pq", "");
+  s = await stav(); ok(s.karty.length >= 30, "po vymazaní " + s.karty.length); ok(!s.hlaska, "hláška ostala");
+  await p.waitForFunction(() => !location.search);
+});
+await T("Patróni: dopyt z adresy filtruje hneď a bez JavaScriptu je políčko skryté", async () => {
+  const q = await mk();
+  await go(q, "/sk/patroni/?q=chor");
+  await q.waitForFunction(() => document.querySelectorAll(".pcard:not([hidden])").length === 1);
+  eq(await q.inputValue("#pq"), "chor", "predvyplnené");
+  await q.context().close();
+  const n = await mk({ javaScriptEnabled: false });
+  await go(n, "/sk/patroni/");
+  ok(await n.locator("#pq").isHidden(), "políčko bez JS");
+  ok((await n.locator(".pcard").count()) >= 30, "kategórie bez JS");
+  ok((await n.locator(".pcard .pat a").count()) >= 150, "mená bez JS");
+  await n.context().close();
 });
 await b.close();
 server.close();

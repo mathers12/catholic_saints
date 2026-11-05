@@ -93,6 +93,8 @@ const patPath = lang => `${lang}/${EXTRA[lang].patSlug}/`;
 // a značku už nepodporuje, ale je to platná schema.org a ostatné čítačky JSON-LD ju čítajú.
 const searchTarget = lang => `${SITE}${calPath(lang)}?q={search_term_string}`;
 
+// text na porovnávanie vo filtri: malé písmená bez diakritiky, rovnako ako plain() v app.js
+const plain = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 // Priamo sa dá odkazať len na tieto šírky thumbnailov, iné Commons odmietne so 400:
 // https://www.mediawiki.org/wiki/Common_thumbnail_sizes
@@ -129,19 +131,19 @@ const { PATRONATY, POPES } = load("patronaty.js");
 const LANG_I = { sk: 0, en: 1, de: 2 };
 const YEAR = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
 const EXTRA = {
-  sk: { kbs: "Liturgický kalendár KBS", more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
+  sk: { filter: "Hľadať patronát alebo meno", kbs: "Liturgický kalendár KBS", more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
     patrons: "Patróni", patSlug: "patroni", patIntro: "Svätí podľa toho, koho majú pod ochranou: najprv patronáty vyhlásené Cirkvou s odkazom na dokument, potom tie z tradície.",
     official: "Úradný patronát", officialH: "Úradne vyhlásené patronáty", holySee: "Svätá stolica",
     officialIntro: "Patronáty, ktoré vyhlásil pápež alebo ich uvádza Svätá stolica. Pri každom je odkaz na dokument. Súhrnný oficiálny zoznam patrónov neexistuje, preto je tento krátky.",
     traditionH: "Patróni podľa tradície", traditionIntro: "Vychádza z údajov anglickej Wikipédie: zoznam nie je úplný a nie sú to úradné vyhlásenia.",
     search: "Hľadať meno alebo patróna", none: "Nič sa nenašlo." },
-  en: { kbs: "Slovak Bishops' Conference", more: "More", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
+  en: { filter: "Search a patronage or name", kbs: "Slovak Bishops' Conference", more: "More", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
     patrons: "Patron saints", patSlug: "patrons", patIntro: "Saints by those they watch over: first the patronages declared by the Church, with a link to the document, then those from tradition.",
     official: "Official patronage", officialH: "Officially declared patronages", holySee: "Holy See",
     officialIntro: "Patronages declared by a Pope or stated by the Holy See. Each one links to the document. No comprehensive official list of patron saints exists, which is why this one is short.",
     traditionH: "Patrons by tradition", traditionIntro: "Based on English Wikipedia data: the list is not complete and these are not official declarations.",
     search: "Search a name or patronage", none: "Nothing found." },
-  de: { kbs: "Slowakische Bischofskonferenz", more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
+  de: { filter: "Patronat oder Name suchen", kbs: "Slowakische Bischofskonferenz", more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
     patrons: "Schutzpatrone", patSlug: "schutzpatrone", patIntro: "Heilige danach, wen sie beschützen: zuerst die von der Kirche erklärten Patronate mit Link zum Dokument, dann die aus der Überlieferung.",
     official: "Amtliches Patronat", officialH: "Amtlich erklärte Patronate", holySee: "Heiliger Stuhl",
     officialIntro: "Patronate, die ein Papst erklärt hat oder die der Heilige Stuhl nennt. Zu jedem gibt es den Link zum Dokument. Eine vollständige amtliche Liste der Schutzpatrone gibt es nicht, darum ist diese kurz.",
@@ -412,11 +414,45 @@ ${a.parts.map(([h, ps]) => `<h2>${h}</h2>\n${ps.map(p => `<p>${esc(p)}</p>`).joi
   return path;
 }
 
+// Kategórie patrónov sú zoskupené do piatich tém, ináč je to 32 nadpisov za sebou a abeceda
+// nič nehovorí („mäsiari“ vedľa „misionárov“). Poradie tém je zámerné: najprv remeslá, ktoré
+// hľadá najviac ľudí, hneď po nich núdza. Nová kategória v tools/facts.mjs sem musí pribudnúť
+// tiež – build spadne, kým nie je zaradená, aby sa nestratila.
+const THEMES = [
+  [["Remeslá a povolania", "Trades and professions", "Handwerk und Berufe"],
+    ["bakers", "butchers", "brewers", "fishermen", "farmers", "gardeners", "builders", "sailors",
+     "physicians", "pharmacists", "nurses", "lawyers", "teachers", "artists", "musicians", "writers", "shepherds"]],
+  [["Keď je ťažko", "In hard times", "In schweren Zeiten"],
+    ["sick", "dying", "prisoners", "poor", "orphans"]],
+  [["Rodina a stav života", "Family and state of life", "Familie und Lebensstand"],
+    ["mothers", "widows", "students"]],
+  [["Cirkev a služba", "Church and ministry", "Kirche und Dienst"],
+    ["missionaries", "preachers", "confessors", "theologians"]],
+  [["Cesta a ochrana", "Travel and protection", "Unterwegs und Schutz"],
+    ["travelers", "soldiers", "animals"]],
+];
+{
+  const placed = THEMES.flatMap(t => t[1]);
+  const dup = placed.filter((k, i) => placed.indexOf(k) !== i);
+  if (dup.length) throw new Error(`kategória patrónov je v dvoch témach: ${dup.join(", ")}`);
+  for (const k of placed) if (!PATRON_NAMES[k]) throw new Error(`téma odkazuje na neznámu kategóriu ${k}`);
+  const missing = Object.keys(PATRON_NAMES).filter(k => !placed.includes(k) && FEASTS.some(f => FACTS[f] && FACTS[f].patron.includes(k)));
+  if (missing.length) throw new Error(`kategória patrónov nie je v žiadnej téme: ${missing.join(", ")}`);
+}
+
 // stránka patrónov: kategórie a svätí s odkazom na ich deň
 function patronsPage(lang) {
   const u = UI[lang], x = EXTRA[lang], path = patPath(lang), title = fitTitle(x.patrons);
   const alts = Object.fromEntries(LANGS.map(l => [l, patPath(l)])); alts["x-default"] = patPath("en");
-  const groups = Object.keys(PATRON_NAMES).map(k => [PATRON_NAMES[k][LANG_I[lang]], FEASTS.filter(f => FACTS[f] && FACTS[f].patron.includes(k))]).filter(g => g[1].length).sort((a, b) => a[0].localeCompare(b[0], lang));
+  // kartička = jedna kategória aj so všetkými menami, nie len ukážka: na detail netreba druhý klik
+  const card_ = (k, rel) => {
+    const name = PATRON_NAMES[k][LANG_I[lang]], fs_ = FEASTS.filter(f => FACTS[f] && FACTS[f].patron.includes(k));
+    if (!fs_.length) return "";
+    return `<div class="pcard" id="pat-${k}" data-find="${esc(plain(name + " " + fs_.map(f => saint(lang, byFeast[f]).name).join(" ")))}">`
+      + `<b>${esc(name)}</b><span class="pnum">${fs_.length}</span>`
+      + `<ul class="pat">${fs_.map(f => `<li><a href="${rel}${dayPath(lang, f)}">${esc(saint(lang, byFeast[f]).name)}</a></li>`).join("")}</ul></div>`;
+  };
+  const groups = rel => THEMES.map(([names, keys]) => [names[LANG_I[lang]], keys.map(k => card_(k, rel)).filter(Boolean)]).filter(g => g[1].length);
   out(path, page({ lang, path, title, desc: x.patIntro, alts, image: imgUrl(SAINTS[0].img, 1200),
     jsonld: { "@context": "https://schema.org", "@graph": [
       { "@type": "CollectionPage", name: title, url: SITE + path, inLanguage: lang, description: x.patIntro,
@@ -433,7 +469,9 @@ function patronsPage(lang) {
   `<li><a href="${rel}${dayPath(lang, f)}">${esc(saint(lang, byFeast[f]).name)}</a> – ${o}</li>`).join("")).join("")}</ul>
 <h2>${x.traditionH}</h2>
 <p>${x.traditionIntro}</p>
-${groups.map(([name, fs_]) => `<h3>${esc(name)}</h3>\n<ul class="pat">${fs_.map(f => `<li><a href="${rel}${dayPath(lang, f)}">${esc(saint(lang, byFeast[f]).name)}</a></li>`).join("")}</ul>`).join("\n")}
+<input type="search" class="q" id="pq" hidden placeholder="${esc(x.filter)}" aria-label="${esc(x.filter)}" data-none="${esc(x.none)}">
+<p class="qnone" id="pqnone" hidden>${esc(x.none)}</p>
+${groups(rel).map(([name, cards]) => `<section class="ptheme"><h3>${esc(name)}</h3>\n<div class="pgrid">${cards.join("")}</div></section>`).join("\n")}
 </article>
 <nav><a class="btn" href="${rel}${homePath(lang)}">${u.today}</a><a class="btn" href="${rel}${calPath(lang)}">${u.cal}</a><a class="btn" href="${rel}${aboutPath(lang)}">${u.about}</a>${LANGS.map(l => l === lang ? `<span class="btn on">${l.toUpperCase()}</span>`
   : `<a class="btn" hreflang="${l}" href="${rel}${patPath(l)}" title="${EXTRA[l].patrons}">${l.toUpperCase()}</a>`).join("")}</nav>

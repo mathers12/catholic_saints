@@ -184,7 +184,17 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .calendar .qres { columns: auto; list-style: none; padding: 0; overflow-y: auto; }
 .calendar .qres .d { min-width: 3.4em; }
 .qres small { display: block; color: var(--muted); font-size: .85em; }
+/* Patróni podľa tradície: kategórie zoskupené do tém, každá ako kartička so všetkými menami.
+   Viacstĺpcové rozloženie, nie grid: kartičky sú rôzne vysoké a takto sa poskladajú bez dier.
+   .pcard ani .ptheme nemajú vlastný display, aby fungoval atribút hidden (filter). */
+.pgrid { columns: 3 15em; column-gap: 10px; }
+.ptheme { margin-bottom: 10px; }
+.pcard { break-inside: avoid; margin-bottom: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.pcard b { font-family: Marcellus, Georgia, serif; font-weight: 400; font-size: 1.02rem; color: var(--accent); }
+.pcard .pnum { float: right; font-size: .82rem; color: var(--muted); }
+.qnone { margin-top: 8px; color: var(--muted); }
 .pat { columns: 2 14em; }
+.pcard .pat { columns: auto; margin: 2px 0 0; padding-left: 1.1em; line-height: 1.45; }
 .calendar .card, .prose .card { margin-top: 0; padding-bottom: 8px; }
 .calendar > nav, .prose > nav { padding: 2px var(--pad) 4px; background: var(--night); border-top: 1px solid var(--line); gap: 0 12px; }
 .calendar h1, .prose h1 { margin: 0 0 4px; font-size: clamp(1.2rem, 3.3vh, 2rem); }

@@ -23,7 +23,7 @@ const LANGS = ["sk", "en", "de"];
 const HOLY_SEE = /^https:\/\/(www\.vatican\.va|([a-z]+\.)?kbs\.sk)[/?]/;
 const bad = [];
 let stubs = 0, searchActions = 0;
-const offCounts = [];
+const offCounts = [], catCounts = [];
 const fail = (what, where) => bad.push(`${what}: ${where}`);
 const one = (h, re) => (h.match(re) || [])[1] || "";
 const urlOf = f => site + f.replace(`${OUT}/`, "").replace(/index\.html$/, "");
@@ -97,6 +97,13 @@ for (const f of html) {
 
   // Úradné patronáty na stránke patrónov: každý odkaz musí viesť na Svätú stolicu a otvárať sa
   // bezpečne. Cudzí odkaz by znamenal, že sa do dát dostal zdroj, ktorý nič neúraduje.
+  // kategórie patrónov: rovnako veľa vo všetkých jazykoch a žiadna téma nesmie ostať prázdna
+  const cards = (h.match(/<div class="pcard"/g) || []).length;
+  if (cards) {
+    catCounts.push(cards);
+    for (const m of h.matchAll(/<section class="ptheme">([\s\S]*?)<\/section>/g))
+      if (!/<div class="pcard"/.test(m[1])) fail("téma patrónov bez kategórie", rel);
+  }
   const offList = one(h, /<ul class="pat-off">([\s\S]*?)<\/ul>/);
   if (offList) {
     offCounts.push((offList.match(/<li>/g) || []).length);
@@ -141,6 +148,9 @@ for (const lang of LANGS) {
 // každý jazyk musí mať tie isté úradné patronáty; rozdielny počet znamená, že jeden o dáta prišiel
 if (offCounts.length !== LANGS.length || new Set(offCounts).size !== 1 || !offCounts[0])
   fail(`úradné patronáty: na stránkach patrónov ${offCounts.join("/") || "0"} záznamov`, "patróni");
+
+if (catCounts.length !== LANGS.length || new Set(catCounts).size !== 1 || !catCounts[0])
+  fail(`kategórie patrónov: na stránkach patrónov ${catCounts.join("/") || "0"} kartičiek`, "patróni");
 
 // SearchAction patrí na domovskú stránku každého jazyka; keby chýbala, nikto by sa nedozvedel,
 // že hľadanie berie dopyt z adresy
