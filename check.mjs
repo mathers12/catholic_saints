@@ -105,6 +105,8 @@ for (const [w, h] of SIZES) {
       const name = el => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "");
       for (const el of document.querySelectorAll("main *, dialog *")) {
         if (el.closest(".mtabs")) continue;              // zámerne posuvné do strán
+        // obsah zatvoreného <details> prehliadač rozloží (content-visibility), ale nevidno ho a nedá sa naň ťuknúť
+        if (el.closest("details:not([open])") && !el.closest("summary")) continue;
         const b = el.getBoundingClientRect();
         if (!b.width && !b.height) continue;
         if (b.right > W + 1 || b.left < -1) out.over.push(`${name(el)} [${Math.round(b.left)},${Math.round(b.right)}]`);
@@ -159,7 +161,7 @@ for (const [w, h] of SIZES) {
     const sp = await ctx.newPage(), LONG = ["01-28", "10-04", "11-11", "11-30"]; // 11-11 má najdlhší úradný patronát
     const scan = min => {
       const d = document.documentElement, W = d.clientWidth, over = [], tiny = [];
-      for (const el of document.querySelectorAll(".more *, .share, .q, .qres *")) {
+      for (const el of document.querySelectorAll(".more *, .think *, .jubilee, .share, .q, .qres *")) {
         const b = el.getBoundingClientRect();
         if (!b.width && !b.height) continue;
         if (b.right > W + 1 || b.left < -1) over.push(el.tagName + " " + Math.round(b.right));
@@ -176,7 +178,7 @@ for (const [w, h] of SIZES) {
     for (const l of LANGS) {
       for (const f of LONG) {
         await sp.goto(BASE + dayUrl(l, f), { waitUntil: "domcontentloaded" });
-        await sp.evaluate(() => document.querySelector(".more").open = true);
+        await sp.evaluate(() => document.querySelectorAll(".more, .think").forEach(d => d.open = true));
         await sp.waitForTimeout(60);
         judge(`${w}×${h} ${dayUrl(l, f)} Viac`, await sp.evaluate(scan, MIN_TAP));
       }
@@ -202,6 +204,8 @@ for (const [w, h] of SIZES) {
         const name = el => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "");
         for (const el of document.querySelectorAll("main *")) {
           if (el.closest(".mtabs")) continue;
+          // obsah zatvoreného <details> prehliadač rozloží (content-visibility), ale nevidno ho a nedá sa naň ťuknúť
+          if (el.closest("details:not([open])") && !el.closest("summary")) continue;
           const b = el.getBoundingClientRect();
           if (!b.width && !b.height) continue;
           if (b.right > W + 1 || b.left < -1) out.over.push(`${name(el)} [${Math.round(b.left)},${Math.round(b.right)}]`);

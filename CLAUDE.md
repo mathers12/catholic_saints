@@ -27,6 +27,17 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   Francúzsko) ostáva, ten má väčšina krajín. Build spadne, keď deň neexistuje, chýba názov v jednom
   z jazykov, odkaz nie je zo Svätej stolice alebo pápež nie je v `POPES`. Patronáty z `facts.js` (Wikipédia)
   nemajú odkaz na dokument a web to pri nich hovorí – nemiešaj ich s úradnými.
+- `roky.js` = rok, ktorý pápež vyhlásil na počesť svätého (Rok sv. Františka 10. 1. 2026 – 10. 1. 2027),
+  **vedie sa ručne** a platí preň to isté čo pre `patronaty.js`: `url` je stránka na vatican.va, ktorá ten
+  rok vyhlasuje, a dátumy aj pápež (`by`, kľúč z `POPES`) sú z nej. Denná stránka ho ukáže pod navigáciou
+  vedľa „Rímskokatolícka stránka“ (`jubilee()` v `build.mjs`, `.foot` v CSS) len v dňoch, keď platí – build
+  beží každú noc, takže po skončení zmizne sám. Názov drž krátky, na mobile stojí v jednom riadku.
+- `zamyslenia.js` = krátke zamyslenie („malá kázeň“) na každý deň, `deň -> [sk, en, de]`, 3–4 vety.
+  Vychádza len z citátu a príbehu toho dňa v `saints.js`: žiadne nové životopisné fakty ani citáty,
+  končí jednou konkrétnou vecou na dnes. Nie je to výklad liturgických čítaní – tie sa menia podľa roka
+  a web je viazaný na dátum. Na dennej stránke je to zatvorený blok `.think` vedľa „Viac“ (`.extra` je
+  flex, otvorený blok si zoberie celý riadok), aby sa stránka stále zmestila na jednu obrazovku. Pri
+  zmene záznamu v `saints.js` uprav aj zamyslenie. Build spadne, keď deň nemá text v troch jazykoch.
 - Lišta hlavného menu (`menu()` v `build.mjs`) je na každej stránke rovnaká: kalendár, patróni,
   „O stránke“ a prepínač jazyka; na podstránkach ešte krížik. Stránka, na ktorej práve si, nie je
   odkaz, ale `.here` s `aria-current`. Na užších displejoch sa časť odkazov nezmestí a CSS ich

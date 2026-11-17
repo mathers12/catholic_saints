@@ -26,6 +26,7 @@ window.POPES = {
   pius12: ["Pius XII.", "Pius XII", "Pius XII."],
   paul6: ["Pavol VI.", "Paul VI", "Paul VI."],
   jp2: ["Ján Pavol II.", "John Paul II", "Johannes Paul II."],
+  leo14: ["Lev XIV.", "Leo XIV", "Leo XIV."],
 };
 
 // deň -> [{ what: [sk, en, de], by: kľúč do POPES alebo null, year: rok alebo null,

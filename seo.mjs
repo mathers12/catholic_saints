@@ -138,6 +138,7 @@ for (const f of html) {
 for (const l of locs) if (!exists(`${OUT}/${l.slice(site.length)}`)) fail("sitemap ukazuje na neexistujúcu stránku", l);
 // Stará adresa dňa (/sk/11-04/) musí presmerovať na novú, ináč sa stratia existujúce odkazy
 // aj to, čo má Google v indexe. Slug berieme z names.json, odtiaľ ho berie aj app.js.
+const jubilees = new Set();
 for (const lang of LANGS) {
   const names = JSON.parse(fs.readFileSync(`${OUT}/${lang}/names.json`, "utf8"));
   for (const feast of Object.keys(names)) {
@@ -147,8 +148,17 @@ for (const lang of LANGS) {
     const h = fs.readFileSync(`${OUT}/${old}index.html`, "utf8");
     const want = `${site}${lang}/${slug}/`;
     if (one(h, /rel="canonical" href="(.*?)"/) !== want) fail(`presmerovanie nevedie na ${want}`, old);
+    // Denná stránka: zamyslenie je v HTML (zatvorené, ale pre čítačky aj bez JS), a rok svätého,
+    // ak nejaký platí, vedie na dokument Svätej stolice a hovorí, kto ho vyhlásil a dokedy.
+    const day = fs.readFileSync(`${OUT}/${lang}/${slug}/index.html`, "utf8");
+    const think = one(day, /<details class="think"><summary>[^<]+<\/summary><p>([^<]*)<\/p>/) || "";
+    if (think.trim().split(/\s+/).length < 30) fail("zamyslenie chýba alebo je prikrátke", `${lang}/${slug}/`);
+    const jub = /<a class="jubilee" href="([^"]*)"[^>]*title="([^"]*)"/.exec(day);
+    jubilees.add(jub ? jub[1] : "");
+    if (jub && (!/^https:\/\/www\.vatican\.va\//.test(jub[1]) || !/\d{4}/.test(jub[2]))) fail("rok svätého bez odkazu na Svätú stolicu alebo bez dátumov", `${lang}/${slug}/`);
   }
 }
+if (jubilees.size !== 1) fail("rok svätého nie je na všetkých denných stránkach rovnaký", [...jubilees].join(" | "));
 
 for (const lang of LANGS) {
   const used = anchorsUsed.get(lang) || new Set(), have = anchorsHave.get(lang) || new Set();

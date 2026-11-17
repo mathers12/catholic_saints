@@ -129,21 +129,23 @@ const { FACTS, PATRON_NAMES } = load("facts.js"), MENINY = load("meniny.js").MEN
 // úradne vyhlásené patronáty (ručne vedené, viď hlavičku patronaty.js)
 const { PATRONATY, POPES } = load("patronaty.js");
 const LANG_I = { sk: 0, en: 1, de: 2 };
+// rok vyhlásený pápežom na počesť svätého (ručne vedené, viď hlavičku roky.js) a zamyslenia na každý deň
+const ROKY = load("roky.js").ROKY, ZAMYSLENIA = load("zamyslenia.js").ZAMYSLENIA;
 const YEAR = Number(new Intl.DateTimeFormat("en", { timeZone: "Europe/Bratislava", year: "numeric" }).format(new Date())); // pregeneruje sa každú noc
 const EXTRA = {
-  sk: { filter: "Hľadať patronát alebo meno", more: "Viac", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
+  sk: { filter: "Hľadať patronát alebo meno", more: "Viac", think: "Zamyslenie", share: "Zdieľať", copied: "Odkaz skopírovaný", patron: "Patrón (podľa tradície)", born: "Narodenie", died: "Úmrtie", bio: "Životopis na Wikipédii", readings: "Čítania na tento deň", src: "Údaje: Wikipédia a Wikidata.", nameday: "Meniny",
     patrons: "Patróni", patSlug: "patroni", patIntro: "Svätí podľa toho, koho majú pod ochranou: najprv patronáty vyhlásené Cirkvou s odkazom na dokument, potom tie z tradície.",
     official: "Úradný patronát", officialH: "Úradne vyhlásené patronáty", holySee: "Svätá stolica",
     officialIntro: "Patronáty, ktoré vyhlásil pápež alebo ich uvádza Svätá stolica. Pri každom je odkaz na dokument. Súhrnný oficiálny zoznam patrónov neexistuje, preto je tento krátky.",
     traditionIntro: "Patronáty bez odkazu na dokument vychádzajú z anglickej Wikipédie: zoznam nie je úplný a nie sú to úradné vyhlásenia.",
     search: "Hľadať meno alebo patróna", none: "Nič sa nenašlo." },
-  en: { filter: "Search a patronage or name", more: "More", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
+  en: { filter: "Search a patronage or name", more: "More", think: "Reflection", share: "Share", copied: "Link copied", patron: "Patron of (by tradition)", born: "Born", died: "Died", bio: "Biography on Wikipedia", readings: "Readings for this day", src: "Data: Wikipedia and Wikidata.", nameday: "",
     patrons: "Patron saints", patSlug: "patrons", patIntro: "Saints by those they watch over: first the patronages declared by the Church, with a link to the document, then those from tradition.",
     official: "Official patronage", officialH: "Officially declared patronages", holySee: "Holy See",
     officialIntro: "Patronages declared by a Pope or stated by the Holy See. Each one links to the document. No comprehensive official list of patron saints exists, which is why this one is short.",
     traditionIntro: "Patronages without a link to a document come from English Wikipedia: the list is not complete and these are not official declarations.",
     search: "Search a name or patronage", none: "Nothing found." },
-  de: { filter: "Patronat oder Name suchen", more: "Mehr", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
+  de: { filter: "Patronat oder Name suchen", more: "Mehr", think: "Betrachtung", share: "Teilen", copied: "Link kopiert", patron: "Patron (nach Überlieferung)", born: "Geboren", died: "Gestorben", bio: "Biografie auf Wikipedia", readings: "Lesungen für diesen Tag", src: "Daten: Wikipedia und Wikidata.", nameday: "",
     patrons: "Schutzpatrone", patSlug: "schutzpatrone", patIntro: "Heilige danach, wen sie beschützen: zuerst die von der Kirche erklärten Patronate mit Link zum Dokument, dann die aus der Überlieferung.",
     official: "Amtliches Patronat", officialH: "Amtlich erklärte Patronate", holySee: "Heiliger Stuhl",
     officialIntro: "Patronate, die ein Papst erklärt hat oder die der Heilige Stuhl nennt. Zu jedem gibt es den Link zum Dokument. Eine vollständige amtliche Liste der Schutzpatrone gibt es nicht, darum ist diese kurz.",
@@ -219,7 +221,7 @@ function moreBlock(lang, rel, feast, shareText) {
     + [[x.born, (f.born || {})[lang]], [x.died, (f.died || {})[lang]]].filter(r => r[1]).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
   const rows = (off.length ? `<dt>${x.official}</dt><dd>${off.join("<br>")}</dd>` : "") + trad;
   const links = [wl && `<a href="${wikiUrl(wl, wiki[wl])}" rel="noopener">${x.bio}${wl !== lang ? " (EN)" : ""} ↗</a>`, rd && `<a href="${rd}" rel="noopener">${x.readings} ↗</a>`].filter(Boolean).join("");
-  return `<div class="extra"><details class="more"><summary>${x.more}</summary>${rows ? `<dl>${rows}</dl>` : ""}<p class="more-links">${links}</p>${trad || wl ? `<p class="more-src">${x.src}</p>` : ""}</details><button type="button" class="share" id="share" hidden data-text="${esc(shareText)}" data-done="${x.copied}">${x.share}</button></div>`;
+  return `<div class="extra"><details class="think"><summary>${x.think}</summary><p>${esc(ZAMYSLENIA[feast][LANG_I[lang]])}</p></details><details class="more"><summary>${x.more}</summary>${rows ? `<dl>${rows}</dl>` : ""}<p class="more-links">${links}</p>${trad || wl ? `<p class="more-src">${x.src}</p>` : ""}</details><button type="button" class="share" id="share" hidden data-text="${esc(shareText)}" data-done="${x.copied}">${x.share}</button></div>`;
 }
 
 // Lišta hlavného menu je na každej stránke rovnaká. Odkaz na stránku, na ktorej práve si, nie je
@@ -313,6 +315,22 @@ for (const [f, list] of Object.entries(PATRONATY)) {
   }
 }
 const todayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bratislava", month: "2-digit", day: "2-digit" }).format(new Date());
+// Zamyslenie má každý deň v každom jazyku, ináč by denná stránka mala prázdny rozbaľovací blok.
+for (const f of FEASTS) if (!Array.isArray(ZAMYSLENIA[f]) || ZAMYSLENIA[f].length !== 3 || ZAMYSLENIA[f].some(t => !t || !t.trim())) throw new Error(`zamyslenia.js: deň ${f} nemá text v troch jazykoch`);
+for (const f of Object.keys(ZAMYSLENIA)) if (!byFeast[f]) throw new Error(`zamyslenia.js: deň ${f} v saints.js nie je`);
+// Rok svätého je úradné tvrdenie ako patronát: bez dokumentu Svätej stolice, pápeža a dátumov sem nepatrí.
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+for (const r of ROKY) {
+  if (!HOLY_SEE.test(r.url)) throw new Error(`roky.js: ${r.name[0]} nemá odkaz na Svätú stolicu (${r.url})`);
+  if (!POPES[r.by]) throw new Error(`roky.js: ${r.name[0]} má neznámeho pápeža ${r.by}`);
+  if (!ISO.test(r.from) || !ISO.test(r.to) || r.from > r.to) throw new Error(`roky.js: ${r.name[0]} má zlé dátumy`);
+  if (r.name.length !== 3 || r.name.some(t => !t)) throw new Error(`roky.js: ${r.from} nemá názov v troch jazykoch`);
+}
+const TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bratislava" }).format(new Date()); // RRRR-MM-DD, build beží každú noc
+const saintYear = ROKY.find(r => r.from <= TODAY && TODAY <= r.to);
+const longDate = (lang, iso) => new Date(iso + "T00:00:00Z").toLocaleDateString(lang, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+// Odkaz vedie rovno na dokument, ktorý rok vyhlasuje; kto a odkedy dokedy, je v popise odkazu.
+const jubilee = lang => saintYear ? `<a class="jubilee" href="${saintYear.url}" rel="noopener" title="${esc(`${POPES[saintYear.by][LANG_I[lang]]} · ${longDate(lang, saintYear.from)} – ${longDate(lang, saintYear.to)}`)}">${esc(saintYear.name[LANG_I[lang]])} ↗</a>` : "";
 const out = (p, html) => { fs.mkdirSync(`${OUT}/${p}`, { recursive: true }); fs.writeFileSync(`${OUT}/${p}index.html`, html); };
 // Presmerovanie: GitHub Pages nevie 301, takže je to stránka s okamžitým `refresh` a `canonical`
 // na novú adresu – Google to berie ako trvalé presmerovanie. Do sitemapy nepatrí.
@@ -350,7 +368,7 @@ ${lang === "sk" && MENINY[feast] ? `<p class="nameday">${EXTRA.sk.nameday}: ${es
 <a class="btn" id="prev" rel="prev" href="${rel}${dayPath(lang, neighbour(feast, -1))}" aria-label="${u.prevL}">${u.prev}</a>
 ${home ? "" : `<a class="btn" id="today" href="${rel}${homePath(lang)}">${u.today}</a>`}
 <a class="btn" id="next" rel="next" href="${rel}${dayPath(lang, neighbour(feast, 1))}" aria-label="${u.nextL}">${u.next}</a>
-<a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}">${CROSS}${u.faith}</a>
+<span class="foot"><a class="faith" href="${rel}${aboutPath(lang)}" title="${u.about}">${CROSS}${u.faith}</a>${jubilee(lang)}</span>
 </nav>`, moreBlock(lang, rel, feast, `${q(lang, s.quote)} – ${s.name}`))}
 </main>
 <dialog id="cal" aria-label="${esc(u.cal)}"><div class="cal-box">
