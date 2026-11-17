@@ -221,6 +221,25 @@ await T("Viac: rozbalí patróna, miesto, životopis a čítania, predvolene zat
   await go(q, dayUrl("de", "10-04")); ok((await q.locator(".more-links a").evaluateAll(a => a.map(x => x.href))).some(h => /schott\.erzabtei-beuron\.de\/\?d=\d{4}-10-04/.test(h)), "čítania DE");
   await go(q, dayUrl("sk", "10-04")); await q.waitForTimeout(300); await q.locator(".more summary").click(); await q.click("#next"); await q.waitForURL("**" + dayUrl("sk", "10-05")); ok(!(await q.locator(".more").getAttribute("open")), "po prepnutí zatvorené"); await q.context().close();
 });
+await T("Zamyslenie: predvolene zatvorené, rozbalí text dňa v jazyku stránky a po prepnutí dňa sa vymení", async () => {
+  const q = await mk(); await go(q, dayUrl("sk", "10-04")); await q.waitForTimeout(300);
+  ok(!(await q.locator(".think").getAttribute("open")), "má byť zatvorené"); ok(!(await q.locator(".think p").isVisible()), "text viditeľný");
+  await q.locator(".think summary").click(); ok(await q.locator(".think p").isVisible(), "text sa neukázal");
+  const sk = await q.locator(".think p").innerText(); ok(sk.split(/\s+/).length >= 30, "krátky text: " + sk);
+  ok(await q.locator(".more summary").isVisible(), "Viac zmizlo"); await q.locator(".more summary").click(); ok(await q.locator(".more dl").isVisible(), "Viac sa pri otvorenom zamyslení neotvorí");
+  await q.click("#next"); await q.waitForURL("**" + dayUrl("sk", "10-05")); ok(!(await q.locator(".think").getAttribute("open")), "po prepnutí zatvorené"); ok((await q.locator(".think p").textContent()) !== sk, "po prepnutí ostal starý text");
+  await go(q, dayUrl("en", "10-04")); const en = await q.locator(".think p").textContent(); ok(en && en !== sk, "EN je rovnaké ako SK"); await q.context().close();
+  const m = await mk({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true }); await go(m, dayUrl("de", "10-04")); await m.waitForTimeout(300);
+  const r = await m.evaluate(() => { const a = document.querySelector(".think summary").getBoundingClientRect(), b = document.querySelector(".more summary").getBoundingClientRect(); return { sameRow: Math.abs(a.top - b.top) < 2, sh: document.documentElement.scrollHeight, ih: innerHeight }; });
+  ok(r.sameRow, "zatvorené bloky nie sú v jednom riadku"); ok(r.sh <= r.ih, `denná stránka sa nezmestí (${r.sh} > ${r.ih})`); await m.context().close();
+});
+await T("Rok svätého: keď nejaký platí, odkaz vedie na dokument Svätej stolice a hovorí, kto ho vyhlásil", async () => {
+  // či rok práve platí, vie build (roky.js + dnešný dátum); že je všade rovnaký, stráži seo.mjs
+  const q = await mk(); const seen = [];
+  for (const l of ["sk", "en", "de"]) { await go(q, dayUrl(l, "11-04")); const j = q.locator(".jubilee"); seen.push(await j.count());
+    if (seen[seen.length - 1]) { ok(/^https:\/\/www\.vatican\.va\//.test(await j.getAttribute("href")), "odkaz " + l); ok(/\d{4}/.test(await j.getAttribute("title")), "popis bez dátumov " + l); ok(await j.isVisible(), "nevidno " + l); } }
+  eq(new Set(seen).size, 1, "nie vo všetkých jazykoch"); await q.context().close();
+});
 await T("Zdieľať: otvorí zdieľanie s citátom, inak skopíruje odkaz, bez JS je skryté", async () => {
   const q = await mk(); await q.addInitScript(() => { navigator.share = d => { window.__shared = d; return Promise.resolve(); }; });
   await go(q, dayUrl("sk", "11-04")); await q.waitForTimeout(300); await q.click("#share"); const d = await q.evaluate(() => window.__shared);

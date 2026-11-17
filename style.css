@@ -105,7 +105,8 @@ blockquote { quotes: "„" "“"; }
 :lang(en) blockquote { quotes: "“" "”"; }
 blockquote::before { content: open-quote; } blockquote::after { content: close-quote; }
 .source { font-size: clamp(.76rem, 1.72vh, .94rem); color: var(--muted); }
-.story { margin-top: clamp(2px, .7vh, 8px); max-width: 72ch; font-size: clamp(.8rem, 2.01vh, 1.08rem); line-height: 1.3; text-wrap: pretty; }
+.story { margin-top: clamp(2px, .7vh, 8px); }
+.story, .think p { max-width: 72ch; font-size: clamp(.8rem, 2.01vh, 1.08rem); line-height: 1.3; text-wrap: pretty; }
 .fade { animation: fadeUp .7s ease-out both; }
 .swap > * { animation: swapIn .18s ease-out; } /* pri prepnutí dňa len krátke prelínanie obsahu */
 @keyframes swapIn { from { opacity: 0; } }
@@ -119,11 +120,16 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .btn.on { color: var(--accent); font-weight: 500; }
 /* znak rímskokatolíckej stránky – vedie na „O stránke“ */
 .nameday { font-size: clamp(.78rem, 1.8vh, .96rem); color: var(--muted); }
-.extra { position: relative; margin-top: clamp(2px, .6vh, 8px); font-size: clamp(.84rem, 2vh, 1.02rem); }
-.more summary { display: inline-flex; align-items: center; gap: .4em; min-height: 26px; color: var(--accent); cursor: pointer; list-style: none; }
-.more summary::-webkit-details-marker { display: none; }
-.more summary::after { content: ""; width: .45em; height: .45em; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.15em) rotate(45deg); }
-.more[open] summary::after { transform: translateY(.1em) rotate(225deg); }
+/* „Zamyslenie“ a „Viac“ stoja zatvorené vedľa seba v jednom riadku, aby denná stránka nenarástla
+   o ďalší; otvorený blok si zoberie celý riadok a druhý sa zalomí pod neho. */
+.extra { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 18px; margin-top: clamp(2px, .6vh, 8px); font-size: clamp(.84rem, 2vh, 1.02rem); }
+.extra details { min-width: 0; }
+.extra details[open] { flex-basis: 100%; }
+.more summary, .think summary { display: inline-flex; align-items: center; gap: .4em; min-height: 26px; color: var(--accent); cursor: pointer; list-style: none; }
+.more summary::-webkit-details-marker, .think summary::-webkit-details-marker { display: none; }
+.more summary::after, .think summary::after { content: ""; width: .45em; height: .45em; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: translateY(-.15em) rotate(45deg); }
+.more[open] summary::after, .think[open] summary::after { transform: translateY(.1em) rotate(225deg); }
+.think p { margin: 2px 0 4px; }
 .more dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; margin-top: 2px; line-height: 1.3; }
 .more dt { color: var(--muted); }
 /* Na úzkom displeji a pri zväčšenom písme sa dvojstĺpec nezmestí: dlhý názov („Amtlich erklärtes
@@ -138,7 +144,10 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
 .more dd a, .pcard .pat a[rel] { display: inline-block; min-height: 26px; color: var(--accent); }
 .share { position: absolute; top: 0; right: 0; min-height: 26px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
 .share:hover { color: var(--ink); }
-.faith { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; font-size: clamp(.8rem, 1.81vh, .96rem); font-style: italic; color: var(--muted); text-decoration: none; }
+/* pod navigáciou: znak stránky a rok svätého, ak nejaký pápež práve vyhlásil (roky.js) */
+.foot { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 16px; }
+.faith, .jubilee { display: inline-flex; align-items: center; gap: 6px; min-height: 26px; font-size: clamp(.8rem, 1.81vh, .96rem); font-style: italic; color: var(--muted); text-decoration: none; }
+.jubilee { color: var(--accent); }
 .cross-sign { flex: none; width: .72em; height: 1em; color: var(--accent); }
 
 /* počítač: kríž vľavo voľne, text vpravo priamo na fotke */
@@ -167,9 +176,10 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   .meta { font-size: clamp(.96rem, 2.1vh, 1.19rem); }
   blockquote { margin-top: clamp(6px, 1.4vh, 14px); font-size: clamp(1.43rem, 3.82vh, 2.39rem); }
   .source { font-size: clamp(.91rem, 1.81vh, 1.01rem); }
-  .story { margin-top: clamp(6px, 1.2vh, 12px); font-size: clamp(.97rem, 2.29vh, 1.19rem); line-height: 1.38; }
+  .story { margin-top: clamp(6px, 1.2vh, 12px); }
+  .story, .think p { font-size: clamp(.97rem, 2.29vh, 1.19rem); line-height: 1.38; }
   .card nav { margin-top: clamp(2px, 1vh, 10px); justify-content: flex-start; gap: 0 20px; }
-  .faith { flex-basis: auto; margin-left: auto; }
+  .foot { flex-basis: auto; margin-left: auto; justify-content: flex-end; }
   /* kalendár a „O stránke“: panel vpravo, kríž ostáva vľavo voľný */
   .calendar, .prose { --pad: clamp(16px, 2.6vw, 40px); width: clamp(520px, 46vw, 1040px); margin-left: auto; background: rgba(7,20,50,.62); border-left: 1px solid var(--line); }
   .calendar > nav, .prose > nav, .calendar .card, .prose .card { background: none; }
