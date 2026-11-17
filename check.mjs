@@ -19,7 +19,7 @@ const MIN_TAP = 24;          // px – najmenší rozmer klikateľného prvku
 const FIT_W = 320, FIT_H = 568; // od tejto veľkosti sa denná stránka musí zmestiť bez posúvania
 const CROSS_H = 640;         // px – od tejto výšky musí byť na mobile celý kríž nad kartou
 const BIG_FONT = 20;         // px – používateľ so zväčšeným písmom (predvolené je 16)
-const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [540, 720], [768, 1024], [1366, 768], [1920, 1080]];
+const ALL_SIZES = [[280, 600], [320, 568], [360, 640], [375, 812], [414, 896], [540, 720], [768, 1024], [1366, 768], [1920, 1080], [2560, 1080], [3440, 1440]]; // posledné dve: širokouhlé monitory (21 : 9)
 const LANGS = ["sk", "en", "de"];
 const CAL = { sk: "sk/kalendar", en: "en/calendar", de: "de/kalender" };
 const ABOUT = { sk: "sk/o-stranke", en: "en/about", de: "de/ueber-uns" };
@@ -100,6 +100,7 @@ for (const [w, h] of SIZES) {
         const sx = [st.offsetLeft + st.offsetWidth * .3065, st.offsetLeft + st.offsetWidth * .3335], top = st.offsetTop + st.offsetHeight * .433; // názov webu ani prepínač nesmú ísť cez kríž
         out.barHit = [...document.querySelectorAll('.top a, .top select')].filter(e => { const b = e.getBoundingClientRect(); return b.width && b.left < sx[1] && b.right > sx[0] && b.bottom > top; }).map(e => e.textContent.trim().slice(0, 20));
         out.cardLeft = Math.round(c.left); out.cardTop = Math.round(c.top);
+        out.crossTop = Math.round(st.getBoundingClientRect().top + st.offsetHeight * .433); // na širokouhlom monitore je fotka vyššia než obrazovka
         out.wide = matchMedia("(min-width: 1024px) and (min-aspect-ratio: 1/1)").matches; }
       const name = el => el.tagName.toLowerCase() + (el.className ? "." + String(el.className).split(" ")[0] : "");
       for (const el of document.querySelectorAll("main *, dialog *")) {
@@ -121,6 +122,7 @@ for (const [w, h] of SIZES) {
     if (day && w >= FIT_W && h >= FIT_H && r.sh > r.ih) problems.push(`${at}: nezmestí sa na obrazovku (${r.sh} > ${r.ih})`);
     if (day && r.wide && r.cardLeft < r.armRight) problems.push(`${at}: text zakrýva kríž (${r.cardLeft} < ${r.armRight})`);
     if (day && !r.wide && h >= CROSS_H && r.cardTop < r.footBottom - 1) problems.push(`${at}: karta zakrýva kríž (${r.cardTop} < ${r.footBottom})`);
+    if (r.wide && r.crossTop < 0) problems.push(`${at}: vrch kríža je nad obrazovkou (${r.crossTop})`);
     if (day && h >= CROSS_H && r.barHit?.length) problems.push(`${at}: horná lišta ide cez kríž: ${r.barHit.join(", ")}`);
   }
 

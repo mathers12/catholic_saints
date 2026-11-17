@@ -91,7 +91,7 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
   `node tools/imgs.mjs`, ináč odkaz na obrázok ide cez dve presmerovania (a `seo.mjs` to nahlási).
 
 ## Responzivita (povinné pri každej zmene vzhľadu)
-- Všetko sa robí responzívne od 280 px do 1920 px šírky. Zmena vzhľadu nie je hotová, kým `node check.mjs`
+- Všetko sa robí responzívne od 280 px po širokouhlé monitory (3440×1440). Zmena vzhľadu nie je hotová, kým `node check.mjs`
   nedobehne bez nálezov; nové rozloženie pridaj aj do kontroly, nech ho pokrýva.
 - Na každej šírke platí: žiadne vodorovné posúvanie, nič mimo obrazovky ani orezané, klikateľné prvky
   aspoň 24 px v menšom rozmere (`MIN_TAP` v `check.mjs`).
@@ -99,7 +99,7 @@ Pri zmene záznamu v `saints.js` uprav aj preklady; biblické odkazy píš ako �
   rolovať, ale nesmú nič orezať ani preliezť do strán.
 - Kalendár sa (od 480 px výšky) celý zmestí na obrazovku: karta má výšku okna,
   vidno jej spodok aj navigáciu pod ňou a roluje sa až jej vnútro (`.mbody` = mriežka mesiaca + zoznam mien).
-  Hlavička karty a prepínač mesiaca teda z obrazovky nikdy nezmiznú. Denná karta nesmie od 640 px výšky zakryť kríž: na mobile a tablete na výšku je celá scéna nad kartou (mriežka na `body.day`, jednotky `cqh`) a kríž sa zmenší tak, aby ho bolo vidno celý. Na počítači (od 1024 px) je text vpravo od neho. Na nízkych displejoch (na šírku)
+  Hlavička karty a prepínač mesiaca teda z obrazovky nikdy nezmiznú. Denná karta nesmie od 640 px výšky zakryť kríž: na mobile a tablete na výšku je celá scéna nad kartou (mriežka na `body.day`, jednotky `cqh`) a kríž sa zmenší tak, aby ho bolo vidno celý. Na počítači (od 1024 px) je text vpravo od neho. Na širokouhlom monitore (od pomeru asi 2,1 : 1) je fotka oveľa vyššia než obrazovka, preto javisko klesne pod spodný okraj (`--drop` v `style.css`), aby vrch kríža ostal na obrazovke, karta sa odsunie z pravého rohu k stredu plochy vedľa kríža a panel podstránok má strop šírky. Na nízkych displejoch (na šírku)
   by bolo vnútorné okno prislabé, tam sa roluje stránka. `check.mjs` toto overuje.
 - Rozmery odvodzuj z `clamp()` a relatívnych jednotiek. Pevnú šírku či výšku (napr. `max-width: 260px`) dávaj
   len do media query pre konkrétne rozloženie, nikdy nie globálne – inak to na mobile vyzerá odseknuté.

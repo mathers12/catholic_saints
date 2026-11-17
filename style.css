@@ -147,7 +147,16 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   .about-btn { display: none !important; }
   /* text stojí priamo na fotke bez tmavého pásu: čitateľnosť drží tieň písmen a noc, ktorá sa tu rozvidnieva menej */
   .dark { animation-name: dawnwide; }
-  .card { width: min(560px, 43vw); margin: auto var(--pad) auto auto; padding: 0; background: none; border: 0;
+  /* Širokouhlý monitor (od pomeru asi 2,1 : 1) a nízke široké okno: fotka musí pokryť šírku, takže je
+     oveľa vyššia než obrazovka a pri zarovnaní na spodok by vrch kríža vyšiel nad horný okraj. Javisko
+     preto klesne pod spodný okraj (stĺp tam len pokračuje), aby vrch kríža ostal 10 % výšky pod okrajom
+     (43,3 % výšky fotky = vrch kríža, zvyšných 56,7 % → 0,567 / 1,3315 = 0,4258 šírky). Tieň pod lištou
+     sa drží vrchu scény, preto ide o to isté naspäť. */
+  .stage { --drop: max(0px, calc(var(--w) * .4258 - 90vh)); bottom: calc(-1 * var(--drop)); }
+  .shade { bottom: var(--drop); }
+  /* Karta: do 16 : 9 pri pravom okraji; čím je obrazovka širšia, tým viac sa odsúva od okraja, najviac
+     do stredu plochy vpravo od ramien kríža (tie končia na 44,8 % šírky) – ináč by ostala v rohu. */
+  .card { --cw: min(560px, 43vw); width: var(--cw); margin: auto max(var(--pad), min(calc(var(--pad) + 50vw - 88.89vh), calc((55vw - var(--cw)) / 2))) auto auto; padding: 0; background: none; border: 0;
     text-shadow: 0 1px 2px rgba(7,20,50,.95), 0 0 10px rgba(7,20,50,.9), 0 0 24px rgba(7,20,50,.7); }
   .calendar .card, .prose .card { text-shadow: none; }
   .head { gap: 20px; }
@@ -162,11 +171,10 @@ nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: spac
   .card nav { margin-top: clamp(2px, 1vh, 10px); justify-content: flex-start; gap: 0 20px; }
   .faith { flex-basis: auto; margin-left: auto; }
   /* kalendár a „O stránke“: panel vpravo, kríž ostáva vľavo voľný */
-  .calendar, .prose { --pad: clamp(16px, 2.6vw, 40px); width: max(46vw, 520px); margin-left: auto; background: rgba(7,20,50,.62); border-left: 1px solid var(--line); }
+  .calendar, .prose { --pad: clamp(16px, 2.6vw, 40px); width: clamp(520px, 46vw, 1040px); margin-left: auto; background: rgba(7,20,50,.62); border-left: 1px solid var(--line); }
   .calendar > nav, .prose > nav, .calendar .card, .prose .card { background: none; }
   .mgrid a { background: rgba(7,20,50,.3); }
-  .calendar .card, .prose .card { width: auto; margin: 0; padding: 0 var(--pad) 8px; }
-}
+  .calendar .card, .prose .card { width: auto; margin: 0; padding: 0 var(--pad) 8px; }}
 
 /* kalendár všetkých svätých */
 .calendar .top, .prose .top { min-height: 33vh; align-items: flex-start; } /* na mobile necháva voľné ramená kríža */
