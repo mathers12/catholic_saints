@@ -322,9 +322,10 @@ const todayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bratislava
 for (const f of FEASTS) if (!Array.isArray(ZAMYSLENIA[f]) || ZAMYSLENIA[f].length !== 3 || ZAMYSLENIA[f].some(t => !t || !t.trim())) throw new Error(`zamyslenia.js: deň ${f} nemá text v troch jazykoch`);
 for (const f of Object.keys(ZAMYSLENIA)) if (!byFeast[f]) throw new Error(`zamyslenia.js: deň ${f} v saints.js nie je`);
 // Rok svätého je úradné tvrdenie ako patronát: bez dokumentu Svätej stolice, pápeža a dátumov sem nepatrí.
-const ISO = /^\d{4}-\d{2}-\d{2}$/;
+const ISO = /^\d{4}-\d{2}-\d{2}$/, KBS = /^https:\/\/www\.(tk)?kbs\.sk\//;
 for (const r of ROKY) {
   if (!HOLY_SEE.test(r.url)) throw new Error(`roky.js: ${r.name[0]} nemá odkaz na Svätú stolicu (${r.url})`);
+  if (r.sk && !KBS.test(r.sk)) throw new Error(`roky.js: ${r.name[0]} má slovenský odkaz mimo KBS (${r.sk})`);
   if (!POPES[r.by]) throw new Error(`roky.js: ${r.name[0]} má neznámeho pápeža ${r.by}`);
   if (!ISO.test(r.from) || !ISO.test(r.to) || r.from > r.to) throw new Error(`roky.js: ${r.name[0]} má zlé dátumy`);
   if (r.name.length !== 3 || r.name.some(t => !t)) throw new Error(`roky.js: ${r.from} nemá názov v troch jazykoch`);
@@ -333,7 +334,8 @@ const TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bratislava" }
 const saintYear = ROKY.find(r => r.from <= TODAY && TODAY <= r.to);
 const longDate = (lang, iso) => new Date(iso + "T00:00:00Z").toLocaleDateString(lang, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 // Odkaz vedie rovno na dokument, ktorý rok vyhlasuje; kto a odkedy dokedy, je v popise odkazu.
-const jubilee = lang => saintYear ? `<a class="jubilee" href="${saintYear.url}" rel="noopener" title="${esc(`${POPES[saintYear.by][LANG_I[lang]]} · ${longDate(lang, saintYear.from)} – ${longDate(lang, saintYear.to)}`)}">${esc(saintYear.name[LANG_I[lang]])} ↗</a>` : "";
+// Slovenská verzia ide na slovenské znenie na stránke KBS, keď ho roky.js má.
+const jubilee = lang => saintYear ? `<a class="jubilee" href="${esc(lang === "sk" && saintYear.sk || saintYear.url)}" rel="noopener" title="${esc(`${POPES[saintYear.by][LANG_I[lang]]} · ${longDate(lang, saintYear.from)} – ${longDate(lang, saintYear.to)}`)}">${esc(saintYear.name[LANG_I[lang]])} ↗</a>` : "";
 const out = (p, html) => { fs.mkdirSync(`${OUT}/${p}`, { recursive: true }); fs.writeFileSync(`${OUT}/${p}index.html`, html); };
 // Presmerovanie: GitHub Pages nevie 301, takže je to stránka s okamžitým `refresh` a `canonical`
 // na novú adresu – Google to berie ako trvalé presmerovanie. Do sitemapy nepatrí.

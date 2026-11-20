@@ -233,11 +233,11 @@ await T("Zamyslenie: predvolene zatvorené, rozbalí text dňa v jazyku stránky
   const r = await m.evaluate(() => { const a = document.querySelector(".think summary").getBoundingClientRect(), b = document.querySelector(".more summary").getBoundingClientRect(); return { sameRow: Math.abs(a.top - b.top) < 2, sh: document.documentElement.scrollHeight, ih: innerHeight }; });
   ok(r.sameRow, "zatvorené bloky nie sú v jednom riadku"); ok(r.sh <= r.ih, `denná stránka sa nezmestí (${r.sh} > ${r.ih})`); await m.context().close();
 });
-await T("Rok svätého: keď nejaký platí, odkaz vedie na dokument Svätej stolice a hovorí, kto ho vyhlásil", async () => {
+await T("Rok svätého: keď nejaký platí, odkaz vedie na dokument Svätej stolice (po slovensky smie na KBS) a hovorí, kto ho vyhlásil", async () => {
   // či rok práve platí, vie build (roky.js + dnešný dátum); že je všade rovnaký, stráži seo.mjs
   const q = await mk(); const seen = [];
   for (const l of ["sk", "en", "de"]) { await go(q, dayUrl(l, "11-04")); const j = q.locator(".jubilee"); seen.push(await j.count());
-    if (seen[seen.length - 1]) { ok(/^https:\/\/www\.vatican\.va\//.test(await j.getAttribute("href")), "odkaz " + l); ok(/\d{4}/.test(await j.getAttribute("title")), "popis bez dátumov " + l); ok(await j.isVisible(), "nevidno " + l); } }
+    if (seen[seen.length - 1]) { ok((l === "sk" ? /^https:\/\/www\.(vatican\.va|(tk)?kbs\.sk)\// : /^https:\/\/www\.vatican\.va\//).test(await j.getAttribute("href")), "odkaz " + l); ok(/\d{4}/.test(await j.getAttribute("title")), "popis bez dátumov " + l); ok(await j.isVisible(), "nevidno " + l); } }
   eq(new Set(seen).size, 1, "nie vo všetkých jazykoch"); await q.context().close();
 });
 await T("Zdieľať: otvorí zdieľanie s citátom, inak skopíruje odkaz, bez JS je skryté", async () => {
