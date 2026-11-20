@@ -29,7 +29,9 @@ Statická stránka generovaná skriptom `build.mjs` (Node, bez závislostí) do 
   nemajú odkaz na dokument a web to pri nich hovorí – nemiešaj ich s úradnými.
 - `roky.js` = rok, ktorý pápež vyhlásil na počesť svätého (Rok sv. Františka 10. 1. 2026 – 10. 1. 2027),
   **vedie sa ručne** a platí preň to isté čo pre `patronaty.js`: `url` je stránka na vatican.va, ktorá ten
-  rok vyhlasuje, a dátumy aj pápež (`by`, kľúč z `POPES`) sú z nej. Denná stránka ho ukáže pod navigáciou
+  rok vyhlasuje, a dátumy aj pápež (`by`, kľúč z `POPES`) sú z nej. Nepovinné `sk` je odkaz pre slovenskú
+  verziu: stránka KBS (kbs.sk, tkkbs.sk) s tým istým dokumentom po slovensky; je to čítanie v reči
+  čitateľa, nie druhý zdroj, a build iné domény odmietne. Denná stránka ho ukáže pod navigáciou
   vedľa „Rímskokatolícka stránka“ (`jubilee()` v `build.mjs`, `.foot` v CSS) len v dňoch, keď platí – build
   beží každú noc, takže po skončení zmizne sám. Názov drž krátky, na mobile stojí v jednom riadku.
 - `zamyslenia.js` = krátke zamyslenie („malá kázeň“) na každý deň, `deň -> [sk, en, de]`, 3–4 vety.

@@ -149,16 +149,19 @@ for (const lang of LANGS) {
     const want = `${site}${lang}/${slug}/`;
     if (one(h, /rel="canonical" href="(.*?)"/) !== want) fail(`presmerovanie nevedie na ${want}`, old);
     // Denná stránka: zamyslenie je v HTML (zatvorené, ale pre čítačky aj bez JS), a rok svätého,
-    // ak nejaký platí, vedie na dokument Svätej stolice a hovorí, kto ho vyhlásil a dokedy.
+    // ak nejaký platí, vedie na dokument Svätej stolice (po slovensky smie na jeho znenie na
+    // stránke KBS) a hovorí, kto ho vyhlásil a dokedy.
     const day = fs.readFileSync(`${OUT}/${lang}/${slug}/index.html`, "utf8");
     const think = one(day, /<details class="think"><summary>[^<]+<\/summary><p>([^<]*)<\/p>/) || "";
     if (think.trim().split(/\s+/).length < 30) fail("zamyslenie chýba alebo je prikrátke", `${lang}/${slug}/`);
     const jub = /<a class="jubilee" href="([^"]*)"[^>]*title="([^"]*)"/.exec(day);
-    jubilees.add(jub ? jub[1] : "");
-    if (jub && (!/^https:\/\/www\.vatican\.va\//.test(jub[1]) || !/\d{4}/.test(jub[2]))) fail("rok svätého bez odkazu na Svätú stolicu alebo bez dátumov", `${lang}/${slug}/`);
+    jubilees.add(jub ? `${lang} ${jub[1]}` : "");
+    const src = lang === "sk" ? /^https:\/\/www\.(vatican\.va|(tk)?kbs\.sk)\// : HOLY_SEE;
+    if (jub && (!src.test(jub[1]) || !/\d{4}/.test(jub[2]))) fail("rok svätého bez odkazu na Svätú stolicu alebo bez dátumov", `${lang}/${slug}/`);
   }
 }
-if (jubilees.size !== 1) fail("rok svätého nie je na všetkých denných stránkach rovnaký", [...jubilees].join(" | "));
+// buď nikde, alebo v každom jazyku práve jeden odkaz
+if (jubilees.size !== (jubilees.has("") ? 1 : LANGS.length)) fail("rok svätého nie je na všetkých denných stránkach rovnaký", [...jubilees].join(" | "));
 
 for (const lang of LANGS) {
   const used = anchorsUsed.get(lang) || new Set(), have = anchorsHave.get(lang) || new Set();
