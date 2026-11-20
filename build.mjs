@@ -300,6 +300,9 @@ function card(s, when, foot, extra) {
 }
 
 const FEASTS = SAINTS.map(s => s.feast);
+// Adresa dňa sa skladá z mena, takže oprava mena ju zmení. Starú adresu sem zapíš (jazyk -> stará
+// adresa -> deň), nech presmeruje na novú: vedú na ňu odkazy a Google ju má v indexe.
+const MOVED = { sk: { "22-december-frantisek-xaviera-cabriniova": "12-22" } }; // preklep „František“ pri sv. Františke
 const byFeast = Object.fromEntries(SAINTS.map(s => [s.feast, s]));
 const neighbour = (feast, step) => FEASTS[(FEASTS.indexOf(feast) + step + FEASTS.length) % FEASTS.length];
 // Úradný patronát bez dňa, bez názvu v troch jazykoch alebo bez odkazu na Svätú stolicu je
@@ -545,6 +548,8 @@ for (const lang of LANGS) {
     urls.push({ path: dayView(lang, f, false), alt: l => dayPath(l, f), changefreq: "yearly" });
     redirect(oldDayPath(lang, f), dayPath(lang, f), saint(lang, byFeast[f]).name);
   }
+  // adresy, ktoré sa zmenili opravou mena: stará ostáva ako presmerovanie, tak ako /sk/11-04/
+  for (const [old, f] of Object.entries(MOVED[lang] || {})) redirect(`${lang}/${old}/`, dayPath(lang, f), saint(lang, byFeast[f]).name);
   // adresa musí byť jednoznačná: ináč by si dva dni prepísali stránku a jeden by zmizol
   const slugs = FEASTS.map(f => daySlug(lang, f));
   const dup = slugs.filter((x, i) => slugs.indexOf(x) !== i);

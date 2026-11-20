@@ -934,7 +934,7 @@ window.SAINTS = [
   {
     name: "sv. Cyril a Metod", img: "Sv_Kiril_Metodij_Zahari_Zograf_Trojanski_mon_1848.jpg", feast: "07-05", years: "9. storočie", title: "slovanskí vierozvestcovia", symbol: "📜",
     quote: "Nahé sú bez kníh všetky národy.", source: "Proglas",
-    story: "Dvaja bratia zo Solúna priniesli našim predkom písmo, liturgiu aj vlastnú kultúru. Za to, že sa Boh mohol modliť po slovensky, zniesli odpor, väzenie aj vyhnanstvo. Ich odvaha je súčasťou toho, kým sme."
+    story: "Dvaja bratia zo Solúna priniesli našim predkom písmo, liturgiu aj vlastnú kultúru. Aby ľudia mohli chváliť Boha po slovansky, zniesli odpor, väzenie aj vyhnanstvo. Ich odvaha je súčasťou toho, kým sme."
   },
   {
     name: "sv. Mária Goretti", img: "Maria_Goretti.jpg", feast: "07-06", years: "1890 – 1902", title: "panna a mučenica", symbol: "🌸",
@@ -1038,7 +1038,7 @@ window.SAINTS = [
   },
   {
     name: "sv. Joachim a Anna", img: "Chanter_Angelos_Akotandos_-_St_Anne_with_the_Virgin_-_Google_Art_Project.jpg", feast: "07-26", years: "1. storočie pred Kr.", title: "rodičia Panny Márie", symbol: "👵",
-    quote: "Starí rodičia sú korunou detí.", source: "Prís 17, 6",
+    quote: "Korunou starcov sú ich synovia a vnukovia.", source: "Prís 17, 6",
     story: "Podľa tradície dlho čakali na dieťa a Boh im dal dcéru Máriu, ktorú vychovali vo viere. Sú patrónmi starých rodičov. Poďakuj dnes za svojich starých rodičov – aj za to, čo ti odovzdali bez slov."
   },
   {
@@ -1782,7 +1782,7 @@ window.SAINTS = [
     story: "Holandský jezuita, ktorý precestoval strednú Európu, pôsobil aj v Prahe a Viedni a zakladal školy. Napísal katechizmus, z ktorého sa učili generácie – vyšiel vo vyše 200 vydaniach. Obnova viery ide cez vzdelanie a trpezlivosť."
   },
   {
-    name: "sv. František Xaviera Cabriniová", img: "Francesca_Cabrini.JPG", feast: "12-22", years: "1850 – 1917", title: "rehoľníčka, patrónka emigrantov", symbol: "🚢",
+    name: "sv. Františka Xaviera Cabriniová", img: "Francesca_Cabrini.JPG", feast: "12-22", years: "1850 – 1917", title: "rehoľníčka, patrónka emigrantov", symbol: "🚢",
     quote: "Všetko môžem v tom, ktorý mi dáva silu.", source: "Flp 4, 13",
     story: "Talianska rehoľníčka, ktorá sa bála vody, no 24-krát preplávala oceán. Pápež ju poslal k talianskym prisťahovalcom do Ameriky, kde založila 67 škôl, sirotincov a nemocníc. Stala sa prvou americkou svätou. Strach nie je prekážkou poslania."
   },
